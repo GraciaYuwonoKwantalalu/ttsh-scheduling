@@ -1,0 +1,6 @@
+FOR WINDOWS:
+1. Ensure your command prompt is at this current folder
+2. Type into your command prompt: Scripts\activate
+3. You should see (ttsh-scheduling) at the front of your command line
+4. Check whether the python libraries are available to you by typing into your command prompt: pip list
+5. You should see a list of python libraries taht have been installed into this virtual environment listed out
