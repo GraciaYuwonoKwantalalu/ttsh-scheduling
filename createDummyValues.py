@@ -1,7 +1,7 @@
 import sqlite3
 from sqlFunctionCalls import create_connection, close_connection
 
-#ASSUME 2020-07-16 --> 2020-08-16 IS THE PERIOD OF SCHEDULING
+#ASSUME 2020-07-16 --> 2020-08-15 IS THE PERIOD OF SCHEDULING
 
 conn, cur = create_connection()
 

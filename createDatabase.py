@@ -13,6 +13,15 @@ cur.execute("""CREATE TABLE IF NOT EXISTS Constraints(
 """)
 conn.commit()
 
+cur.execute("""CREATE TABLE IF NOT EXISTS PublicHoliday(
+   holiday_id INTEGER PRIMARY KEY,
+   holiday_name TEXT NOT NULL,
+   holiday_date TEXT NOT NULL,
+   holiday_day TEXT NOT NULL
+   );
+""")
+conn.commit()
+
 cur.execute("""CREATE TABLE IF NOT EXISTS Roster(
    email TEXT PRIMARY KEY,
    name TEXT NOT NULL,
