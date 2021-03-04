@@ -1,8 +1,10 @@
 import sqlite3
+import holidays
 from flask import Flask, redirect, url_for, render_template, request, session, flash
 from datetime import date, timedelta, datetime
 from sqlFunctionCalls import create_connection, close_connection
-from lpfunction import run_lp
+from lpFunction import run_lp
+from pprint import pprint
 
 # Initialize Flask app
 app = Flask(__name__)
@@ -47,8 +49,10 @@ def points():
 def retrieve_all():
     # Obtain user input for schedule start date and end date
     try:
-        query_start_date = request.form['start_date']
-        query_last_date = request.form['end_date']
+        #query_start_date = request.form['start_date']
+        query_start_date = '2020-07-16'
+        #query_last_date = request.form['end_date']
+        query_last_date = '2020-08-15'
     
     except Exception as e:
         return (str(e)), 404
@@ -84,8 +88,12 @@ def retrieve_all():
         (query_start_date, query_last_date, query_last_date, query_start_date))
         pl_results = cur.fetchall()
 
-        # Insert LP code here using constraints, duty, training, priority leave
-        run_lp(doctor_call_daily, day_off_monthly, max_call_month_4, max_call_month_5, duty_results, training_results, pl_results)
+        # Fetch the priority leave data stored in DB
+        cur.execute("""SELECT * FROM PublicHoliday;""")
+        ph_results = cur.fetchall()
+
+        # Insert LP code here using constraints, duty, training, priority leave, public holiday
+        run_lp(doctor_call_daily, day_off_monthly, max_call_month_4, max_call_month_5, duty_results, training_results, pl_results, ph_results)
         
         # Fetch the call LP data stored in DB (call LP data should only contain processed data for the requested schedule month)
         cur.execute("""SELECT * FROM CallLP;""")
@@ -136,7 +144,7 @@ def retrieve_all():
                 leave_reason = doc[3]
                 if day >= datetime.strptime(startDate, '%Y-%m-%d').date() and day <= datetime.strptime(endDate, '%Y-%m-%d').date():
                     priority_leave[doc_name] = leave_reason
-            
+            """
             call_LP = {}
             for doc in call_lp_results:
                 call_date = doc[3]
@@ -156,9 +164,9 @@ def retrieve_all():
                 remark = doc[7]
                 if day >= datetime.strptime(startDate, '%Y-%m-%d').date() and day <= datetime.strptime(endDate, '%Y-%m-%d').date():
                     leave_LP[doc_name] = duration,leave_type,remark
-
+"""
             # Combine all the necessary data into 1 single dictionary
-            all_data_dict[day_key] ={"Training": training, "Duty": duty, "Priority Leave": priority_leave, "Call": call_LP, "Leave": leave_LP}
+            all_data_dict[day_key] ={"Training": training, "Duty": duty, "Priority Leave": priority_leave, "Call": 'call_LP', "Leave": 'leave_LP'}
 
         #Close connection to DB
         close_connection(conn, cur)
@@ -196,6 +204,42 @@ def edit_constraints():
     
     except Exception as e:
         return (str(e)), 404
+
+#API endpoint to check public holidays
+@app.route('/check_public_holiday', methods=['GET'])
+def check_ph():
+    ### weekdays as a tuple
+    weekDays = ("Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday")
+
+    sg_Holiday = []
+    count = 0
+    conn, cur = create_connection()
+
+    ### Singapore Holidays - 2021
+    for holiday in sorted(holidays.Singapore(years=2021).items()):
+        ### get the day of that week
+        holiday_date = holiday[0]
+        holiday_day = holiday_date.weekday()
+        holiday_weekday = weekDays[holiday_day]
+        
+        count += 1
+        
+        case = {
+            "ID": count,
+            "HolidayName":holiday[1],
+            "HolidayDate":format(holiday[0]),
+            "HolidayDay":format(holiday_weekday)
+        }
+
+        cur.execute("""INSERT OR IGNORE INTO PublicHoliday(holiday_id, holiday_name, holiday_date, holiday_day) 
+        VALUES (?, ?, ?, ?);""", (count,holiday[1],format(holiday[0]),format(holiday_weekday)))
+        conn.commit()
+
+        sg_Holiday.append(case)
+
+    close_connection(conn, cur)
+    #pprint(sg_Holiday)
+    return(str(sg_Holiday))
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
