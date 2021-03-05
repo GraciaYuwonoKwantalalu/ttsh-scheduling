@@ -1,20 +1,20 @@
 import sqlite3
 import holidays
-from flask import Flask, redirect, url_for, render_template, request, session, flash
+from flask import Flask, redirect, url_for, render_template, request, session, flash, make_response, request
 from datetime import date, timedelta, datetime
 from sqlFunctionCalls import create_connection, close_connection
 from lpFunction import run_lp
 from pprint import pprint
+import pdfkit
+# import datetime
+# from win32com.client import Dispatch
 
 # Initialize Flask app
 app = Flask(__name__)
-#app.secret_key = "hello"
+app.secret_key = "hello"
 
 # Display the main page when user first loads the Flask app at localhost:5000
-@app.route('/')
-def index():
-    return render_template("base.html")
-
+@app.route('/', methods=["POST", "GET"])
 @app.route('/login', methods=["POST", "GET"])
 def login(): 
     if request.method == "POST": 
@@ -25,20 +25,282 @@ def login():
             return redirect(url_for("timetable"))
         return render_template("login.html")
 
+# logout 
 @app.route('/logout')
 def logout():
     session.pop("user", None)
     flash("You have been logged out!", "info")
     return redirect(url_for("login"))
 
+# specify email filter page
+@app.route('/email_filter', methods=["POST"])
+def email_filter():
+    start_date = request.form["start_date"]
+    end_date = request.form["end_date"]
+    # use the start_date and end_date for email extraction 
+    # put email extraction code here
+
+    return render_template("email_filter.html")
+
+# SCRATCH
+# @app.route('/scratch')
+# def scratch():
+#     result = {
+#                 "2020-07-16": {
+#                     "A": "Duty",
+#                     "B": "On-leave",
+#                     "C": "On-call",
+#                     "D": "Working",
+#                     "E": "Off"
+#                 },
+#                 "2020-07-17": {
+#                     "A": "Duty",
+#                     "B": "On-call",
+#                     "C": "Working",
+#                     "D": "On-leave",
+#                     "E": "Working"
+#                 },
+#                 "2020-07-18": {
+#                     "A": "Duty",
+#                     "B": "On-call",
+#                     "C": "On-leave",
+#                     "D": "Working",
+#                     "E": "Working"
+#                 },
+#                 "2020-07-19": {
+#                     "A": "Duty",
+#                     "B": "On-leave",
+#                     "C": "Working",
+#                     "D": "Working",
+#                     "E": "Duty"
+#                 },
+#                 "2020-07-20": {
+#                     "A": "Duty",
+#                     "B": "Working",
+#                     "C": "Working",
+#                     "D": "Working",
+#                     "E": "Duty"
+#                 }
+#             }
+#     return render_template("scratch.html", result=result)
+
+# timetable page - timetable 
 @app.route('/timetable')
 def timetable():    
-    # LP 
-    return render_template("timetable.html")
+    timetable_dict = {
+        "2020-07-16": {
+            "A": "Duty",
+            "B": "On-leave",
+            "C": "On-call",
+            "D": "Working",
+            "E": "Off",
+            "F": "Off"
+        },
+        "2020-07-17": {
+            "A": "Duty",
+            "B": "On-call",
+            "C": "Working",
+            "D": "On-leave",
+            "E": "Working",
+            "F": "On-call"
+        },
+        "2020-07-18": {
+            "A": "Duty",
+            "B": "On-call",
+            "C": "On-leave",
+            "D": "Working",
+            "E": "Working",
+            "F": "Duty"
+        },
+        "2020-07-19": {
+            "A": "On-leave",
+            "B": "On-leave",
+            "C": "Working",
+            "D": "Working",
+            "E": "Duty",
+            "F": "Duty"
+        },
+        "2020-07-20": {
+            "A": "Duty",
+            "B": "Working",
+            "C": "Working",
+            "D": "Working",
+            "E": "Duty",
+            "F": "On-leave"
+        },
+            "2020-07-21": {
+            "A": "Working",
+            "B": "On-leave",
+            "C": "On-call",
+            "D": "Working",
+            "E": "Off",
+            "F": "Off"
+        }
+    }
 
+    call_summary_dict = {
+        "2020-07-16": {
+            "total call": "8",
+            "Clinic 1": "1",
+            "Clinic 2": "2",
+            "amSat Clinic 4": "0",
+            "amSat Clinic 1": "1",
+            "amSat Clinic 3": "1",
+            "P": "2"
+        },
+        "2020-07-17": {
+            "total call": "7",
+            "Clinic 1": "1",
+            "Clinic 2": "0",
+            "amSat Clinic 4": "2",
+            "amSat Clinic 1": "0",
+            "amSat Clinic 3": "2",
+            "P": "1"
+        },
+        "2020-07-18": {
+            "total call": "8",
+            "Clinic 1": "1",
+            "Clinic 2": "1",
+            "amSat Clinic 4": "1",
+            "amSat Clinic 1": "1",
+            "amSat Clinic 3": "1",
+            "P": "2"
+        },
+        "2020-07-19": {
+            "total call": "8",
+            "Clinic 1": "1",
+            "Clinic 2": "2",
+            "amSat Clinic 4": "1",
+            "amSat Clinic 1": "1",
+            "amSat Clinic 3": "0",
+            "P": "1"
+        },
+        "2020-07-20": {
+            "total call": "8",
+            "Clinic 1": "1",
+            "Clinic 2": "0",
+            "amSat Clinic 4": "2",
+            "amSat Clinic 1": "2",
+            "amSat Clinic 3": "1",
+            "P": "2"
+        },
+        "2020-07-21": {
+            "total call": "8",
+            "Clinic 1": "2",
+            "Clinic 2": "0",
+            "amSat Clinic 4": "2",
+            "amSat Clinic 1": "1",
+            "amSat Clinic 3": "1",
+            "P": "1"
+        }
+    }
+    
+    return render_template("timetable.html", timetable_dict=timetable_dict, call_summary_dict=call_summary_dict)
+
+# points page
 @app.route('/points')
 def points():
-    return render_template("points.html")
+    points_dict = {
+        "A": {
+            "Month Calls": "6",
+            "WD": "0",
+            "Fri": "1",
+            "Sat": "0",
+            "Sun": "1",
+            "Pre-PH": "0",
+            "PH": "1",
+            "Sat/Sun AM":"0",
+            "Leave": "1",
+            "Clinic 1": "2",
+            "Clinic 2": "0"
+        },
+        "B": {
+            "Month Calls": "6",
+            "WD": "1",
+            "Fri": "0",
+            "Sat": "1",
+            "Sun": "0",
+            "Pre-PH": "0",
+            "PH": "1",
+            "Sat/Sun AM":"0",
+            "Leave": "2",
+            "Clinic 1": "1",
+            "Clinic 2": "0"
+        },
+        "C": {
+            "Month Calls": "7",
+            "WD": "1",
+            "Fri": "1",
+            "Sat": "1",
+            "Sun": "1",
+            "Pre-PH": "0",
+            "PH": "0",
+            "Sat/Sun AM":"0",
+            "Leave": "2",
+            "Clinic 1": "1",
+            "Clinic 2": "3"
+        },
+        "D": {
+            "Month Calls": "6",
+            "WD": "1",
+            "Fri": "2",
+            "Sat": "0",
+            "Sun": "0",
+            "Pre-PH": "1",
+            "PH": "0",
+            "Sat/Sun AM":"1",
+            "Leave": "0",
+            "Clinic 1": "0",
+            "Clinic 2": "2"
+        },
+        "E": {
+            "Month Calls": "7",
+            "WD": "0",
+            "Fri": "1",
+            "Sat": "0",
+            "Sun": "1",
+            "Pre-PH": "0",
+            "PH": "1",
+            "Sat/Sun AM":"0",
+            "Leave": "2",
+            "Clinic 1": "0",
+            "Clinic 2": "2"
+        },
+        "F": {
+            "Month Calls": "8",
+            "WD": "1",
+            "Fri": "2",
+            "Sat": "0",
+            "Sun": "1",
+            "Pre-PH": "1",
+            "PH": "2",
+            "Sat/Sun AM":"2",
+            "Leave": "1",
+            "Clinic 1": "2",
+            "Clinic 2": "3"
+        }
+    }
+    return render_template("points.html", points_dict=points_dict)
+
+# download timetable as pdf
+@app.route('/download_pdf')
+def download_timetable():
+    config = pdfkit.configuration(wkhtmltopdf="C:\\Program Files\\wkhtmltopdf\\bin\\wkhtmltopdf.exe")
+    pdf = pdfkit.from_url('http://localhost:5000/timetable', False, configuration=config)
+    response = make_response(pdf)
+    response.headers['Content-Type'] = 'application/pdf'
+    response.headers['Content-Disposition'] = 'attachment; filename=timetable.pdf'
+    return response
+
+# download points summary as pdf
+@app.route('/download_points')
+def download_points():
+    config = pdfkit.configuration(wkhtmltopdf="C:\\Program Files\\wkhtmltopdf\\bin\\wkhtmltopdf.exe")
+    pdf = pdfkit.from_url('http://localhost:5000/points', False, configuration=config)
+    response = make_response(pdf)
+    response.headers['Content-Type'] = 'application/pdf'
+    response.headers['Content-Disposition'] = 'attachment; filename=points.pdf'
+    return response
 
 # @app.route('/admin')
 # def admin():
@@ -168,16 +430,17 @@ def retrieve_all():
             # Combine all the necessary data into 1 single dictionary
             all_data_dict[day_key] ={"Training": training, "Duty": duty, "Priority Leave": priority_leave, "Call": 'call_LP', "Leave": 'leave_LP'}
 
-        #Close connection to DB
+        # Close connection to DB
         close_connection(conn, cur)
 
-        #returns the necessary data to render schedule
+        # returns the necessary data to render schedule
         return all_data_dict, 200
+        # return render_template("scratch.html", all_data_dict)
 
     except Exception as e:
         return (str(e)), 404
 
-#Takes in user-edited constraint and updates the DB
+# Takes in user-edited constraint and updates the DB
 @app.route('/edit_constraints', methods=['POST'])
 def edit_constraints():
     #Obtain user input values from front-end UI for saving into the DB
@@ -205,7 +468,7 @@ def edit_constraints():
     except Exception as e:
         return (str(e)), 404
 
-#API endpoint to check public holidays
+# API endpoint to check public holidays
 @app.route('/check_public_holiday', methods=['GET'])
 def check_ph():
     ### weekdays as a tuple
@@ -238,7 +501,6 @@ def check_ph():
         sg_Holiday.append(case)
 
     close_connection(conn, cur)
-    #pprint(sg_Holiday)
     return(str(sg_Holiday))
 
 if __name__ == '__main__':
