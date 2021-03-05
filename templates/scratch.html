@@ -1,0 +1,29 @@
+<!doctype html>
+<html>
+    <head>
+        <title>SCRATCH</title>
+    </head>
+    <body>
+
+    <table border="1">
+    <tr>
+        <th></th>
+        <th>A</th>
+        <th>B</th>
+        <th>C</th>
+        <th>D</th>
+        <th>E</th>
+    </tr>
+    <tr>
+    {% for key,parent_dict_item in result.items() %}
+        <td><b>{{key}}</b></td>
+        {% for key2, nested_value in parent_dict_item.items() %}
+            <td>{{nested_value}}</td>
+        {% endfor %}
+    </tr>
+    {% endfor %}
+    </tr>
+    </table>
+
+    </body>
+</html>

@@ -3,32 +3,45 @@
 {% block title %}Points{% endblock %}
 
 {% block content %}
-<h1>Points Summary</h1>
+<a class="btn btn-secondary btn-sm" href="{{url_for('download_points')}}">Download as PDF</a>
+<br><br>
 
-<br> 
-
-<table class="table">
-    <thead>
-        <tr>
-            <th scope="col">#</th>
-            <th scope="col">First</th>
-            <th scope="col">Last</th>
-            <th scope="col">Handle</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <th scope="row">1</th>
-            <td>Mark</td>
-            <td>Otto</td>
-            <td>@mdo</td>
-        </tr>
-        <tr>
-            <th scope="row">2</th>
-            <td>Jacob</td>
-            <td>Thornton</td>
-            <td>@fat</td>
-        </tr>
-    </tbody>
-</table>
+<div class="panel-group">
+    <!-- POINTS STARTS -->
+    <div class="panel panel-danger">
+        <div class="panel-heading">Points Summary</div>
+        <div class="panel-body">
+            <table class="table table-bordered table-striped mb-0">
+                <thead>
+                    <tr>
+                        <th></th>
+                        <th scope="col">Month Calls</th>
+                        <th scope="col">WD</th>
+                        <th scope="col">Fri</th>
+                        <th scope="col">Sat</th>
+                        <th scope="col">Sun</th>
+                        <th scope="col">Pre-PH</th>
+                        <th scope="col">PH</th>
+                        <th scope="col">Sat/Sun AM</th>
+                        <th scope="col">Leave</th>
+                        <th scope="col">Clinic 1</th>
+                        <th scope="col">Clinic 2</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                    {% for key,parent_dict_item in points_dict.items() %}
+                        <th>{{key}}</th>
+                        {% for key2, nested_value in parent_dict_item.items() %}
+                            <td>{{nested_value}}</td>
+                        {% endfor %}
+                    </tr>
+                    {% endfor %}
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <!-- POINTS ENDS -->
+</div>
 {% endblock %}
