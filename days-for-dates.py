@@ -25,7 +25,7 @@ for i in range(delta.days + 1):
     
     case = {
             "DATE": dateOnly,
-            "Day": dateOnly,
+            "Day": day_weekday,
         }
     
     datesList.append(case)
