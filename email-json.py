@@ -115,9 +115,9 @@ for email in emails:
                 pass
             else:
                 myQnA.append(thread)
-
-        myQnA.append({"leaveRequest":leaveRequest})
-        myQnA.append({"callRequest":callRequest})
+        
+        myQnA.append({"question":"leaveRequest", "answer":leaveRequest})
+        myQnA.append({"question":"callRequest","answer":callRequest})
 
         
         needed_emails.append({"ID": count, "Email":myQnA, "Subject":email_list[count-1]['Subject'], "SenderEmail":email_list[count-1]['SenderEmail'], "SenderName":email_list[count-1]['SenderName'], "Date":email_list[count-1]['Date']})       
@@ -126,3 +126,11 @@ for email in emails:
         pass
 
 pprint(needed_emails)
+
+### to get request month
+#for i in needed_emails:
+#    email_info = i['Email']
+#    for j in email_info:
+#        if "RequestMonth" in j['question']:
+#            print(j)
+    
