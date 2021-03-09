@@ -1,11 +1,11 @@
 import sqlite3
 import holidays
+import pdfkit
 from flask import Flask, redirect, url_for, render_template, request, session, flash, make_response, request
 from datetime import date, timedelta, datetime
-from sqlFunctionCalls import create_connection, close_connection
+from helperFunctions import create_connection, close_connection, check_weekend
 from lpFunction import run_lp
 from pprint import pprint
-import pdfkit
 # import datetime
 # from win32com.client import Dispatch
 
@@ -332,6 +332,13 @@ def retrieve_all():
         max_call_month_4 = constraints_results[3]
         max_call_month_5 = constraints_results[4]
 
+        # Fetch the doctor's name stored in DB
+        cur.execute("""SELECT name FROM Roster;""")
+        roster_results = cur.fetchall()
+        doc_list = []
+        for each in roster_results:
+            doc_list.append(each[0])
+
         # Fetch the training data stored in DB
         cur.execute("""SELECT * FROM Training WHERE start_date >= ? INTERSECT SELECT * FROM Training WHERE start_date <= ? 
         UNION SELECT * FROM Training WHERE end_date <= ? INTERSECT SELECT * FROM Training WHERE end_date >= ?;""",
@@ -349,6 +356,10 @@ def retrieve_all():
         UNION SELECT * FROM PriorityLeave WHERE end_date <= ? INTERSECT SELECT * FROM PriorityLeave WHERE end_date >= ?;""",
         (query_start_date, query_last_date, query_last_date, query_start_date))
         pl_results = cur.fetchall()
+
+        # Fetch the public holiday data stored in DB
+        cur.execute("""SELECT * FROM PublicHoliday;""")
+        ph_results = cur.fetchall()
 
         # Fetch the priority leave data stored in DB
         cur.execute("""SELECT * FROM PublicHoliday;""")
@@ -368,7 +379,7 @@ def retrieve_all():
         leave_lp_results = cur.fetchall()
 
         # Dictionary to store all necessary data to render the main page timetable
-        all_data_dict = {}
+        overall_result = {}
 
         # Appending all into dictionary with day as key and everything else as values
         sdate = datetime.strptime(query_start_date, '%Y-%m-%d').date()   # start date
@@ -378,6 +389,19 @@ def retrieve_all():
             day = sdate + timedelta(days=date_diff)     # 2020-08-02 (datetime object format)
             day_key = day.strftime("%Y-%m-%d")          # 2020-08-02 (string format)
 
+            # Check if the date is a weekend or weekday
+            # True: date is on a weekend
+            # False: date is on a weekday
+            weekend_checker = check_weekend(day)
+
+            # Check if date is a public holiday (based on public holidays stored in DB)
+            if day in ph_results:
+                # Date is a public holiday
+                ph_checker = True
+            else:
+                # Date is not a public holiday
+                ph_checker = False
+
             training = {}
             for doc in training_results:
                 startDate = doc[4]
@@ -386,8 +410,6 @@ def retrieve_all():
                 training_name = doc[3]
                 if day >= datetime.strptime(startDate, '%Y-%m-%d').date() and day <= datetime.strptime(endDate, '%Y-%m-%d').date():
                     training[doc_name] = training_name
-                if training:
-                    all_data_dict[day_key] ={"Training" : training}
             
             duty = {}
             for doc in duty_results:
@@ -427,14 +449,37 @@ def retrieve_all():
                 if day >= datetime.strptime(startDate, '%Y-%m-%d').date() and day <= datetime.strptime(endDate, '%Y-%m-%d').date():
                     leave_LP[doc_name] = duration,leave_type,remark
 """
-            # Combine all the necessary data into 1 single dictionary
-            all_data_dict[day_key] ={"Training": training, "Duty": duty, "Priority Leave": priority_leave, "Call": 'call_LP', "Leave": 'leave_LP'}
+            one_day_dict = {}
+            
+            for each_doc in doc_list:
+                one_doc_dict = {}
+
+                if each_doc in training:
+                    one_doc_dict[each_doc] = {"Training": training[each_doc]}
+                elif each_doc in duty:
+                    one_doc_dict[each_doc] = {"Duty": duty[each_doc]}
+                elif each_doc in priority_leave:
+                    one_doc_dict[each_doc] = {"Priority Leave": priority_leave[each_doc]}
+                # elif each_doc in call_LP:
+                #     one_doc_dict[each_doc] = {call_LP[each_doc][0]: call_LP[each_doc][1]}
+                # elif each_doc in leave_LP:
+                #     one_doc_dict[each_doc] = {"leave_LP[each_doc][1]": leave_LP[each_doc][2]}
+                elif weekend_checker == True or ph_checker == True:
+                    one_doc_dict[each_doc] = {"Off": ""}
+                else:
+                    one_doc_dict[each_doc] = {"Working": ""}
+
+                # Combine all the activity data into 1 single dictionary
+                one_day_dict[each_doc] = one_doc_dict[each_doc]
+
+            # Combine one day's worth of data into 1 overall dictionary
+            overall_result[day_key] = one_day_dict
 
         # Close connection to DB
         close_connection(conn, cur)
 
         # returns the necessary data to render schedule
-        return all_data_dict, 200
+        return overall_result, 200
         # return render_template("scratch.html", all_data_dict)
 
     except Exception as e:
@@ -502,6 +547,9 @@ def check_ph():
 
     close_connection(conn, cur)
     return(str(sg_Holiday))
+
+# API endpoint to check public holidays
+# @app.route('/check_public_holiday', methods=['GET'])
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
