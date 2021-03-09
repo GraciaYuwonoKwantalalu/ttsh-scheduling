@@ -85,17 +85,17 @@ conn.commit()
 #NOTICE: date should be in YYYY-MM-DD format
 cur.execute("""INSERT OR IGNORE INTO Duty(email, name, duty_name, start_date, end_date) 
    VALUES
-   ('a@mail.com', 'A', 'ICU 1', '2020-07-21', '2020-07-22'),
-   ('b@mail.com', 'B', 'ICU 2', '2020-07-21', '2020-08-22'),
-   ('c@mail.com', 'C', 'ICU 3', '2020-07-21', '2020-08-22'),
-   ('d@mail.com', 'D', 'ICU 4', '2020-07-21', '2020-08-22'),
-   ('e@mail.com', 'E', 'Clinic 1', '2020-07-21', '2020-08-22'),
-   ('f@mail.com', 'F', 'Clinic 2', '2020-07-21', '2020-08-22'),
-   ('g@mail.com', 'G', 'Clinic 3', '2020-07-21', '2020-08-22'),
-   ('h@mail.com', 'H', 'Clinic 4', '2020-07-21', '2020-08-22'),
-   ('i@mail.com', 'I', 'amSat Clinic 1', '2020-07-21', '2020-08-22'),
-   ('j@mail.com', 'J', 'amSat Clinic 2', '2020-07-21', '2020-08-22'),
-   ('k@mail.com', 'K', 'amSat Clinic 3', '2020-07-21', '2020-08-22'),
+   ('a@mail.com', 'A', 'ICU 1', '2020-07-16', '2020-08-15'),
+   ('b@mail.com', 'B', 'ICU 2', '2020-07-13', '2020-07-17'),
+   ('c@mail.com', 'C', 'ICU 3', '2020-07-16', '2020-07-18'),
+   ('d@mail.com', 'D', 'ICU 4', '2020-08-14', '2020-08-16'),
+   ('e@mail.com', 'E', 'Clinic 1', '2020-08-17', '2020-08-18'),
+   ('f@mail.com', 'F', 'Clinic 2', '2020-07-11', '2020-07-15'),
+   ('g@mail.com', 'G', 'Clinic 3', '2020-07-21', '2020-07-22'),
+   ('h@mail.com', 'H', 'Clinic 4', '2020-07-29', '2020-07-30'),
+   ('i@mail.com', 'I', 'amSat Clinic 1', '2020-07-17', '2020-08-18'),
+   ('j@mail.com', 'J', 'amSat Clinic 2', '2020-08-11', '2020-08-12'),
+   ('k@mail.com', 'K', 'amSat Clinic 3', '2020-08-17', '2020-07-18'),
    ('l@mail.com', 'L', 'amSat Clinic 4', '2020-07-21', '2020-08-22'),
    ('m@mail.com', 'M', 'p', '2020-07-21', '2020-08-22')
    ;""")
@@ -138,6 +138,22 @@ conn.commit()
 #Original Constraints
 cur.execute("""INSERT OR IGNORE INTO Constraints(doctor_call_daily, day_off_monthly, max_call_month_four, max_call_month_five) 
    VALUES (3, 4, 6, 7);""")
+conn.commit()
+
+cur.execute("""INSERT OR IGNORE INTO PublicHoliday(holiday_name, holiday_date, holiday_day) 
+   VALUES 
+   ('New Years Day', '2021-01-01', 'Friday'),
+   ('Chinese New Year', '2021-02-12', 'Friday'),
+   ('Chinese New Year', '2021-02-13', 'Saturday'),
+   ('Good Friday', '2021-04-02', 'Friday'),
+   ('Labour Day', '2021-05-01', 'Saturday'),
+   ('Hari Raya Puasa', '2021-05-13', 'Thursday'),
+   ('Vesak Day', '2021-05-26', 'Wednesday'),
+   ('Hari Raya Haji', '2021-07-20', 'Tuesday'),
+   ('National Day', '2021-08-09', 'Monday'),
+   ('Deepavali', '2021-11-04', 'Thursday'),
+   ('Christmas Day', '2021-12-25', 'Saturday')
+   ;""")
 conn.commit()
 
 close_connection(conn, cur)
