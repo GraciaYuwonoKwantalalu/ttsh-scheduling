@@ -287,6 +287,11 @@ def points():
     }
     return render_template("points.html", points_dict=points_dict)
 
+# icu duties page
+@app.route('/icu_duties')
+def icu_duties():
+    return render_template("icu_duties.html")
+
 # download timetable as pdf
 @app.route('/download_pdf')
 def download_timetable():
@@ -305,6 +310,16 @@ def download_points():
     response = make_response(pdf)
     response.headers['Content-Type'] = 'application/pdf'
     response.headers['Content-Disposition'] = 'attachment; filename=points.pdf'
+    return response
+
+# download icu duties as pdf
+@app.route('/download_icu_duties')
+def download_icu_duties():
+    config = pdfkit.configuration(wkhtmltopdf="C:\\Program Files\\wkhtmltopdf\\bin\\wkhtmltopdf.exe")
+    pdf = pdfkit.from_url('http://localhost:5000/icu_duties', False, configuration=config)
+    response = make_response(pdf)
+    response.headers['Content-Type'] = 'application/pdf'
+    response.headers['Content-Disposition'] = 'attachment; filename=icu_duties.pdf'
     return response
 
 # @app.route('/admin')

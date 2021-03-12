@@ -1,0 +1,175 @@
+{% extends "base.html" %}
+
+{% block title %}ICU Duties{% endblock %}
+
+{% block content %}
+
+<br><br>
+
+<!-- ICU DUTIES 1 STARTS -->
+<div class="testimonials" id="icu_duties_1_table">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-12 text-center text">
+                <h3>ICU 1</h3>
+                <div class="row">
+                    <table class="table table-bordered table-striped mb-0">
+                        <thead>
+                            <tr>
+                                <th></th>
+                                <th><input type='text' placeholder='Dr A'></th>
+                                <th><input type='text' placeholder='Dr B'></th>
+                                <th><input type='text' placeholder='Dr C'></th>
+                                <th><input type='text' placeholder='Dr D'></th>
+                                <th>Total On Call</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <th scope="row">2020-07-16</th>
+                                <td><input type='text'></td>
+                                <td><input type='text'></td>
+                                <td><input type='text'></td>
+                                <td><input type='text'></td>
+                                <td>1</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">2020-07-17</th>
+                                <td><input type='text'></td>
+                                <td><input type='text'></td>
+                                <td><input type='text'></td>
+                                <td><input type='text'></td>
+                                <td>1</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">2020-07-18</th>
+                                <td><input type='text'></td>
+                                <td><input type='text'></td>
+                                <td><input type='text'></td>
+                                <td><input type='text'></td>
+                                <td>1</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">2020-07-19</th>
+                                <td><input type='text'></td>
+                                <td><input type='text'></td>
+                                <td><input type='text'></td>
+                                <td><input type='text'></td>
+                                <td>1</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">2020-07-20</th>
+                                <td><input type='text'></td>
+                                <td><input type='text'></td>
+                                <td><input type='text'></td>
+                                <td><input type='text'></td>
+                                <td>1</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">2020-07-21</th>
+                                <td><input type='text'></td>
+                                <td><input type='text'></td>
+                                <td><input type='text'></td>
+                                <td><input type='text'></td>
+                                <td>1</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- ICU DUTIES 1 ENDS -->
+
+<!-- ICU DUTIES 2 STARTS -->
+<div class="portfolio" id="icu_duties_2_table">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-12 text-center text">
+                <h3>ICU 2</h3>
+                <div class="row">
+                    <table class="table table-bordered table-striped mb-0">
+                        <thead>
+                            <tr>
+                                <th></th>
+                                <th scope="col">A</th>
+                                <th scope="col">B</th>
+                                <th scope="col">C</th>
+                                <th scope="col">D</th>
+                                <th scope="col">Total On Call</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <th scope="row">2020-07-16</th>
+                                <td><input type='text'></td>
+                                <td><input type='text'></td>
+                                <td><input type='text'></td>
+                                <td><input type='text'></td>
+                                <td>1</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">2020-07-17</th>
+                                <td><input type='text'></td>
+                                <td><input type='text'></td>
+                                <td><input type='text'></td>
+                                <td><input type='text'></td>
+                                <td>1</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">2020-07-18</th>
+                                <td><input type='text'></td>
+                                <td><input type='text'></td>
+                                <td><input type='text'></td>
+                                <td><input type='text'></td>
+                                <td>1</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">2020-07-19</th>
+                                <td><input type='text'></td>
+                                <td><input type='text'></td>
+                                <td><input type='text'></td>
+                                <td><input type='text'></td>
+                                <td>1</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">2020-07-20</th>
+                                <td><input type='text'></td>
+                                <td><input type='text'></td>
+                                <td><input type='text'></td>
+                                <td><input type='text'></td>
+                                <td>1</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">2020-07-21</th>
+                                <td><input type='text'></td>
+                                <td><input type='text'></td>
+                                <td><input type='text'></td>
+                                <td><input type='text'></td>
+                                <td>1</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- ICU DUTIES 2 ENDS -->
+
+<!-- BUTTON STARTS -->
+<div class="call-to-action">
+    <div style="background-image: url('../static/images/ttsh_building.jpg'); ">
+        <div class="call-overlay">
+            <div class="container">
+                <div class="row">
+                    <a class="contact-button" href="{{url_for('download_icu_duties')}}">Download as PDF</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- BUTTON STARTS -->
+
+{% endblock %}
