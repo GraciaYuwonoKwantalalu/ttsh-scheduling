@@ -3,45 +3,64 @@
 {% block title %}Points{% endblock %}
 
 {% block content %}
-<a class="btn btn-secondary btn-sm" href="{{url_for('download_points')}}">Download as PDF</a>
+
 <br><br>
 
-<div class="panel-group">
-    <!-- POINTS STARTS -->
-    <div class="panel panel-danger">
-        <div class="panel-heading">Points Summary</div>
-        <div class="panel-body">
-            <table class="table table-bordered table-striped mb-0">
-                <thead>
-                    <tr>
-                        <th></th>
-                        <th scope="col">Month Calls</th>
-                        <th scope="col">WD</th>
-                        <th scope="col">Fri</th>
-                        <th scope="col">Sat</th>
-                        <th scope="col">Sun</th>
-                        <th scope="col">Pre-PH</th>
-                        <th scope="col">PH</th>
-                        <th scope="col">Sat/Sun AM</th>
-                        <th scope="col">Leave</th>
-                        <th scope="col">Clinic 1</th>
-                        <th scope="col">Clinic 2</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                    {% for key,parent_dict_item in points_dict.items() %}
-                        <th>{{key}}</th>
-                        {% for key2, nested_value in parent_dict_item.items() %}
-                            <td>{{nested_value}}</td>
-                        {% endfor %}
-                    </tr>
-                    {% endfor %}
-                    </tr>
-                </tbody>
-            </table>
+<!-- POINTS STARTS -->
+<div class="testimonials" id="timetable_table">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-12 text-center text">
+                <h3>Points Summary</h3>
+                <div class="row">
+                    <table class="table table-bordered table-striped mb-0">
+                        <thead>
+                            <tr>
+                                <th></th>
+                                <th scope="col">Month Calls</th>
+                                <th scope="col">WD</th>
+                                <th scope="col">Fri</th>
+                                <th scope="col">Sat</th>
+                                <th scope="col">Sun</th>
+                                <th scope="col">Pre-PH</th>
+                                <th scope="col">PH</th>
+                                <th scope="col">Sat/Sun AM</th>
+                                <th scope="col">Leave</th>
+                                <th scope="col">Clinic 1</th>
+                                <th scope="col">Clinic 2</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                            {% for key,parent_dict_item in points_dict.items() %}
+                                <th>{{key}}</th>
+                                {% for key2, nested_value in parent_dict_item.items() %}
+                                    <td>{{nested_value}}</td>
+                                {% endfor %}
+                            </tr>
+                            {% endfor %}
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
     </div>
-    <!-- POINTS ENDS -->
 </div>
+<!-- POINTS ENDS -->
+
+<!-- BUTTON STARTS -->
+<div class="call-to-action">
+    <div style="background-image: url('../static/images/ttsh_building.jpg'); ">
+        <div class="call-overlay">
+            <div class="container">
+                <div class="row">
+                    <a class="contact-button" href="{{url_for('download_points')}}">Download as PDF</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- BUTTON STARTS -->
+
 {% endblock %}

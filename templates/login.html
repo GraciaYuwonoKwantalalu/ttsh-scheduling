@@ -1,13 +1,3 @@
-<div class='container-fluid'>
-{% with messages = get_flashed_messages() %}
-    {% if messages %}
-        {% for msg in messages %}
-        <div class="alert alert-success" role="alert">{{msg}}</div>
-        {% endfor %}
-    {% endif %}
-{% endwith %}
-</div>
-
 <!doctype html>
 <html>
     <head>

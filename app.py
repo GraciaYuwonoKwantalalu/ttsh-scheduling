@@ -14,7 +14,6 @@ app = Flask(__name__)
 app.secret_key = "hello"
 
 # Display the main page when user first loads the Flask app at localhost:5000
-@app.route('/', methods=["POST", "GET"])
 @app.route('/login', methods=["POST", "GET"])
 def login(): 
     if request.method == "POST": 
@@ -24,6 +23,12 @@ def login():
         if "user" in session:
             return redirect(url_for("timetable"))
         return render_template("login.html")
+
+# home
+@app.route('/', methods=["POST", "GET"])
+@app.route('/home')
+def home(): 
+    return render_template("home.html")
 
 # logout 
 @app.route('/logout')

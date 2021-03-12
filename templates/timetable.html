@@ -3,168 +3,175 @@
 {% block title %}Timetable{% endblock %}
 
 {% block content %}
-<button type="button" class="btn btn-secondary btn-sm" data-toggle="modal" data-target="#emailFilterModal">Generate Schedule</button>
-<a class="btn btn-secondary btn-sm" href="">Validate</a>
-<a class="btn btn-secondary btn-sm" href="{{url_for('download_timetable')}}">Download as PDF</a>
+
 <br><br>
 
-<!-- EMAIL FILTER MODAL STARTS -->
-<div class="modal fade bd-example-modal-sm" id="emailFilterModal" tabindex="-1" role="dialog" aria-labelledby="emailFilterModal" aria-hidden="true">
-    <div class="modal-dialog modal-sm">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="emailFilterModal">Filter Email By</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <div class="modal-body">
-                Please specify the data in dd/mm/yyyy format.
-                <form action='email_filter' method='post'>
-                    <p>Start Date:</p>
-                    <p><input type='text' name='start_date' /></p>
-                    <p>End Date:</p>
-                    <p><input type='text' name='end_date' /></p>
-                    <p><input type='submit' value='Submit' /></p>
-                </form>
+<!-- TIMETABLE STARTS -->
+<div class="testimonials" id="timetable_table">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-12 text-center text">
+                <h3>Timetable</h3>
+                <div class="row">
+                    <table class="table table-bordered table-striped mb-0">
+                        <thead>
+                            <tr>
+                                <th scope="col"></th>
+                                <th scope="col">A</th>
+                                <th scope="col">B</th>
+                                <th scope="col">C</th>
+                                <th scope="col">D</th>
+                                <th scope="col">E</th>
+                                <th scope="col">F</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                            {% for key,parent_dict_item in timetable_dict.items() %}
+                                <th>{{key}}</th>
+                                {% for key2, nested_value in parent_dict_item.items() %}
+                                    {% if nested_value == "Duty" %}
+                                        <td style=background-color:#51E2F5>{{nested_value}}
+                                        <div class="tooltip">
+                                            <span class="tooptiptext">some details</span>
+                                          </div>
+                                        </td>
+                                    {% elif nested_value == "On-leave" %}
+                                        <td style=background-color:#9DF9EF>{{nested_value}}</td>
+                                    {% elif nested_value == "On-call" %}
+                                        <td style=background-color:#EDF7F6>{{nested_value}}</td>
+                                    {% elif nested_value == "Working" %}
+                                        <td style=background-color:#FFA8B6>{{nested_value}}</td>
+                                    {% elif nested_value == "Off" %}
+                                        <td style=background-color:#A28089>{{nested_value}}</td>
+                                    {% endif %}
+                                {% endfor %}
+                            </tr>
+                            {% endfor %}
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
 </div>
-<!-- EMAIL FILTER MODAL ENDS -->
+<!-- TIMETABLE ENDS -->
 
-<div class="panel-group">
-    <!-- TIMETABLE STARTS -->
-    <div class="panel panel-danger">
-        <div class="panel-heading">Timetable</div>
-        <div class="panel-body">
-            <table class="table table-bordered table-striped mb-0">
-                <thead>
-                    <tr>
-                        <th scope="col"></th>
-                        <th scope="col">A</th>
-                        <th scope="col">B</th>
-                        <th scope="col">C</th>
-                        <th scope="col">D</th>
-                        <th scope="col">E</th>
-                        <th scope="col">F</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                    {% for key,parent_dict_item in timetable_dict.items() %}
-                        <th>{{key}}</th>
-                        {% for key2, nested_value in parent_dict_item.items() %}
-                            {% if nested_value == "Duty" %}
-                                <td style=background-color:green><input type="text" value="{{nested_value}}" style=background-color:green size=5></td>
-                            {% elif nested_value == "On-leave" %}
-                                <td style=background-color:red><input type="text" value="{{nested_value}}" style=background-color:red size=5></td>
-                            {% elif nested_value == "On-call" %}
-                                <td style=background-color:orange><input type="text" value="{{nested_value}}" style=background-color:orange size=5></td>
-                            {% elif nested_value == "Working" %}
-                                <td style=background-color:pink><input type="text" value="{{nested_value}}" style=background-color:pink size=5></td>
-                            {% elif nested_value == "Off" %}
-                                <td style=background-color:purple><input type="text" value="{{nested_value}}" style=background-color:purple size=5></td>
-                            {% endif %}
-                        {% endfor %}
-                    </tr>
-                    {% endfor %}
-                    </tr>
-                </tbody>
-            </table>
-        </div>
+<!-- CALL SUMMARY STARTS -->
+<div class="portfolio" id="call_summary_table">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-12 text-center">
+                <h3>Call Summary</h3>
+                <div class="row">
+                    <table class="table table-bordered table-striped mb-0">
+                        <thead>
+                            <tr>
+                                <th></th>
+                                <th scope="col">total call</th>
+                                <th scope="col">Clinic 1</th>
+                                <th scope="col">Clinic 2</th>
+                                <th scope="col">amSat Clinic 4</th>
+                                <th scope="col">amSat Clinic 1</th>
+                                <th scope="col">amSat Clinic 3</th>
+                                <th scope="col">P</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                            {% for key,parent_dict_item in call_summary_dict.items() %}
+                                <th>{{key}}</th>
+                                {% for key2, nested_value in parent_dict_item.items() %}
+                                    <td>{{nested_value}}</td>
+                                {% endfor %}
+                            </tr>
+                            {% endfor %}
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
     </div>
-    <!-- TIMETABLE ENDS -->
-
-    <!-- CALL SUMMARY STARTS -->
-    <div class="panel panel-danger">
-        <div class="panel-heading">Call Summary</div>
-        <div class="panel-body">
-            <table class="table table-bordered table-striped mb-0">
-                <thead>
-                    <tr>
-                        <th></th>
-                        <th scope="col">total call</th>
-                        <th scope="col">Clinic 1</th>
-                        <th scope="col">Clinic 2</th>
-                        <th scope="col">amSat Clinic 4</th>
-                        <th scope="col">amSat Clinic 1</th>
-                        <th scope="col">amSat Clinic 3</th>
-                        <th scope="col">P</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                    {% for key,parent_dict_item in call_summary_dict.items() %}
-                        <th>{{key}}</th>
-                        {% for key2, nested_value in parent_dict_item.items() %}
-                            <td>{{nested_value}}</td>
-                        {% endfor %}
-                    </tr>
-                    {% endfor %}
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-    </div>
-    <!-- CALL SUMMARY ENDS -->
-
-    <!-- ICU DUTIES STARTS -->
-    <div class="panel panel-danger">
-        <div class="panel-heading">ICU Duties</div>
-        <div class="panel-body">
-            <table class="table table-bordered table-striped mb-0">
-                <thead>
-                    <tr>
-                        <th></th>
-                        <th scope="col">ICU 1</th>
-                        <th scope="col">ICU 2</th>
-                        <th scope="col">Total On Call</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <th scope="row">2020-07-16</th>
-                        <td><input type='text'></td>
-                        <td><input type='text'></td>
-                        <td>8</td>
-                    </tr>
-                    <tr>
-                        <th scope="row">2020-07-17</th>
-                        <td><input type='text'></td>
-                        <td><input type='text'></td>
-                        <td>7</td>
-                    </tr>
-                    <tr>
-                        <th scope="row">2020-07-18</th>
-                        <td><input type='text'></td>
-                        <td><input type='text'></td>
-                        <td>8</td>
-                    </tr>
-                    <tr>
-                        <th scope="row">2020-07-19</th>
-                        <td><input type='text'></td>
-                        <td><input type='text'></td>
-                        <td>8</td>
-                    </tr>
-                    <tr>
-                        <th scope="row">2020-07-20</th>
-                        <td><input type='text'></td>
-                        <td><input type='text'></td>
-                        <td>8</td>
-                    </tr>
-                    <tr>
-                        <th scope="row">2020-07-21</th>
-                        <td><input type='text'></td>
-                        <td><input type='text'></td>
-                        <td>8</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-    </div>
-    <!-- ICU DUTIES ENDS -->
 </div>
+
+<!-- ICU DUTIES STARTS -->
+<div class="contact" id="icu_duties_table">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-12 text-center">
+                <h3>ICU Duties</h3>
+                <div class="row">
+                    <table class="table table-bordered table-striped mb-0">
+                        <thead>
+                            <tr>
+                                <th></th>
+                                <th scope="col">ICU 1</th>
+                                <th scope="col">ICU 2</th>
+                                <th scope="col">Total On Call</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <th scope="row">2020-07-16</th>
+                                <td><input type='text'></td>
+                                <td><input type='text'></td>
+                                <td>8</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">2020-07-17</th>
+                                <td><input type='text'></td>
+                                <td><input type='text'></td>
+                                <td>7</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">2020-07-18</th>
+                                <td><input type='text'></td>
+                                <td><input type='text'></td>
+                                <td>8</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">2020-07-19</th>
+                                <td><input type='text'></td>
+                                <td><input type='text'></td>
+                                <td>8</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">2020-07-20</th>
+                                <td><input type='text'></td>
+                                <td><input type='text'></td>
+                                <td>8</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">2020-07-21</th>
+                                <td><input type='text'></td>
+                                <td><input type='text'></td>
+                                <td>8</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- ICU DUTIES ENDS -->
+
+<!-- BUTTON STARTS -->
+<div class="call-to-action">
+    <div style="background-image: url('../static/images/ttsh_building.jpg'); ">
+        <div class="call-overlay">
+            <div class="container">
+                <div class="row">
+                    <a class="contact-button" href="">Validate</a>
+                    <a class="contact-button" href="{{url_for('download_timetable')}}">Download as PDF</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- BUTTON STARTS -->
+
 {% endblock %}
 
