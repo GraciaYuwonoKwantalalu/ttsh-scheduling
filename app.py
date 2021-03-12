@@ -3,7 +3,7 @@ import holidays
 import pdfkit
 from flask import Flask, redirect, url_for, render_template, request, session, flash, make_response, request
 from datetime import date, timedelta, datetime
-from helperFunctions import create_connection, close_connection, check_weekend
+from helperFunctions import create_connection, close_connection, check_weekend, is_constraint_met()
 from lpFunction import run_lp
 from pprint import pprint
 # import datetime
@@ -326,7 +326,7 @@ def download_icu_duties():
 # def admin():
 #     return redirect(url_for("user", content=name, age=2, array_list=["billy","jim","timmy"]))
 
-# Runs the LP and returns all the data needed to render the timetable
+# Fetch data necessary for LP, runs LP, create new DB Temp table, returns formatted doctor's schedule
 @app.route('/display_timetable', methods=['GET'])
 def retrieve_all():
     # Obtain user input for schedule start date and end date
@@ -335,15 +335,14 @@ def retrieve_all():
         query_start_date = '2020-07-16'
         #query_last_date = request.form['end_date']
         query_last_date = '2020-08-15'
-    
+
+        # Establish connection to DB
+        conn, cur = create_connection()
     except Exception as e:
         return (str(e)), 404
     
-    # Get data from DB, Run the LP, Return the data in dictionary format to FrontEnd/UI
+    # Get relevant data from DB
     try:
-        # Establish connection to DB
-        conn, cur = create_connection()
-
         # Fetch the constraints defined by the user from DB
         cur.execute("""SELECT * FROM Constraints;""")
         constraints_results = cur.fetchone()
@@ -351,13 +350,28 @@ def retrieve_all():
         day_off_monthly = constraints_results[2]
         max_call_month_4 = constraints_results[3]
         max_call_month_5 = constraints_results[4]
+        total_call = constraints_results[5]
+        clinic1 = constraints_results[6]
+        clinic2 = constraints_results[7]
+        amSat_clinic4 = constraints_results[8]
+        amSat_clinic1 = constraints_results[9]
+        amSat_clinic3 = constraints_results[10]
+        p = constraints_results[11]
 
         # Fetch the doctor's name stored in DB
         cur.execute("""SELECT name FROM Roster;""")
         roster_results = cur.fetchall()
+
+        # Drop previous Temp table, then create new Temp table with the doctor's name as column header
+        cur.execute('''DROP TABLE IF EXISTS Temp;''')
+        cur.execute("""CREATE TABLE IF NOT EXISTS Temp(date TEXT PRIMARY KEY);""")
+        conn.commit()
+
+        # Placing the name of doctors in a list AND adding doctor's name to Temp table as header
         doc_list = []
         for each in roster_results:
             doc_list.append(each[0])
+            cur.execute('''ALTER TABLE Temp ADD COLUMN ''' + each[0] + ''' TEXT;''')
 
         # Fetch the training data stored in DB
         cur.execute("""SELECT * FROM Training WHERE start_date >= ? INTERSECT SELECT * FROM Training WHERE start_date <= ? 
@@ -381,12 +395,14 @@ def retrieve_all():
         cur.execute("""SELECT * FROM PublicHoliday;""")
         ph_results = cur.fetchall()
 
-        # Fetch the priority leave data stored in DB
-        cur.execute("""SELECT * FROM PublicHoliday;""")
-        ph_results = cur.fetchall()
+    except Exception as e:
+        return (str(e)), 404
 
-        # Insert LP code here using constraints, duty, training, priority leave, public holiday
-        run_lp(doctor_call_daily, day_off_monthly, max_call_month_4, max_call_month_5, duty_results, training_results, pl_results, ph_results)
+    # Run the LP and get the LP results that are stored in DB
+    try:
+        run_lp(doctor_call_daily, day_off_monthly, max_call_month_4, max_call_month_5, 
+                total_call, clinic1, clinic2, amSat_clinic4, amSat_clinic1, amSat_clinic3, p, 
+                duty_results, training_results, pl_results, ph_results)
         
         # Fetch the call LP data stored in DB (call LP data should only contain processed data for the requested schedule month)
         cur.execute("""SELECT * FROM CallLP;""")
@@ -398,6 +414,11 @@ def retrieve_all():
         (query_start_date, query_last_date, query_last_date, query_start_date))
         leave_lp_results = cur.fetchall()
 
+    except Exception as e:
+        return (str(e)), 404
+    
+    # Return the data in dictionary format to FrontEnd/UI
+    try:
         # Dictionary to store all necessary data to render the main page timetable
         overall_result = {}
 
@@ -409,18 +430,20 @@ def retrieve_all():
             day = sdate + timedelta(days=date_diff)     # 2020-08-02 (datetime object format)
             day_key = day.strftime("%Y-%m-%d")          # 2020-08-02 (string format)
 
+            #Initialize an sql statement for inserting a row into Temp table
+            sqlstmt = '''INSERT INTO Temp(date,'''
+            for each in doc_list:
+                sqlstmt += each + ''','''
+            sqlstmt = sqlstmt[:-1] + """) VALUES ('""" + day_key + """',"""
+
             # Check if the date is a weekend or weekday
-            # True: date is on a weekend
-            # False: date is on a weekday
-            weekend_checker = check_weekend(day)
+            weekend_checker = check_weekend(day)    # True: date is on a weekend; False: date is on a weekday
 
             # Check if date is a public holiday (based on public holidays stored in DB)
             if day in ph_results:
-                # Date is a public holiday
-                ph_checker = True
+                ph_checker = True   # Date is a public holiday
             else:
-                # Date is not a public holiday
-                ph_checker = False
+                ph_checker = False  # Date is not a public holiday
 
             training = {}
             for doc in training_results:
@@ -467,8 +490,8 @@ def retrieve_all():
                 leave_type = doc[6]
                 remark = doc[7]
                 if day >= datetime.strptime(startDate, '%Y-%m-%d').date() and day <= datetime.strptime(endDate, '%Y-%m-%d').date():
-                    leave_LP[doc_name] = duration,leave_type,remark
-"""
+                    leave_LP[doc_name] = duration,leave_type,remark"""
+
             one_day_dict = {}
             
             for each_doc in doc_list:
@@ -495,6 +518,18 @@ def retrieve_all():
             # Combine one day's worth of data into 1 overall dictionary
             overall_result[day_key] = one_day_dict
 
+            # Continuation of creating sql statement to insert values into Temp table
+            temp_list = []
+            for each in doc_list:
+                temp_list.append(str(one_day_dict[each]))
+                sqlstmt += '''?,'''
+            sqlstmt = sqlstmt[:-1] + ''');'''   # Example: INSERT INTO Temp(date,name,...) VALUES ('2020-08-15','training',...);
+            temp_tuple = tuple(temp_list)
+
+            # Executing sql statement to add values into Temp table
+            cur.execute(sqlstmt,temp_tuple)
+            conn.commit()
+    
         # Close connection to DB
         close_connection(conn, cur)
 
@@ -509,10 +544,21 @@ def retrieve_all():
 @app.route('/edit_constraints', methods=['POST'])
 def edit_constraints():
     #Obtain user input values from front-end UI for saving into the DB
-    doctor_call_daily = request.form['']
-    day_off_monthly = request.form['']
-    max_call_month_4 = request.form['']
-    max_call_month_5 = request.form['']
+    try:
+        doctor_call_daily = request.form['doctor_call_daily']
+        day_off_monthly = request.form['day_off_monthly']
+        max_call_month_4 = request.form['max_call_month_4']
+        max_call_month_5 = request.form['max_call_month_5']
+        total_call = request.form['total_call']
+        clinic1 = request.form['clinic1']
+        clinic2 = request.form['clinic2']
+        amSat_clinic4 = request.form['amSat_clinic4']
+        amSat_clinic1 = request.form['amSat_clinic1']
+        amSat_clinic3 = request.form['amSat_clinic3']
+        p = request.form['p']
+
+    except Exception as e:
+        return (str(e)), 404
 
     try:
         #Establish connection to DB
@@ -520,32 +566,87 @@ def edit_constraints():
 
         #Insert edited values into database and commit to database
         cur.execute("""UPDATE Constraints 
-        SET doctor_call_daily = ?, day_off_monthly = ?, max_call_month_four = ?, max_call_month_five = ?;""", 
-        (doctor_call_daily,day_off_monthly,max_call_month_4,max_call_month_5))
+        SET doctor_call_daily = ?, day_off_monthly = ?, max_call_month_four = ?, max_call_month_five = ?,
+        total_call = ?, clinic1 = ?, clinic2 = ?, amSat_clinic4 = ?, amSat_clinic1 = ?, amSat_clinic3 = ?, p = ?
+        ;""", 
+        (doctor_call_daily,day_off_monthly,max_call_month_4,max_call_month_5,
+        total_call,clinic1,clinic2,amSat_clinic4,amSat_clinic1,amSat_clinic3,p))
         conn.commit()
 
         #Close connection to DB
         close_connection(conn, cur)
 
         #returns successful message
-        return 'Constraints have been successfully changed!' ,200
+        return 'Constraints have been successfully changed!', 200
     
     except Exception as e:
         return (str(e)), 404
 
+# Checks the constraints as specified in the DB with the LP results
+@app.route('/check_constraints', methods=['POST'])
+def is_constraint_met():
+    checking = is_constraint_met()
+    return checking
+
+# Currently NOT DONE, DO NOT USE
+'''@app.route('update_timetable/',methods=['POST'])
+def update_timetable():
+    #Obtain user input values from front-end UI for saving into the DB
+    activityType = request.form['type']
+    remark = request.form['remark']
+    doctor = request.form['doctor']
+    date = request.form['date']
+    
+    #Establish connection to DB
+    conn, cur = create_connection()
+
+    if activityType == 'Duty':
+        cur.execute("""Select * FROM Duty 
+            WHERE duty_name = ? AND name = ? AND start_date = ? AND end_date = ?
+            ;""", 
+            (remark,doctor,date,date))
+        query_results = cur.fetchone()
+        if query_results != None:
+            cur.execute("""UPDATE Duty 
+                SET duty_name = ? WHERE name = ? AND start_date = ? AND end_date = ?
+                ;""", 
+                (remark,doctor,date,date))
+            conn.commit()
+        else:
+            cur.execute("""INSERT INTO Duty(email, name, duty_name, start_date, end_date) 
+                VALUES (?,?,?,?,?);""", 
+                (remark,doctor,date,date))
+            conn.commit()
+    elif activityType == 'Call':
+        cur.execute("""UPDATE CallLP 
+            SET request_type = 'c', remark = ? WHERE name = ? AND start_date = ? AND end_date = ?
+            ;""", 
+            (remark,doctor,date,date))
+        conn.commit()
+    
+    elif activityType == 'Leave':
+        cur.execute("""UPDATE LeaveLP 
+            SET leave_type = 'Others', remark = ? WHERE name = ? AND start_date = ? AND end_date = ?
+            ;""", 
+            (remark,doctor,date,date))
+        conn.commit()
+
+    #Close connection to DB
+    close_connection(conn, cur)'''
+
 # API endpoint to check public holidays
 @app.route('/check_public_holiday', methods=['GET'])
 def check_ph():
-    ### weekdays as a tuple
+    # Weekdays as a tuple
     weekDays = ("Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday")
 
     sg_Holiday = []
     count = 0
     conn, cur = create_connection()
 
-    ### Singapore Holidays - 2021
+    # Singapore Holidays - 2021
     for holiday in sorted(holidays.Singapore(years=2021).items()):
-        ### get the day of that week
+        # Get the day of that week
         holiday_date = holiday[0]
         holiday_day = holiday_date.weekday()
         holiday_weekday = weekDays[holiday_day]
@@ -567,9 +668,6 @@ def check_ph():
 
     close_connection(conn, cur)
     return(str(sg_Holiday))
-
-# API endpoint to check public holidays
-# @app.route('/check_public_holiday', methods=['GET'])
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
