@@ -1,10 +1,12 @@
 import sqlite3
-from sqlFunctionCalls import create_connection, close_connection
+from helperFunctions import create_connection, close_connection
 
-#ASSUME 2020-07-16 --> 2020-08-15 IS THE PERIOD OF SCHEDULING
+# ASSUME 2020-07-16 --> 2020-08-15 IS THE PERIOD OF SCHEDULING
 
+# Create connection to DB
 conn, cur = create_connection()
 
+# Table for the doctor roster
 cur.execute("""INSERT OR IGNORE INTO Roster(email, name, first_position, second_position, posting, points) 
    VALUES
    ('a@mail.com', 'A', 'A1', 'A2', 'P1', 5),
@@ -36,6 +38,7 @@ cur.execute("""INSERT OR IGNORE INTO Roster(email, name, first_position, second_
    ;""")
 conn.commit()
 
+# Table for the doctor's skills
 cur.execute("""INSERT OR IGNORE INTO Skill(email, skill) 
    VALUES
    ('a@mail.com', 'Skill1'),
@@ -71,7 +74,7 @@ cur.execute("""INSERT OR IGNORE INTO Skill(email, skill)
    ;""")
 conn.commit()
 
-#NOTICE: date should be in YYYY-MM-DD format
+# NOTICE: date should be in YYYY-MM-DD format
 cur.execute("""INSERT OR IGNORE INTO Training(email, name, training, start_date, end_date) 
    VALUES
    ('z@mail.com', 'Z', 'Trianing0', '2020-07-21', '2020-07-22'),
@@ -82,7 +85,7 @@ cur.execute("""INSERT OR IGNORE INTO Training(email, name, training, start_date,
    ;""")
 conn.commit()
 
-#NOTICE: date should be in YYYY-MM-DD format
+# NOTICE: date should be in YYYY-MM-DD format
 cur.execute("""INSERT OR IGNORE INTO Duty(email, name, duty_name, start_date, end_date) 
    VALUES
    ('a@mail.com', 'A', 'ICU 1', '2020-07-16', '2020-08-15'),
@@ -101,7 +104,7 @@ cur.execute("""INSERT OR IGNORE INTO Duty(email, name, duty_name, start_date, en
    ;""")
 conn.commit()
 
-#NOTICE: date should be in YYYY-MM-DD format
+# NOTICE: date should be in YYYY-MM-DD format
 cur.execute("""INSERT OR IGNORE INTO PriorityLeave(email, name, reason, start_date, end_date) 
    VALUES
    ('g@mail.com', 'G', 'Grandparent Death Anniversary', '2020-07-23', '2020-07-23'),
@@ -113,7 +116,7 @@ cur.execute("""INSERT OR IGNORE INTO PriorityLeave(email, name, reason, start_da
    ;""")
 conn.commit()
 
-#This table data should be obtained from employee emails 
+# This table data should be obtained from employee emails 
 cur.execute("""INSERT OR IGNORE INTO LeaveApplication(email, name, start_date, end_date, duration, leave_type, remark) 
    VALUES
    ('o@mail.com', 'O', '2020-07-23', '2020-07-23', 'PM', 'Child Care Leave', 'PSLE Results Collection'),
@@ -126,7 +129,7 @@ cur.execute("""INSERT OR IGNORE INTO LeaveApplication(email, name, start_date, e
    ;""")
 conn.commit()
 
-#This table data should be obtained from employee emails 
+# This table data should be obtained from employee emails 
 cur.execute("""INSERT OR IGNORE INTO CallRequest(email, name, date, request_type, remark) 
    VALUES
    ('v@mail.com', 'V', '2020-07-21', 'No call only', 'Busy'),
@@ -135,11 +138,12 @@ cur.execute("""INSERT OR IGNORE INTO CallRequest(email, name, date, request_type
    ;""")
 conn.commit()
 
-#Original Constraints
-cur.execute("""INSERT OR IGNORE INTO Constraints(doctor_call_daily, day_off_monthly, max_call_month_four, max_call_month_five) 
-   VALUES (3, 4, 6, 7);""")
+# Original Constraints set by admin
+cur.execute("""INSERT OR IGNORE INTO Constraints(doctor_call_daily, day_off_monthly, max_call_month_four, max_call_month_five,total_call,clinic1,clinic2,amSat_clinic4,amSat_clinic1,amSat_clinic3,p) 
+   VALUES (3, 4, 6, 7, 3, 2, 1, 2, 1, 1, 3);""")
 conn.commit()
 
+# Table for public holidays in 2021
 cur.execute("""INSERT OR IGNORE INTO PublicHoliday(holiday_name, holiday_date, holiday_day) 
    VALUES 
    ('New Years Day', '2021-01-01', 'Friday'),
@@ -156,18 +160,5 @@ cur.execute("""INSERT OR IGNORE INTO PublicHoliday(holiday_name, holiday_date, h
    ;""")
 conn.commit()
 
+# Close connection to DB
 close_connection(conn, cur)
-
-
-#Format Reference: Insert values in sqlite
-'''
-cur.execute("""INSERT INTO users(userid, fname, lname, gender) 
-   VALUES('00001', 'Nik', 'Piepenbreier', 'male');""")
-conn.commit()
-'''
-
-#Delete all values in 1 table
-'''
-cur.execute("""DELETE FROM Constraints;""")
-conn.commit()
-'''
