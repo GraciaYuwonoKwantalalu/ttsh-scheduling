@@ -1,9 +1,10 @@
 import sqlite3
 import holidays
 import pdfkit
+import json
 from flask import Flask, redirect, url_for, render_template, request, session, flash, make_response, request
 from datetime import date, timedelta, datetime
-from helperFunctions import create_connection, close_connection, check_weekend, is_constraint_met()
+from helperFunctions import create_connection, close_connection, check_weekend, is_constraint_met
 from lpFunction import run_lp
 from pprint import pprint
 # import datetime
@@ -582,57 +583,61 @@ def edit_constraints():
     except Exception as e:
         return (str(e)), 404
 
-# Checks the constraints as specified in the DB with the LP results
+# Checks the constraints as specified in the DB with the Temp table
 @app.route('/check_constraints', methods=['POST'])
-def is_constraint_met():
-    checking = is_constraint_met()
+def is_constraint_met_temp():
+    start_date = request.form['start_date']
+    end_date = request.form['end_date']
+    checking = is_constraint_met('Temp', start_date, end_date)
     return checking
 
-# Currently NOT DONE, DO NOT USE
-'''@app.route('update_timetable/',methods=['POST'])
+# Updates the Temp table if constraints are still met after changes are made to the schedule
+@app.route('update_timetable/',methods=['POST'])
 def update_timetable():
-    #Obtain user input values from front-end UI for saving into the DB
+    # Obtain user input values from front-end UI for saving into the DB
     activityType = request.form['type']
     remark = request.form['remark']
     doctor = request.form['doctor']
     date = request.form['date']
+    start_date = request.form['start_date']
+    end_date = request.form['end_date']
     
-    #Establish connection to DB
+    # Format the changes in dictionary format
+    input_data = {str(activityType) : str(remark)}
+
+    # Establish connection to DB
     conn, cur = create_connection()
 
-    if activityType == 'Duty':
-        cur.execute("""Select * FROM Duty 
-            WHERE duty_name = ? AND name = ? AND start_date = ? AND end_date = ?
-            ;""", 
-            (remark,doctor,date,date))
-        query_results = cur.fetchone()
-        if query_results != None:
-            cur.execute("""UPDATE Duty 
-                SET duty_name = ? WHERE name = ? AND start_date = ? AND end_date = ?
-                ;""", 
-                (remark,doctor,date,date))
-            conn.commit()
-        else:
-            cur.execute("""INSERT INTO Duty(email, name, duty_name, start_date, end_date) 
-                VALUES (?,?,?,?,?);""", 
-                (remark,doctor,date,date))
-            conn.commit()
-    elif activityType == 'Call':
-        cur.execute("""UPDATE CallLP 
-            SET request_type = 'c', remark = ? WHERE name = ? AND start_date = ? AND end_date = ?
-            ;""", 
-            (remark,doctor,date,date))
-        conn.commit()
-    
-    elif activityType == 'Leave':
-        cur.execute("""UPDATE LeaveLP 
-            SET leave_type = 'Others', remark = ? WHERE name = ? AND start_date = ? AND end_date = ?
-            ;""", 
-            (remark,doctor,date,date))
-        conn.commit()
+    # Delete and previous Checking table and create a new Checking table to check whether changes made does not violate the constraints
+    cur.execute('''DROP TABLE IF EXISTS Checking;''')
+    cur.execute("""CREATE TABLE IF NOT EXISTS Checking AS SELECT * FROM Temp""")
 
+    # Make changes to the Checking table to check constraint violation
+    # WARNING: Prone to SQL Injection Attack (Assumption is that the admin is trustworthy and won't jeopardise the system)
+    sqlstmt = """UPDATE Checking SET """ + doctor + """ = ? WHERE date = ?;"""
+    cur.execute(sqlstmt,(input_data,date))
+    conn.commit()
+
+    # Check whether constraints are violated.
+    # WARNING: Prone to SQL Injection Attack (Assumption is that the admin is trustworthy and won't jeopardise the system)
+    checker = is_constraint_met('Checking', start_date, end_date)
+
+    # If constraints not violated, then make permanent changes to the Temp table
+    # WARNING: Prone to SQL Injection Attack (Assumption is that the admin is trustworthy and won't jeopardise the system)
+    if checker == True:
+        sqlstmt = """UPDATE Temp SET """ + doctor + """ = ? WHERE date = ?;"""
+        cur.execute(sqlstmt,(input_data,date))
+        conn.commit()
+        message = True
+    # Otherwise, do not make any changes to the Temp table and discard user's changes
+    else:
+        message = checker
+    
     #Close connection to DB
-    close_connection(conn, cur)'''
+    close_connection(conn, cur)
+
+    # Returns either True or constraints that are not met in the form: {date:[constraint1,constraint2],date:[constraint1],...}
+    return message, 200
 
 # API endpoint to check public holidays
 @app.route('/check_public_holiday', methods=['GET'])
