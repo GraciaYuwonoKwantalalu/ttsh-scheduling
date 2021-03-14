@@ -88,7 +88,7 @@ def is_constraint_met(table_name, start_date, end_date):
                     elif value == 'Clinic 2':
                         counter_clinic2 += 1
                     elif value == 'amSat Clinic 3':
-                        counter_amsatclinic2 += 1
+                        counter_amsatclinic3 += 1
                     elif value == 'amSat Clinic 4':
                         counter_amsatclinic4 += 1
                     elif value == 'P':
