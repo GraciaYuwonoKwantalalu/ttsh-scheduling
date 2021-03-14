@@ -332,13 +332,14 @@ def download_icu_duties():
 def retrieve_all():
     # Obtain user input for schedule start date and end date
     try:
-        #query_start_date = request.form['start_date']
-        query_start_date = '2020-07-16'
-        #query_last_date = request.form['end_date']
-        query_last_date = '2020-08-15'
+        query_start_date = request.form['start_date']
+        # query_start_date = '2020-07-16'
+        query_last_date = request.form['end_date']
+        # query_last_date = '2020-08-15'
 
         # Establish connection to DB
-        conn, cur = create_connection()
+        conn, cur = create_connection()     
+
     except Exception as e:
         return (str(e)), 404
     
@@ -431,7 +432,7 @@ def retrieve_all():
             day = sdate + timedelta(days=date_diff)     # 2020-08-02 (datetime object format)
             day_key = day.strftime("%Y-%m-%d")          # 2020-08-02 (string format)
 
-            #Initialize an sql statement for inserting a row into Temp table
+            # Initialize an sql statement for inserting a row into Temp table
             sqlstmt = '''INSERT INTO Temp(date,'''
             for each in doc_list:
                 sqlstmt += each + ''','''
@@ -446,6 +447,7 @@ def retrieve_all():
             else:
                 ph_checker = False  # Date is not a public holiday
 
+            # Storing all doctor's training for schedule month in training dictionary
             training = {}
             for doc in training_results:
                 startDate = doc[4]
@@ -455,6 +457,7 @@ def retrieve_all():
                 if day >= datetime.strptime(startDate, '%Y-%m-%d').date() and day <= datetime.strptime(endDate, '%Y-%m-%d').date():
                     training[doc_name] = training_name
             
+            # Storing all doctor's duty for schedule month in duty dictionary
             duty = {}
             for doc in duty_results:
                 startDate = doc[4]
@@ -464,6 +467,7 @@ def retrieve_all():
                 if day >= datetime.strptime(startDate, '%Y-%m-%d').date() and day <= datetime.strptime(endDate, '%Y-%m-%d').date():
                     duty[doc_name] = duty_name
             
+            # Storing all doctor's priority leave for schedule month in priority leave dictionary
             priority_leave = {}
             for doc in pl_results:
                 startDate = doc[4]
@@ -472,7 +476,8 @@ def retrieve_all():
                 leave_reason = doc[3]
                 if day >= datetime.strptime(startDate, '%Y-%m-%d').date() and day <= datetime.strptime(endDate, '%Y-%m-%d').date():
                     priority_leave[doc_name] = leave_reason
-            """
+            
+            # Storing all doctor's calls based on LP for schedule month in call_LP dictionary
             call_LP = {}
             for doc in call_lp_results:
                 call_date = doc[3]
@@ -482,6 +487,7 @@ def retrieve_all():
                 if day == datetime.strptime(call_date, '%Y-%m-%d').date():
                     call_LP[doc_name] = call_type,remark
             
+            # Storing all doctor's leaves based on LP for schedule month in leave_LP dictionary
             leave_LP = {}
             for doc in leave_lp_results:
                 startDate = doc[3]
@@ -491,10 +497,12 @@ def retrieve_all():
                 leave_type = doc[6]
                 remark = doc[7]
                 if day >= datetime.strptime(startDate, '%Y-%m-%d').date() and day <= datetime.strptime(endDate, '%Y-%m-%d').date():
-                    leave_LP[doc_name] = duration,leave_type,remark"""
+                    leave_LP[doc_name] = duration,leave_type,remark
 
+            # Storing each day's activity by all doctors in one_day_dict
             one_day_dict = {}
             
+            # Determine each doctor's activity based on above dictionaries and collate into 1 dictionary
             for each_doc in doc_list:
                 one_doc_dict = {}
 
@@ -504,10 +512,10 @@ def retrieve_all():
                     one_doc_dict[each_doc] = {"Duty": duty[each_doc]}
                 elif each_doc in priority_leave:
                     one_doc_dict[each_doc] = {"Priority Leave": priority_leave[each_doc]}
-                # elif each_doc in call_LP:
-                #     one_doc_dict[each_doc] = {call_LP[each_doc][0]: call_LP[each_doc][1]}
-                # elif each_doc in leave_LP:
-                #     one_doc_dict[each_doc] = {"leave_LP[each_doc][1]": leave_LP[each_doc][2]}
+                elif each_doc in call_LP:
+                    one_doc_dict[each_doc] = {call_LP[each_doc][0]: call_LP[each_doc][1]}
+                elif each_doc in leave_LP:
+                    one_doc_dict[each_doc] = {"leave_LP[each_doc][1]": leave_LP[each_doc][2]}
                 elif weekend_checker == True or ph_checker == True:
                     one_doc_dict[each_doc] = {"Off": ""}
                 else:
@@ -544,7 +552,7 @@ def retrieve_all():
 # Takes in user-edited constraint and updates the DB
 @app.route('/edit_constraints', methods=['POST'])
 def edit_constraints():
-    #Obtain user input values from front-end UI for saving into the DB
+    # Obtain user input values from front-end UI to save into DB, also create connection to DB
     try:
         doctor_call_daily = request.form['doctor_call_daily']
         day_off_monthly = request.form['day_off_monthly']
@@ -558,14 +566,14 @@ def edit_constraints():
         amSat_clinic3 = request.form['amSat_clinic3']
         p = request.form['p']
 
+        # Establish connection to DB
+        conn, cur = create_connection()
+
     except Exception as e:
         return (str(e)), 404
 
     try:
-        #Establish connection to DB
-        conn, cur = create_connection()
-
-        #Insert edited values into database and commit to database
+        # Insert edited values into database and commit to database
         cur.execute("""UPDATE Constraints 
         SET doctor_call_daily = ?, day_off_monthly = ?, max_call_month_four = ?, max_call_month_five = ?,
         total_call = ?, clinic1 = ?, clinic2 = ?, amSat_clinic4 = ?, amSat_clinic1 = ?, amSat_clinic3 = ?, p = ?
@@ -574,17 +582,17 @@ def edit_constraints():
         total_call,clinic1,clinic2,amSat_clinic4,amSat_clinic1,amSat_clinic3,p))
         conn.commit()
 
-        #Close connection to DB
+        # Close connection to DB
         close_connection(conn, cur)
 
-        #returns successful message
-        return 'Constraints have been successfully changed!', 200
+        # Returns True when saved successfully into DB
+        return True, 200
     
     except Exception as e:
         return (str(e)), 404
 
 # Checks the constraints as specified in the DB with the Temp table
-@app.route('/check_constraints', methods=['POST'])
+@app.route('/check_constraints', methods=['GET'])
 def is_constraint_met_temp():
     start_date = request.form['start_date']
     end_date = request.form['end_date']
@@ -633,46 +641,450 @@ def update_timetable():
     else:
         message = checker
     
-    #Close connection to DB
+    # Close connection to DB
     close_connection(conn, cur)
 
     # Returns either True or constraints that are not met in the form: {date:[constraint1,constraint2],date:[constraint1],...}
     return message, 200
 
+# Retrieves the call summary based on the current Temp table in DB
+@app.route('/retrieve_call_summary', methods=['GET'])
+def retrieve_call_summary():
+    # Obtain user input and create connection to DB
+    try:
+        # Establish connection to DB
+        conn, cur = create_connection()
+
+        # Obtain the schedule's start date and end date
+        start_date = request.form['start_date']
+        end_date = request.form['end_date']
+
+    except Exception as e:
+        return (str(e)), 404
+
+    # Calculate the month's call summary and return to UI
+    try:
+        # Manipulating the dates for the function to work
+        sdate = datetime.strptime(start_date, '%Y-%m-%d').date()   # start date
+        edate = datetime.strptime(end_date, '%Y-%m-%d').date()   # end date
+        delta = edate - sdate       # as timedelta
+
+        # Dictionary to store the month's call summary
+        overall_summary = {}
+
+        # Creating a loop to check the calls/duties/working for each day
+        for date_diff in range(delta.days + 1):
+            day = sdate + timedelta(days=date_diff)     # 2020-08-02 (datetime object format)
+            day_key = day.strftime("%Y-%m-%d")          # 2020-08-02 (string format)
+
+            # Retrieve from DB each day's schedule
+            sqlstmt = """SELECT * FROM Temp WHERE date = ?;"""
+            cur.execute(sqlstmt,(day_key,))
+            constraints_result = cur.fetchone()
+
+            # Counters to record the number of calls/duties/working for each day assigned
+            counter_clinic1 = 0
+            counter_clinic2 = 0
+            counter_amsatclinic1 = 0
+            counter_amsatclinic3 = 0
+            counter_amsatclinic4 = 0
+            counter_p = 0
+            counter_totalcall = 0
+            counter_total = 0
+
+            # Counting the calls/duties/working from all doctors for each day
+            for element in constraints_result[1:]:
+                str_element = element.replace("'",'"')
+                dict_element = json.loads(str_element)
+                for key,value in dict_element.items():
+                    if value == 'Clinic 1':
+                        counter_clinic1 += 1
+                    elif value == 'Clinic 2':
+                        counter_clinic2 += 1
+                    elif value == 'amSat Clinic 1':
+                        counter_amsatclinic1 += 1
+                    elif value == 'amSat Clinic 3':
+                        counter_amsatclinic3 += 1
+                    elif value == 'amSat Clinic 4':
+                        counter_amsatclinic4 += 1
+                    elif value == 'P':
+                        counter_p += 1
+                    elif value == 'c' or value == 'cr':
+                        counter_totalcall += 1
+                    elif key == 'AM leave' or key == 'PM leave' or key == 'Working':
+                        counter_total += 1
+            
+            # Placing each day's call summary into a dictionary format
+            overall_summary[day_key] = {
+                "total" : counter_total,
+                "total call" : counter_totalcall,
+                "clinic 1" : counter_clinic1,
+                "clinic 2" : counter_clinic2,
+                "amSat Clinic 1" : counter_amsatclinic1,
+                "amSat Clinic 3" : counter_amsatclinic3,
+                "amSat Clinic 4" : counter_amsatclinic4,
+                "P" : counter_p
+            }
+
+        # Close connection to DB
+        close_connection(conn, cur)
+
+        # Return the month's call summary to UI
+        return overall_summary, 200
+
+    except Exception as e:
+        return (str(e)), 404
+
 # API endpoint to check public holidays
 @app.route('/check_public_holiday', methods=['GET'])
 def check_ph():
-    # Weekdays as a tuple
-    weekDays = ("Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday")
+    try:
+        # Establish connection to DB
+        conn, cur = create_connection()
 
-    sg_Holiday = []
-    count = 0
-    conn, cur = create_connection()
+        # Obtain the schedule's start date and end date
+        start_date = request.form['start_date']
+        end_date = request.form['end_date']
 
-    # Singapore Holidays - 2021
-    for holiday in sorted(holidays.Singapore(years=2021).items()):
-        # Get the day of that week
-        holiday_date = holiday[0]
-        holiday_day = holiday_date.weekday()
-        holiday_weekday = weekDays[holiday_day]
-        
-        count += 1
-        
-        case = {
-            "ID": count,
-            "HolidayName":holiday[1],
-            "HolidayDate":format(holiday[0]),
-            "HolidayDay":format(holiday_weekday)
-        }
-
-        cur.execute("""INSERT OR IGNORE INTO PublicHoliday(holiday_id, holiday_name, holiday_date, holiday_day) 
-        VALUES (?, ?, ?, ?);""", (count,holiday[1],format(holiday[0]),format(holiday_weekday)))
+        # Delete any old data inside PublicHoliday table in DB
+        cur.execute("""DELETE FROM PublicHoliday""")
         conn.commit()
 
-        sg_Holiday.append(case)
+    except Exception as e:
+        return (str(e)), 404
+    
+    try:
+        # Manipulating the dates for the function to work
+        sdate = datetime.strptime(start_date, '%Y-%m-%d').date()   # start date
+        edate = datetime.strptime(end_date, '%Y-%m-%d').date()   # end date
+        syear = sdate.year
+        eyear = edate.year
 
-    close_connection(conn, cur)
-    return(str(sg_Holiday))
+        # Weekdays as a tuple
+        weekDays = ("Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday")
+
+        sg_Holiday = []
+        count = 0
+
+        # When the scheduled month is within the same year
+        if syear == eyear:
+            # Singapore Holidays - the starting year
+            for holiday in sorted(holidays.Singapore(years=syear).items()):
+                # Get the day of that week
+                holiday_date = holiday[0]
+                holiday_day = holiday_date.weekday()
+                holiday_weekday = weekDays[holiday_day]
+                
+                count += 1
+                
+                case = {
+                    "ID": count,
+                    "HolidayName":holiday[1],
+                    "HolidayDate":format(holiday[0]),
+                    "HolidayDay":format(holiday_weekday)
+                }
+
+                cur.execute("""INSERT OR IGNORE INTO PublicHoliday(holiday_id, holiday_name, holiday_date, holiday_day) 
+                VALUES (?, ?, ?, ?);""", (count,holiday[1],format(holiday[0]),format(holiday_weekday)))
+                conn.commit()
+
+                sg_Holiday.append(case)
+
+        # When the scheduled month spills over into the next year
+        else:
+            # Singapore Holidays - the starting year
+            for holiday in sorted(holidays.Singapore(years=syear).items()):
+                # Get the day of that week
+                holiday_date = holiday[0]
+                holiday_day = holiday_date.weekday()
+                holiday_weekday = weekDays[holiday_day]
+                
+                count += 1
+                
+                case = {
+                    "ID": count,
+                    "HolidayName":holiday[1],
+                    "HolidayDate":format(holiday[0]),
+                    "HolidayDay":format(holiday_weekday)
+                }
+
+                cur.execute("""INSERT OR IGNORE INTO PublicHoliday(holiday_id, holiday_name, holiday_date, holiday_day) 
+                VALUES (?, ?, ?, ?);""", (count,holiday[1],format(holiday[0]),format(holiday_weekday)))
+                conn.commit()
+
+                sg_Holiday.append(case)
+
+            # Singapore Holidays - the ending year
+            for holiday in sorted(holidays.Singapore(years=eyear).items()):
+                # Get the day of that week
+                holiday_date = holiday[0]
+                holiday_day = holiday_date.weekday()
+                holiday_weekday = weekDays[holiday_day]
+                
+                count += 1
+                
+                case = {
+                    "ID": count,
+                    "HolidayName":holiday[1],
+                    "HolidayDate":format(holiday[0]),
+                    "HolidayDay":format(holiday_weekday)
+                }
+
+                cur.execute("""INSERT OR IGNORE INTO PublicHoliday(holiday_id, holiday_name, holiday_date, holiday_day) 
+                VALUES (?, ?, ?, ?);""", (count,holiday[1],format(holiday[0]),format(holiday_weekday)))
+                conn.commit()
+
+                sg_Holiday.append(case)
+
+        # Close connection to DB
+        close_connection(conn, cur)
+
+        # Return the public holidays for the year to UI
+        return(str(sg_Holiday)), 200
+
+    except Exception as e:
+        return (str(e)), 404
+
+# Checking and storing the ICU 1 Duty for the scheduled month
+@app.route('/insert_icu_1_duties', methods=['POST'])
+def insert_icu_1_duties():
+    # Obtain user input and create connection to DB
+    try:
+        # Establish connection to DB
+        conn, cur = create_connection()
+
+        # Obtain the ICU1 user input as dictionary
+        user_input_dict = request.form['input_dictionary']
+
+        # Obtain the schedule's start date and end date
+        start_date = request.form['start_date']
+        end_date = request.form['end_date']
+
+    except Exception as e:
+        return (str(e)), 404
+
+    try:
+        # Manipulating the dates for the function to work
+        sdate = datetime.strptime(start_date, '%Y-%m-%d').date()   # start date
+        edate = datetime.strptime(end_date, '%Y-%m-%d').date()   # end date
+        delta = edate - sdate       # as timedelta
+
+        # List to store any dates that have errors
+        error_list = []
+
+        # Creating a loop to go through the input dictionary
+        for date_diff in range(delta.days + 1):
+            day = sdate + timedelta(days=date_diff)     # 2020-08-02 (datetime object format)
+            day_key = day.strftime("%Y-%m-%d")          # 2020-08-02 (string format)
+
+            # Counting the total number of ICU 1 duty in 1 day
+            sum_counter = 0
+            for key,value in user_input_dict[day_key]:
+                sum_counter += int(value)
+
+            # If the ICU 1 duty constraint is met, store the user inputs into the ICU1Duty table in DB
+            if sum_counter == 1:
+                for key,value in user_input_dict[day_key]:
+                    cur.execute("""INSERT OR IGNORE INTO ICU1Duty(name, date, duty_status) VALUES (?,?,?);""",(key,day_key,value))
+                    conn.commit()
+            # Otherwise, store the days where the constraint is not met
+            else:
+                error_list.append(day_key)
+        
+        # If there are any days where ICU duty constraint is not met, delete all data from ICU1Duty table in DB and return the list of dates with constraint not met
+        if len(error_list) != 0:
+            cur.execute("""DELETE FROM ICU2Duty""")
+            conn.commit()
+            message = error_list
+        # Return True when constraint for all days is met
+        else:
+            message = True
+
+        # Close connection to DB
+        close_connection(conn, cur)
+
+        #Returns True or list of dates with constraint not met
+        return message, 200
+
+    except Exception as e:
+        return (str(e)), 404
+
+# Checking and storing the ICU 2 Duty for the scheduled month
+@app.route('/insert_icu_2_duties', methods=['POST'])
+def insert_icu_2_duties():
+    # Obtain user input and create connection to DB
+    try:
+        # Establish connection to DB
+        conn, cur = create_connection()
+
+        # Obtain the ICU1 user input as dictionary
+        user_input_dict = request.form['input_dictionary']
+
+        # Obtain the schedule's start date and end date
+        start_date = request.form['start_date']
+        end_date = request.form['end_date']
+
+    except Exception as e:
+        return (str(e)), 404
+
+    try:
+        # Manipulating the dates for the function to work
+        sdate = datetime.strptime(start_date, '%Y-%m-%d').date()   # start date
+        edate = datetime.strptime(end_date, '%Y-%m-%d').date()   # end date
+        delta = edate - sdate       # as timedelta
+
+        # List to store any dates that have errors
+        error_list = []
+
+        # Creating a loop to go through the input dictionary
+        for date_diff in range(delta.days + 1):
+            day = sdate + timedelta(days=date_diff)     # 2020-08-02 (datetime object format)
+            day_key = day.strftime("%Y-%m-%d")          # 2020-08-02 (string format)
+
+            # Counting the total number of ICU 2 duty in 1 day
+            sum_counter = 0
+            for key,value in user_input_dict[day_key]:
+                sum_counter += int(value)
+
+            # If the ICU 2 duty constraint is met, store the user inputs into the ICU2Duty table in DB
+            if sum_counter == 1:
+                for key,value in user_input_dict[day_key]:
+                    cur.execute("""INSERT OR IGNORE INTO ICU2Duty(name, date, duty_status) VALUES (?,?,?);""",(key,day_key,value))
+                    conn.commit()
+            # Otherwise, store the days where the constraint is not met
+            else:
+                error_list.append(day_key)
+        
+        # If there are any days where ICU duty constraint is not met, delete all data from ICU2Duty table in DB and return the list of dates with constraint not met
+        if len(error_list) != 0:
+            cur.execute("""DELETE FROM ICU2Duty""")
+            conn.commit()
+            message = error_list
+        # Return True when constraint for all days is met
+        else:
+            message = True
+
+        # Close connection to DB
+        close_connection(conn, cur)
+
+        #Returns True or list of dates with constraint not met
+        return message, 200
+
+    except Exception as e:
+        return (str(e)), 404
+
+# Calculating and returning each doctor's number of points for the scheduled month
+@app.route('retrieve_points_summary', methods=['GET'])
+def retrieve_points_summary():
+    # Obtain schedule start date and end date, also create connection to DB
+    try:
+        # Establish connection to DB
+        conn, cur = create_connection()
+
+    except Exception as e:
+        return (str(e)), 404
+
+    # Calculate the month's point summary for all doctors and return to UI
+    try:
+        # Fetch the doctor's name stored in DB
+        cur.execute("""SELECT name FROM Roster;""")
+        roster_results = cur.fetchall()
+
+        # Dictionary to store the scheduled month's point summary
+        overall_summary = {}
+
+        # Query Temp table for each doctor's schedule
+        for each in roster_results:
+            sqlstmt = """SELECT """ + each[0] + """ FROM Temp;"""   #each[0] refers to the doctor's name
+            cur.execute(sqlstmt)
+            constraints_result = cur.fetchall()
+
+            # Counters to record the number of calls/duties/leave for each day assigned
+            counter_wd = 0
+            counter_fri = 0
+            counter_sat = 0
+            counter_sun = 0
+            counter_preph = 0
+            counter_ph = 0
+            counter_satsunam = 0
+            counter_leave = 0
+            counter_clinic1 = 0
+            counter_clinic2 = 0
+            counter_clinic3 = 0
+            counter_clinic4 = 0
+            counter_duty = 0
+
+            # Counting the calls/duties/leave from all doctors for each day
+            for element in constraints_result:
+                str_element = element[0].replace("'",'"')
+                dict_element = json.loads(str_element)
+                for key,value in dict_element.items():
+                    if value == 'c' or value == 'cr':
+                        counter_wd += 1
+                    elif value == 'cF' or value == 'crF':
+                        counter_fri += 1
+                    elif value == 'cSat' or value == 'crSat':
+                        counter_sat += 1
+                    elif value == 'cSun' or value == 'crSun':
+                        counter_sun += 1
+                    elif value == 'cpPH' or value == 'crpPH':
+                        counter_preph += 1
+                    elif value == 'cPH' or value == 'crPH':
+                        counter_ph += 1
+                    elif value == 'Clinic 1':
+                        counter_clinic1 += 1
+                    elif value == 'Clinic 2':
+                        counter_clinic2 += 1
+                    elif value == 'Clinic 3':
+                        counter_clinic3 += 1
+                    elif value == 'Clinic 4':
+                        counter_clinic4 += 1
+                    elif value == 'amSat Clinic 1' or value == 'amSat Clinic 2' or value == 'amSat Clinic 3' or value == 'amSat Clinic 4':
+                        counter_satsunam += 1
+                    elif value == 'amSun Clinic 1' or value == 'amSun Clinic 2' or value == 'amSun Clinic 3' or value == 'amSun Clinic 4':
+                        counter_satsunam += 1
+                    elif key == 'AM Leave' or key == 'PM Leave' or key == 'Whole Leave' or key == 'Priority Leave':
+                        counter_leave += 1
+                    if key == 'Duty':
+                        counter_duty += 1
+            
+            # Tabulating the total points for calls and duties
+            points_fri = 1.5 * counter_fri
+            points_sat = 2 * counter_sat
+            points_sun = 3 * counter_sun
+            points_preph = 2.5 * counter_preph
+            points_ph = 3 * counter_ph
+            points_satsunam = 0.5 * counter_satsunam
+            month_call_points = counter_wd + points_fri + points_sat + points_sun + points_preph + points_ph
+            month_calls = counter_wd + counter_fri + counter_sat + counter_sun + counter_preph + counter_ph
+
+            # Placing each day's call summary into a dictionary format
+            overall_summary[each[0]] = {
+                "Month calls" : month_calls,
+                "Month call points" : month_call_points,
+                "WD" : counter_wd,
+                "Fri" : points_fri,
+                "Sat" : points_sat,
+                "Sun" : points_sun,
+                "Pre-PH" : points_preph,
+                "PH" : points_ph,
+                "Sat/Sun AM" : points_satsunam,
+                "Leave" : counter_leave,
+                "Clinic 1" : counter_clinic1,
+                "Clinic 2" : counter_clinic2,
+                "Clinic 3" : counter_clinic3,
+                "Clinic 4" : counter_clinic4,
+                "Duties" : counter_duty
+            }
+                 
+        # Close connection to DB
+        close_connection(conn, cur)
+
+        # Return the month's call summary to UI
+        return overall_summary, 200
+    
+    except Exception as e:
+        return (str(e)), 404
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
