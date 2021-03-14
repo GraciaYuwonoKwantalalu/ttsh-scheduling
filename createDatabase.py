@@ -3,6 +3,22 @@ from helperFunctions import create_connection, close_connection
 
 conn, cur = create_connection()
 
+cur.execute("""CREATE TABLE IF NOT EXISTS ICU1Duty(
+   name TEXT NOT NULL,
+   date TEXT NOT NULL,
+   duty_status INTEGER NOT NULL
+   );
+""")
+conn.commit()
+
+cur.execute("""CREATE TABLE IF NOT EXISTS ICU2Duty(
+   name TEXT NOT NULL,
+   date TEXT NOT NULL,
+   duty_status INTEGER NOT NULL
+   );
+""")
+conn.commit()
+
 cur.execute("""CREATE TABLE IF NOT EXISTS Constraints(
    constraint_id INTEGER PRIMARY KEY AUTOINCREMENT,
    doctor_call_daily INTEGER NOT NULL,
