@@ -49,46 +49,46 @@ def email_filter():
     return render_template("email_filter.html")
 
 # SCRATCH
-# @app.route('/scratch')
-# def scratch():
-#     result = {
-#                 "2020-07-16": {
-#                     "A": "Duty",
-#                     "B": "On-leave",
-#                     "C": "On-call",
-#                     "D": "Working",
-#                     "E": "Off"
-#                 },
-#                 "2020-07-17": {
-#                     "A": "Duty",
-#                     "B": "On-call",
-#                     "C": "Working",
-#                     "D": "On-leave",
-#                     "E": "Working"
-#                 },
-#                 "2020-07-18": {
-#                     "A": "Duty",
-#                     "B": "On-call",
-#                     "C": "On-leave",
-#                     "D": "Working",
-#                     "E": "Working"
-#                 },
-#                 "2020-07-19": {
-#                     "A": "Duty",
-#                     "B": "On-leave",
-#                     "C": "Working",
-#                     "D": "Working",
-#                     "E": "Duty"
-#                 },
-#                 "2020-07-20": {
-#                     "A": "Duty",
-#                     "B": "Working",
-#                     "C": "Working",
-#                     "D": "Working",
-#                     "E": "Duty"
-#                 }
-#             }
-#     return render_template("scratch.html", result=result)
+@app.route('/scratch')
+def scratch():
+    result = {
+                "2020-07-16": {
+                    "A": "Duty",
+                    "B": "On-leave",
+                    "C": "On-call",
+                    "D": "Working",
+                    "E": "Off"
+                },
+                "2020-07-17": {
+                    "A": "Duty",
+                    "B": "On-call",
+                    "C": "Working",
+                    "D": "On-leave",
+                    "E": "Working"
+                },
+                "2020-07-18": {
+                    "A": "Duty",
+                    "B": "On-call",
+                    "C": "On-leave",
+                    "D": "Working",
+                    "E": "Working"
+                },
+                "2020-07-19": {
+                    "A": "Duty",
+                    "B": "On-leave",
+                    "C": "Working",
+                    "D": "Working",
+                    "E": "Duty"
+                },
+                "2020-07-20": {
+                    "A": "Duty",
+                    "B": "Working",
+                    "C": "Working",
+                    "D": "Working",
+                    "E": "Duty"
+                }
+            }
+    return render_template("scratch.html", result=result)
 
 # timetable page - timetable 
 @app.route('/timetable')
@@ -206,92 +206,94 @@ def timetable():
 # points page
 @app.route('/points')
 def points():
-    points_dict = {
-        "A": {
-            "Month Calls": "6",
-            "WD": "0",
-            "Fri": "1",
-            "Sat": "0",
-            "Sun": "1",
-            "Pre-PH": "0",
-            "PH": "1",
-            "Sat/Sun AM":"0",
-            "Leave": "1",
-            "Clinic 1": "2",
-            "Clinic 2": "0"
-        },
-        "B": {
-            "Month Calls": "6",
-            "WD": "1",
-            "Fri": "0",
-            "Sat": "1",
-            "Sun": "0",
-            "Pre-PH": "0",
-            "PH": "1",
-            "Sat/Sun AM":"0",
-            "Leave": "2",
-            "Clinic 1": "1",
-            "Clinic 2": "0"
-        },
-        "C": {
-            "Month Calls": "7",
-            "WD": "1",
-            "Fri": "1",
-            "Sat": "1",
-            "Sun": "1",
-            "Pre-PH": "0",
-            "PH": "0",
-            "Sat/Sun AM":"0",
-            "Leave": "2",
-            "Clinic 1": "1",
-            "Clinic 2": "3"
-        },
-        "D": {
-            "Month Calls": "6",
-            "WD": "1",
-            "Fri": "2",
-            "Sat": "0",
-            "Sun": "0",
-            "Pre-PH": "1",
-            "PH": "0",
-            "Sat/Sun AM":"1",
-            "Leave": "0",
-            "Clinic 1": "0",
-            "Clinic 2": "2"
-        },
-        "E": {
-            "Month Calls": "7",
-            "WD": "0",
-            "Fri": "1",
-            "Sat": "0",
-            "Sun": "1",
-            "Pre-PH": "0",
-            "PH": "1",
-            "Sat/Sun AM":"0",
-            "Leave": "2",
-            "Clinic 1": "0",
-            "Clinic 2": "2"
-        },
-        "F": {
-            "Month Calls": "8",
-            "WD": "1",
-            "Fri": "2",
-            "Sat": "0",
-            "Sun": "1",
-            "Pre-PH": "1",
-            "PH": "2",
-            "Sat/Sun AM":"2",
-            "Leave": "1",
-            "Clinic 1": "2",
-            "Clinic 2": "3"
-        }
-    }
-    return render_template("points.html", points_dict=points_dict)
+    overall_summary = retrieve_points_summary()
+    # points_dict = {
+    #     "A": {
+    #         "Month Calls": "6",
+    #         "WD": "0",
+    #         "Fri": "1",
+    #         "Sat": "0",
+    #         "Sun": "1",
+    #         "Pre-PH": "0",
+    #         "PH": "1",
+    #         "Sat/Sun AM":"0",
+    #         "Leave": "1",
+    #         "Clinic 1": "2",
+    #         "Clinic 2": "0"
+    #     },
+    #     "B": {
+    #         "Month Calls": "6",
+    #         "WD": "1",
+    #         "Fri": "0",
+    #         "Sat": "1",
+    #         "Sun": "0",
+    #         "Pre-PH": "0",
+    #         "PH": "1",
+    #         "Sat/Sun AM":"0",
+    #         "Leave": "2",
+    #         "Clinic 1": "1",
+    #         "Clinic 2": "0"
+    #     },
+    #     "C": {
+    #         "Month Calls": "7",
+    #         "WD": "1",
+    #         "Fri": "1",
+    #         "Sat": "1",
+    #         "Sun": "1",
+    #         "Pre-PH": "0",
+    #         "PH": "0",
+    #         "Sat/Sun AM":"0",
+    #         "Leave": "2",
+    #         "Clinic 1": "1",
+    #         "Clinic 2": "3"
+    #     },
+    #     "D": {
+    #         "Month Calls": "6",
+    #         "WD": "1",
+    #         "Fri": "2",
+    #         "Sat": "0",
+    #         "Sun": "0",
+    #         "Pre-PH": "1",
+    #         "PH": "0",
+    #         "Sat/Sun AM":"1",
+    #         "Leave": "0",
+    #         "Clinic 1": "0",
+    #         "Clinic 2": "2"
+    #     },
+    #     "E": {
+    #         "Month Calls": "7",
+    #         "WD": "0",
+    #         "Fri": "1",
+    #         "Sat": "0",
+    #         "Sun": "1",
+    #         "Pre-PH": "0",
+    #         "PH": "1",
+    #         "Sat/Sun AM":"0",
+    #         "Leave": "2",
+    #         "Clinic 1": "0",
+    #         "Clinic 2": "2"
+    #     },
+    #     "F": {
+    #         "Month Calls": "8",
+    #         "WD": "1",
+    #         "Fri": "2",
+    #         "Sat": "0",
+    #         "Sun": "1",
+    #         "Pre-PH": "1",
+    #         "PH": "2",
+    #         "Sat/Sun AM":"2",
+    #         "Leave": "1",
+    #         "Clinic 1": "2",
+    #         "Clinic 2": "3"
+    #     }
+    # }
+    return render_template("points.html", overall_summary=overall_summary)
 
 # icu duties page
 @app.route('/icu_duties')
 def icu_duties():
-    return render_template("icu_duties.html")
+    timetable = retrieve_timetable()
+    return render_template("icu_duties.html", timetable=timetable)
 
 # download timetable as pdf
 @app.route('/download_pdf')
@@ -328,8 +330,8 @@ def download_icu_duties():
 #     return redirect(url_for("user", content=name, age=2, array_list=["billy","jim","timmy"]))
 
 # Fetch data necessary for LP, runs LP, create new DB Temp table, returns formatted doctor's schedule
-@app.route('/display_timetable', methods=['GET'])
-def retrieve_all():
+@app.route('/retrieve_timetable', methods=['GET'])
+def retrieve_timetable():
     # Obtain user input for schedule start date and end date
     try:
         query_start_date = request.form['start_date']
@@ -600,7 +602,7 @@ def is_constraint_met_temp():
     return checking
 
 # Updates the Temp table if constraints are still met after changes are made to the schedule
-@app.route('update_timetable/',methods=['POST'])
+@app.route('/update_timetable',methods=['POST'])
 def update_timetable():
     # Obtain user input values from front-end UI for saving into the DB
     activityType = request.form['type']
@@ -893,7 +895,7 @@ def insert_icu_1_duties():
         
         # If there are any days where ICU duty constraint is not met, delete all data from ICU1Duty table in DB and return the list of dates with constraint not met
         if len(error_list) != 0:
-            cur.execute("""DELETE FROM ICU2Duty""")
+            cur.execute("""DELETE FROM ICU1Duty""")
             conn.commit()
             message = error_list
         # Return True when constraint for all days is met
@@ -974,7 +976,7 @@ def insert_icu_2_duties():
         return (str(e)), 404
 
 # Calculating and returning each doctor's number of points for the scheduled month
-@app.route('retrieve_points_summary', methods=['GET'])
+@app.route('/retrieve_points_summary', methods=['GET'])
 def retrieve_points_summary():
     # Obtain schedule start date and end date, also create connection to DB
     try:
@@ -1081,7 +1083,7 @@ def retrieve_points_summary():
         close_connection(conn, cur)
 
         # Return the month's call summary to UI
-        return overall_summary, 200
+        return overall_summary
     
     except Exception as e:
         return (str(e)), 404
