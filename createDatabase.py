@@ -51,7 +51,8 @@ cur.execute("""CREATE TABLE IF NOT EXISTS Roster(
    first_position TEXT,
    second_position TEXT,
    posting TEXT,
-   points INTEGER
+   points INTEGER,
+   type TEXT
    );
 """)
 conn.commit()
@@ -64,6 +65,14 @@ cur.execute("""CREATE TABLE IF NOT EXISTS Skill(
    );
 """)
 conn.commit()
+
+cur.execute("""CREATE TABLE IF NOT EXISTS Points(
+   email TEXT,
+   points FLOAT,
+   PRIMARY KEY (email, points),
+   FOREIGN KEY (email) REFERENCES Roster (email)
+   );
+""")
 
 cur.execute("""CREATE TABLE IF NOT EXISTS Training(
    training_id INTEGER PRIMARY KEY AUTOINCREMENT,

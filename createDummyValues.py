@@ -7,34 +7,34 @@ from helperFunctions import create_connection, close_connection
 conn, cur = create_connection()
 
 # Table for the doctor roster
-cur.execute("""INSERT OR IGNORE INTO Roster(email, name, first_position, second_position, posting, points) 
+cur.execute("""INSERT OR IGNORE INTO Roster(email, name, first_position, second_position, posting, type) 
    VALUES
-   ('a@mail.com', 'A', 'A1', 'A2', 'P1', 5),
-   ('b@mail.com', 'B', 'B1', 'B2', 'P2', 5),
-   ('c@mail.com', 'C', 'C1', 'C2', 'P3', 5),
-   ('d@mail.com', 'D', 'D1', 'D2', 'P4', 5),
-   ('e@mail.com', 'E', 'E1', 'E2', 'P5', 5),
-   ('f@mail.com', 'F', 'F1', 'F2', 'P6', 5),
-   ('g@mail.com', 'G', 'G1', 'G2', 'P7', 5),  
-   ('h@mail.com', 'H', 'H1', 'H2', 'P8', 5),
-   ('i@mail.com', 'I', 'I1', 'I2', 'P9', 5), 
-   ('j@mail.com', 'J', 'J1', 'J2', 'P10', 5),
-   ('k@mail.com', 'K', 'K1', 'K2', 'P11', 5),
-   ('l@mail.com', 'L', 'L1', 'L2', 'P12', 5),
-   ('m@mail.com', 'M', 'M1', 'M2', 'P13', 5),
-   ('n@mail.com', 'N', 'N1', 'N2', 'P14', 5),
-   ('o@mail.com', 'O', 'O1', 'O2', 'P15', 5),
-   ('p@mail.com', 'P', 'P1', 'P2', 'P16', 5),
-   ('q@mail.com', 'Q', 'Q1', 'Q2', 'P17', 5),
-   ('r@mail.com', 'R', 'R1', 'R2', 'P18', 5),
-   ('s@mail.com', 'S', 'S1', 'S2', 'P19', 5),
-   ('t@mail.com', 'T', 'T1', 'T2', 'P20', 5),
-   ('u@mail.com', 'U', 'U1', 'U2', 'P21', 5),
-   ('v@mail.com', 'V', 'V1', 'V2', 'P22', 5),
-   ('w@mail.com', 'W', 'W1', 'W2', 'P23', 5),
-   ('x@mail.com', 'X', 'X1', 'X2', 'P24', 5),
-   ('y@mail.com', 'Y', 'Y1', 'Y2', 'P25', 5),
-   ('z@mail.com', 'Z', 'Z1', 'Z2', 'P26', 5)
+   ('a@mail.com', 'A', 'A1', 'A2', 'P1', S),
+   ('b@mail.com', 'B', 'B1', 'B2', 'P2', S),
+   ('c@mail.com', 'C', 'C1', 'C2', 'P3', S),
+   ('d@mail.com', 'D', 'D1', 'D2', 'P4', S),
+   ('e@mail.com', 'E', 'E1', 'E2', 'P5', S),
+   ('f@mail.com', 'F', 'F1', 'F2', 'P6', S),
+   ('g@mail.com', 'G', 'G1', 'G2', 'P7', S), 
+   ('h@mail.com', 'H', 'H1', 'H2', 'P8', S),
+   ('i@mail.com', 'I', 'I1', 'I2', 'P9', S),
+   ('j@mail.com', 'J', 'J1', 'J2', 'P10', S),
+   ('k@mail.com', 'K', 'K1', 'K2', 'P11', S),
+   ('l@mail.com', 'L', 'L1', 'L2', 'P12', S),
+   ('m@mail.com', 'M', 'M1', 'M2', 'P13', S),
+   ('n@mail.com', 'N', 'N1', 'N2', 'P14', S),
+   ('o@mail.com', 'O', 'O1', 'O2', 'P15', J),
+   ('p@mail.com', 'P', 'P1', 'P2', 'P16', J),
+   ('q@mail.com', 'Q', 'Q1', 'Q2', 'P17', J),
+   ('r@mail.com', 'R', 'R1', 'R2', 'P18', J),
+   ('s@mail.com', 'S', 'S1', 'S2', 'P19', J),
+   ('t@mail.com', 'T', 'T1', 'T2', 'P20', J),
+   ('u@mail.com', 'U', 'U1', 'U2', 'P21', J),
+   ('v@mail.com', 'V', 'V1', 'V2', 'P22', J),
+   ('w@mail.com', 'W', 'W1', 'W2', 'P23', J),
+   ('x@mail.com', 'X', 'X1', 'X2', 'P24', J),
+   ('y@mail.com', 'Y', 'Y1', 'Y2', 'P25', J),
+   ('z@mail.com', 'Z', 'Z1', 'Z2', 'P26', J)
    ;""")
 conn.commit()
 
@@ -71,6 +71,42 @@ cur.execute("""INSERT OR IGNORE INTO Skill(email, skill)
    ('b@mail.com', 'Skill28'),
    ('c@mail.com', 'Skill29'),
    ('d@mail.com', 'Skill30')
+   ;""")
+conn.commit()
+
+#Table for doctor's points
+cur.execute("""INSERT OR IGNORE INTO Points(email, skill) 
+   VALUES
+   ('a@mail.com', '5'),
+   ('b@mail.com', '5'),
+   ('c@mail.com', '5'),
+   ('d@mail.com', '5'),
+   ('e@mail.com', '5'),
+   ('f@mail.com', '5'),
+   ('g@mail.com', '5'),  
+   ('h@mail.com', '5'),
+   ('i@mail.com', '5'), 
+   ('j@mail.com', '5'),
+   ('k@mail.com', '5'),
+   ('l@mail.com', '5'),
+   ('m@mail.com', '5'),
+   ('n@mail.com', '5'),
+   ('o@mail.com', '5'),
+   ('p@mail.com', '5'),
+   ('q@mail.com', '5'),
+   ('r@mail.com', '5'),
+   ('s@mail.com', '5'),
+   ('t@mail.com', '5'),
+   ('u@mail.com', '5'),
+   ('v@mail.com', '5'),
+   ('w@mail.com', '5'),
+   ('x@mail.com', '5'),
+   ('y@mail.com', '5'),
+   ('z@mail.com', '5'),
+   ('a@mail.com', '5'),
+   ('b@mail.com', '5'),
+   ('c@mail.com', '5'),
+   ('d@mail.com', '5')
    ;""")
 conn.commit()
 
