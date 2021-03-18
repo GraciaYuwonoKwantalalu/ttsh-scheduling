@@ -1,20 +1,43 @@
 import sqlite3
-from sqlFunctionCalls import create_connection, close_connection
+from helperFunctions import create_connection, close_connection
 
 conn, cur = create_connection()
+
+cur.execute("""CREATE TABLE IF NOT EXISTS ICU1Duty(
+   name TEXT NOT NULL,
+   date TEXT NOT NULL,
+   duty_status INTEGER NOT NULL
+   );
+""")
+conn.commit()
+
+cur.execute("""CREATE TABLE IF NOT EXISTS ICU2Duty(
+   name TEXT NOT NULL,
+   date TEXT NOT NULL,
+   duty_status INTEGER NOT NULL
+   );
+""")
+conn.commit()
 
 cur.execute("""CREATE TABLE IF NOT EXISTS Constraints(
    constraint_id INTEGER PRIMARY KEY AUTOINCREMENT,
    doctor_call_daily INTEGER NOT NULL,
    day_off_monthly INTEGER NOT NULL,
    max_call_month_four INTEGER NOT NULL,
-   max_call_month_five INTEGER NOT NULL
+   max_call_month_five INTEGER NOT NULL,
+   total_call INTEGER NOT NULL,
+   clinic1 INTEGER NOT NULL,
+   clinic2 INTEGER NOT NULL,
+   amSat_clinic4 INTEGER NOT NULL,
+   amSat_clinic1 INTEGER NOT NULL,
+   amSat_clinic3 INTEGER NOT NULL,
+   p INTEGER NOT NULL
    );
 """)
 conn.commit()
 
 cur.execute("""CREATE TABLE IF NOT EXISTS PublicHoliday(
-   holiday_id INTEGER PRIMARY KEY,
+   holiday_id INTEGER PRIMARY KEY AUTOINCREMENT,
    holiday_name TEXT NOT NULL,
    holiday_date TEXT NOT NULL,
    holiday_day TEXT NOT NULL
@@ -131,23 +154,3 @@ cur.execute("""CREATE TABLE IF NOT EXISTS CallLP(
 conn.commit()
 
 close_connection(conn, cur)
-
-
-#Format Reference: Create table in sqlite
-'''
-cur.execute("""CREATE TABLE IF NOT EXISTS users(
-   userid INT PRIMARY KEY,
-   fname TEXT,
-   lname TEXT,
-   gender TEXT);
-""")
-conn.commit()
-
-cur.execute("""CREATE TABLE IF NOT EXISTS orders(
-   orderid INT PRIMARY KEY,
-   date TEXT,
-   userid TEXT,
-   total TEXT);
-""")
-conn.commit()
-'''
