@@ -345,6 +345,17 @@ def retrieve_timetable():
     except Exception as e:
         return (str(e)), 404
     
+    # Read all sheets from the excel file and insert into DB
+    # try:
+    #     A = readRoster()
+    #     B = readTraining()
+    #     C = readDuties()
+    #     D = readPl()
+    #     E = readPh()
+    
+    # except Exception as e:
+    #     return (str(e)), 404
+
     # Get relevant data from DB
     try:
         # Fetch the constraints defined by the user from DB
