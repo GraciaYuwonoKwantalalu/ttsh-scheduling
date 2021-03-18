@@ -3,6 +3,7 @@ import datetime
 from win32com.client import Dispatch
 from pprint import pprint
 import json
+from time import strptime
 
 outlook = Dispatch("Outlook.Application").GetNamespace("MAPI")
 root_folder = outlook.Folders.Item(1)   
@@ -15,10 +16,10 @@ email_list = []
 email_body_list = []
 count = 0
 
-start_date = datetime.datetime(2021, 1, 1)
+start_date = datetime.datetime(2021, 2, 1)
 start_date = start_date.strftime("%Y-%m-%d")
 
-end_date = datetime.datetime(2021, 12, 31)
+end_date = datetime.datetime(2021, 4, 20)
 end_date = end_date.strftime("%Y-%m-%d")
 
 needed_emails = []
@@ -29,7 +30,7 @@ for email in emails:
     
     ### email subjects
     emailSubject = email.Subject
-    emailSubject = str(emailSubject)   
+    emailSubject = str(emailSubject)
           
     ### sender name
     emailSender = email.Sender
@@ -41,13 +42,24 @@ for email in emails:
 
     ### email body
     emailBody = email.Body
+    emailBody = emailBody.encode('ascii', 'ignore')
     emailBody = str(emailBody)
 
-    ### Get email date 
-    date = str(email.SentOn) 
-    date = date[:10]
+    ### Get email date
+    date2_year = str(email.SentOn.year)
+    date2_mth = str(email.SentOn.month)
     
-    if start_date <= date <= end_date:  
+    if len(date2_mth) < 2:
+        date2_mth = '0' + date2_mth
+    
+    date2_day = str(email.SentOn.day)
+    
+    if len(date2_day) < 2:
+        date2_day = '0' + date2_day
+    
+    date2 = date2_year + '-' + date2_mth + '-' + date2_day
+    
+    if start_date <= date2 <= end_date:
 
         formatJson = emailBody.split()
         formatJson = ''.join(formatJson)
@@ -56,18 +68,34 @@ for email in emails:
         myJson = formatJson[start:end]
         myQuestion = myJson.split('{"question":')
         
-        count2 = 0
+        count2 = 0        
         
         for i in myQuestion:
             myAnswerPosition = i.find('"answer"')
-            myQuestion = i[1:myAnswerPosition-2]
+            myQuestion = i[1:myAnswerPosition-2]            
+            
+            if r'r\n\r' in myQuestion:
+                myQuestion = myQuestion.replace(r'r\n\r','')
+            
             #print(myQuestion)
+            
             myAns = i[myAnswerPosition:]
             myAnswerPosition = myAns.find('},')
             myAns = myAns[:myAnswerPosition]
             myAnswerPosition = myAns.find('"answer":"') + 10
             myAns = myAns[myAnswerPosition:]
             myAns = myAns[:len(myAns)-1]
+            myAns = str(myAns)
+            
+            myAns = myAns.replace(r'\r','')
+            myAns = myAns.replace(r'\n','')
+            myAns = myAns.replace('}','')
+            myAns = myAns.replace(']','')
+            myAns = myAns.replace('"','')
+            
+            if r'\r\n\r' in myAns:
+                myAns = myAns[:len(myAns)-9]
+            
             #print(myAns)
             
             count2 +=1
@@ -86,7 +114,7 @@ for email in emails:
             "Body":email_body_list,
             "SenderEmail": emailSenderAddress,
             "SenderName":emailSender,
-            "Date":date
+            "Date":date2
         }
         
         ### to prevent appending from old emails
@@ -117,20 +145,52 @@ for email in emails:
                 myQnA.append(thread)
         
         myQnA.append({"question":"leaveRequest", "answer":leaveRequest})
-        myQnA.append({"question":"callRequest","answer":callRequest})
+        myQnA.append({"question":"callRequest", "answer":callRequest})
 
         
-        needed_emails.append({"ID": count, "Email":myQnA, "Subject":email_list[count-1]['Subject'], "SenderEmail":email_list[count-1]['SenderEmail'], "SenderName":email_list[count-1]['SenderName'], "Date":email_list[count-1]['Date']})       
+        needed_emails.append({
+            "ID": count, 
+            "Email":myQnA, 
+            "Subject":email_list[count-1]['Subject'], 
+            "SenderEmail":email_list[count-1]['SenderEmail'], 
+            "SenderName":email_list[count-1]['SenderName'], 
+            "Date":email_list[count-1]['Date']
+        })
     
     else:
         pass
 
-pprint(needed_emails)
+#pprint(needed_emails)
 
-### to get request month
-#for i in needed_emails:
-#    email_info = i['Email']
-#    for j in email_info:
-#        if "RequestMonth" in j['question']:
-#            print(j)
+
+final_output = []
+
+for i in needed_emails:
+    myEmails = i['Email']
+    myDate = i['Date'].split('-')
+    #print(myDate[0], myDate[1])
     
+    #requestedMonth = []
+    
+    for j in myEmails:
+        question = j['question']
+        if 'RequestMonth' in question:
+            text = j['answer']
+            text = text.split(',')
+            
+            #month = monthToNum(text[0].lower())
+            month = strptime(text[0],'%b').tm_mon
+            year = text[1]
+            
+            requestedMonth = [month, year]
+    
+    #print(requestedMonth[1], requestedMonth[0])
+    
+    if str(requestedMonth[1]) < str(myDate[0]):
+        final_output.append(i)
+    elif str(requestedMonth[1]) == str(myDate[0]):
+        if str(requestedMonth[0]) < str(myDate[1]):
+            final_output.append(i)
+
+pprint(final_output)
+            
