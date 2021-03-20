@@ -43,7 +43,7 @@ def readRoster():
                 VALUES (?, ?, ?, ?, ?, ?);""", (email,name,first_position,second_position,posting,mo_type))
         conn.commit()
         for each_skill in skills:
-            cur.execute("""INSERT OR IGNORE INTO Skills(email, skill)  
+            cur.execute("""INSERT OR IGNORE INTO Skill(email, skill)  
                     VALUES (?, ?);""", (email,each_skill))
             conn.commit()
     
