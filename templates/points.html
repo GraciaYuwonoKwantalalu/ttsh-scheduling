@@ -4,6 +4,22 @@
 
 {% block content %}
 
+<style>
+th {
+    text-align:center;
+}
+
+.my-custom-scrollbar {
+    position: relative;
+    height: 200px;
+    overflow: auto;
+}
+
+.table-wrapper-scroll-y {
+    display: block;
+}
+</style>
+
 <br><br>
 
 <!-- POINTS STARTS -->
@@ -13,11 +29,13 @@
             <div class="col-md-12 text-center text">
                 <h3>Points Summary</h3>
                 <div class="row">
+                    <div class="table-wrapper-scroll-y my-custom-scrollbar">
                     <table class="table table-bordered table-striped mb-0">
                         <thead>
                             <tr>
                                 <th></th>
                                 <th scope="col">Month Calls</th>
+                                <th scope="col">Month Call Points</th>
                                 <th scope="col">WD</th>
                                 <th scope="col">Fri</th>
                                 <th scope="col">Sat</th>
@@ -28,13 +46,16 @@
                                 <th scope="col">Leave</th>
                                 <th scope="col">Clinic 1</th>
                                 <th scope="col">Clinic 2</th>
+                                <th scope="col">Clinic 3</th>
+                                <th scope="col">Clinic 4</th>
+                                <th scope="col">Duties</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr>
-                            {% for key,parent_dict_item in points_dict.items() %}
+                            {% for key,overall_summary_item in overall_summary.items() %}
                                 <th>{{key}}</th>
-                                {% for key2, nested_value in parent_dict_item.items() %}
+                                {% for key2, nested_value in overall_summary_item.items() %}
                                     <td>{{nested_value}}</td>
                                 {% endfor %}
                             </tr>
@@ -42,6 +63,7 @@
                             </tr>
                         </tbody>
                     </table>
+                    </div>
                 </div>
             </div>
         </div>
@@ -61,6 +83,6 @@
         </div>
     </div>
 </div>
-<!-- BUTTON STARTS -->
+<!-- BUTTON ENDS -->
 
 {% endblock %}

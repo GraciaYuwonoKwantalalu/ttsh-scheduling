@@ -4,6 +4,22 @@
 
 {% block content %}
 
+<style>
+th {
+    text-align:center;
+}
+
+.my-custom-scrollbar {
+    position: relative;
+    height: 200px;
+    overflow: auto;
+}
+
+.table-wrapper-scroll-y {
+    display: block;
+}
+</style>
+
 <br><br>
 
 <!-- ICU DUTIES 1 STARTS -->
@@ -13,6 +29,7 @@
             <div class="col-md-12 text-center text">
                 <h3>ICU 1</h3>
                 <div class="row">
+                    <div class="table-wrapper-scroll-y my-custom-scrollbar">
                     <table class="table table-bordered table-striped mb-0">
                         <thead>
                             <tr>
@@ -21,60 +38,31 @@
                                 <th><input type='text' placeholder='Dr B'></th>
                                 <th><input type='text' placeholder='Dr C'></th>
                                 <th><input type='text' placeholder='Dr D'></th>
-                                <th>Total On Call</th>
+                                <th scope="col">Total On Call</th>
                             </tr>
                         </thead>
+
+                        <!-- <tfoot>
+                            <tr>
+                                <td>Total On Call</td>
+                                <td>$180</td>
+                            </tr>
+                        </tfoot> -->
+
                         <tbody>
                             <tr>
-                                <th scope="row">2020-07-16</th>
+                            {% for key,overall_summary_item in call_summary_dict.items() %}
+                                <th>{{key}}</th>
                                 <td><input type='text'></td>
                                 <td><input type='text'></td>
                                 <td><input type='text'></td>
                                 <td><input type='text'></td>
                                 <td>1</td>
                             </tr>
-                            <tr>
-                                <th scope="row">2020-07-17</th>
-                                <td><input type='text'></td>
-                                <td><input type='text'></td>
-                                <td><input type='text'></td>
-                                <td><input type='text'></td>
-                                <td>1</td>
-                            </tr>
-                            <tr>
-                                <th scope="row">2020-07-18</th>
-                                <td><input type='text'></td>
-                                <td><input type='text'></td>
-                                <td><input type='text'></td>
-                                <td><input type='text'></td>
-                                <td>1</td>
-                            </tr>
-                            <tr>
-                                <th scope="row">2020-07-19</th>
-                                <td><input type='text'></td>
-                                <td><input type='text'></td>
-                                <td><input type='text'></td>
-                                <td><input type='text'></td>
-                                <td>1</td>
-                            </tr>
-                            <tr>
-                                <th scope="row">2020-07-20</th>
-                                <td><input type='text'></td>
-                                <td><input type='text'></td>
-                                <td><input type='text'></td>
-                                <td><input type='text'></td>
-                                <td>1</td>
-                            </tr>
-                            <tr>
-                                <th scope="row">2020-07-21</th>
-                                <td><input type='text'></td>
-                                <td><input type='text'></td>
-                                <td><input type='text'></td>
-                                <td><input type='text'></td>
-                                <td>1</td>
-                            </tr>
+                            {% endfor %}
                         </tbody>
                     </table>
+                    </div>
                 </div>
             </div>
         </div>
@@ -89,68 +77,33 @@
             <div class="col-md-12 text-center text">
                 <h3>ICU 2</h3>
                 <div class="row">
+                    <div class="table-wrapper-scroll-y my-custom-scrollbar">
                     <table class="table table-bordered table-striped mb-0">
                         <thead>
                             <tr>
                                 <th></th>
-                                <th scope="col">A</th>
-                                <th scope="col">B</th>
-                                <th scope="col">C</th>
-                                <th scope="col">D</th>
+                                <th><input type='text' placeholder='Dr A'></th>
+                                <th><input type='text' placeholder='Dr B'></th>
+                                <th><input type='text' placeholder='Dr C'></th>
+                                <th><input type='text' placeholder='Dr D'></th>
                                 <th scope="col">Total On Call</th>
                             </tr>
                         </thead>
+
                         <tbody>
                             <tr>
-                                <th scope="row">2020-07-16</th>
+                            {% for key,overall_summary_item in call_summary_dict.items() %}
+                                <th>{{key}}</th>
                                 <td><input type='text'></td>
                                 <td><input type='text'></td>
                                 <td><input type='text'></td>
                                 <td><input type='text'></td>
                                 <td>1</td>
                             </tr>
-                            <tr>
-                                <th scope="row">2020-07-17</th>
-                                <td><input type='text'></td>
-                                <td><input type='text'></td>
-                                <td><input type='text'></td>
-                                <td><input type='text'></td>
-                                <td>1</td>
-                            </tr>
-                            <tr>
-                                <th scope="row">2020-07-18</th>
-                                <td><input type='text'></td>
-                                <td><input type='text'></td>
-                                <td><input type='text'></td>
-                                <td><input type='text'></td>
-                                <td>1</td>
-                            </tr>
-                            <tr>
-                                <th scope="row">2020-07-19</th>
-                                <td><input type='text'></td>
-                                <td><input type='text'></td>
-                                <td><input type='text'></td>
-                                <td><input type='text'></td>
-                                <td>1</td>
-                            </tr>
-                            <tr>
-                                <th scope="row">2020-07-20</th>
-                                <td><input type='text'></td>
-                                <td><input type='text'></td>
-                                <td><input type='text'></td>
-                                <td><input type='text'></td>
-                                <td>1</td>
-                            </tr>
-                            <tr>
-                                <th scope="row">2020-07-21</th>
-                                <td><input type='text'></td>
-                                <td><input type='text'></td>
-                                <td><input type='text'></td>
-                                <td><input type='text'></td>
-                                <td>1</td>
-                            </tr>
+                            {% endfor %}
                         </tbody>
                     </table>
+                    </div>
                 </div>
             </div>
         </div>
@@ -170,6 +123,6 @@
         </div>
     </div>
 </div>
-<!-- BUTTON STARTS -->
+<!-- BUTTON ENDS -->
 
 {% endblock %}

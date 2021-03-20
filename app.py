@@ -2,6 +2,7 @@ import sqlite3
 import holidays
 import pdfkit
 import json
+import pandas as pd
 from flask import Flask, redirect, url_for, render_template, request, session, flash, make_response, request
 from datetime import date, timedelta, datetime
 from helperFunctions import create_connection, close_connection, check_weekend, is_constraint_met
@@ -14,6 +15,7 @@ from pprint import pprint
 app = Flask(__name__)
 app.secret_key = "hello"
 
+### PAGES ###
 # Display the main page when user first loads the Flask app at localhost:5000
 @app.route('/login', methods=["POST", "GET"])
 def login(): 
@@ -39,14 +41,13 @@ def logout():
     return redirect(url_for("login"))
 
 # specify email filter page
-@app.route('/email_filter', methods=["POST"])
-def email_filter():
+@app.route('/extract_dates', methods=["POST"])
+def extract_dates():
     start_date = request.form["start_date"]
     end_date = request.form["end_date"]
-    # use the start_date and end_date for email extraction 
-    # put email extraction code here
+    dates = [start_date, end_date]
 
-    return render_template("email_filter.html")
+    return redirect(url_for("timetable"))
 
 # SCRATCH
 @app.route('/scratch')
@@ -88,120 +89,128 @@ def scratch():
                     "E": "Duty"
                 }
             }
-    return render_template("scratch.html", result=result)
 
-# timetable page - timetable 
+    dict1 = retrieve_timetable()
+    dict2 = retrieve_call_summary()
+    return render_template("scratch.html", result=result, dict1=dict1, dict2=dict2)
+
+# timetable page  
 @app.route('/timetable')
 def timetable():    
-    timetable_dict = {
-        "2020-07-16": {
-            "A": "Duty",
-            "B": "On-leave",
-            "C": "On-call",
-            "D": "Working",
-            "E": "Off",
-            "F": "Off"
-        },
-        "2020-07-17": {
-            "A": "Duty",
-            "B": "On-call",
-            "C": "Working",
-            "D": "On-leave",
-            "E": "Working",
-            "F": "On-call"
-        },
-        "2020-07-18": {
-            "A": "Duty",
-            "B": "On-call",
-            "C": "On-leave",
-            "D": "Working",
-            "E": "Working",
-            "F": "Duty"
-        },
-        "2020-07-19": {
-            "A": "On-leave",
-            "B": "On-leave",
-            "C": "Working",
-            "D": "Working",
-            "E": "Duty",
-            "F": "Duty"
-        },
-        "2020-07-20": {
-            "A": "Duty",
-            "B": "Working",
-            "C": "Working",
-            "D": "Working",
-            "E": "Duty",
-            "F": "On-leave"
-        },
-            "2020-07-21": {
-            "A": "Working",
-            "B": "On-leave",
-            "C": "On-call",
-            "D": "Working",
-            "E": "Off",
-            "F": "Off"
-        }
-    }
+    # timetable_dict = {
+    #     "2020-07-16": {
+    #         "A": "Duty",
+    #         "B": "On-leave",
+    #         "C": "On-call",
+    #         "D": "Working",
+    #         "E": "Off",
+    #         "F": "Off"
+    #     },
+    #     "2020-07-17": {
+    #         "A": "Duty",
+    #         "B": "On-call",
+    #         "C": "Working",
+    #         "D": "On-leave",
+    #         "E": "Working",
+    #         "F": "On-call"
+    #     },
+    #     "2020-07-18": {
+    #         "A": "Duty",
+    #         "B": "On-call",
+    #         "C": "On-leave",
+    #         "D": "Working",
+    #         "E": "Working",
+    #         "F": "Duty"
+    #     },
+    #     "2020-07-19": {
+    #         "A": "On-leave",
+    #         "B": "On-leave",
+    #         "C": "Working",
+    #         "D": "Working",
+    #         "E": "Duty",
+    #         "F": "Duty"
+    #     },
+    #     "2020-07-20": {
+    #         "A": "Duty",
+    #         "B": "Working",
+    #         "C": "Working",
+    #         "D": "Working",
+    #         "E": "Duty",
+    #         "F": "On-leave"
+    #     },
+    #         "2020-07-21": {
+    #         "A": "Working",
+    #         "B": "On-leave",
+    #         "C": "On-call",
+    #         "D": "Working",
+    #         "E": "Off",
+    #         "F": "Off"
+    #     }
+    # }
 
-    call_summary_dict = {
-        "2020-07-16": {
-            "total call": "8",
-            "Clinic 1": "1",
-            "Clinic 2": "2",
-            "amSat Clinic 4": "0",
-            "amSat Clinic 1": "1",
-            "amSat Clinic 3": "1",
-            "P": "2"
-        },
-        "2020-07-17": {
-            "total call": "7",
-            "Clinic 1": "1",
-            "Clinic 2": "0",
-            "amSat Clinic 4": "2",
-            "amSat Clinic 1": "0",
-            "amSat Clinic 3": "2",
-            "P": "1"
-        },
-        "2020-07-18": {
-            "total call": "8",
-            "Clinic 1": "1",
-            "Clinic 2": "1",
-            "amSat Clinic 4": "1",
-            "amSat Clinic 1": "1",
-            "amSat Clinic 3": "1",
-            "P": "2"
-        },
-        "2020-07-19": {
-            "total call": "8",
-            "Clinic 1": "1",
-            "Clinic 2": "2",
-            "amSat Clinic 4": "1",
-            "amSat Clinic 1": "1",
-            "amSat Clinic 3": "0",
-            "P": "1"
-        },
-        "2020-07-20": {
-            "total call": "8",
-            "Clinic 1": "1",
-            "Clinic 2": "0",
-            "amSat Clinic 4": "2",
-            "amSat Clinic 1": "2",
-            "amSat Clinic 3": "1",
-            "P": "2"
-        },
-        "2020-07-21": {
-            "total call": "8",
-            "Clinic 1": "2",
-            "Clinic 2": "0",
-            "amSat Clinic 4": "2",
-            "amSat Clinic 1": "1",
-            "amSat Clinic 3": "1",
-            "P": "1"
-        }
-    }
+    # call_summary_dict = {
+    #     "2020-07-16": {
+    #         "total call": "8",
+    #         "Clinic 1": "1",
+    #         "Clinic 2": "2",
+    #         "amSat Clinic 4": "0",
+    #         "amSat Clinic 1": "1",
+    #         "amSat Clinic 3": "1",
+    #         "P": "2"
+    #     },
+    #     "2020-07-17": {
+    #         "total call": "7",
+    #         "Clinic 1": "1",
+    #         "Clinic 2": "0",
+    #         "amSat Clinic 4": "2",
+    #         "amSat Clinic 1": "0",
+    #         "amSat Clinic 3": "2",
+    #         "P": "1"
+    #     },
+    #     "2020-07-18": {
+    #         "total call": "8",
+    #         "Clinic 1": "1",
+    #         "Clinic 2": "1",
+    #         "amSat Clinic 4": "1",
+    #         "amSat Clinic 1": "1",
+    #         "amSat Clinic 3": "1",
+    #         "P": "2"
+    #     },
+    #     "2020-07-19": {
+    #         "total call": "8",
+    #         "Clinic 1": "1",
+    #         "Clinic 2": "2",
+    #         "amSat Clinic 4": "1",
+    #         "amSat Clinic 1": "1",
+    #         "amSat Clinic 3": "0",
+    #         "P": "1"
+    #     },
+    #     "2020-07-20": {
+    #         "total call": "8",
+    #         "Clinic 1": "1",
+    #         "Clinic 2": "0",
+    #         "amSat Clinic 4": "2",
+    #         "amSat Clinic 1": "2",
+    #         "amSat Clinic 3": "1",
+    #         "P": "2"
+    #     },
+    #     "2020-07-21": {
+    #         "total call": "8",
+    #         "Clinic 1": "2",
+    #         "Clinic 2": "0",
+    #         "amSat Clinic 4": "2",
+    #         "amSat Clinic 1": "1",
+    #         "amSat Clinic 3": "1",
+    #         "P": "1"
+    #     }
+    # }
+
+    timetable_dict = retrieve_timetable()
+    timetable_dict_df = pd.DataFrame.from_dict(timetable_dict)
+    call_summary_dict = retrieve_call_summary()
+    call_summary_df = pd.DataFrame.from_dict(call_summary_dict)
     
-    return render_template("timetable.html", timetable_dict=timetable_dict, call_summary_dict=call_summary_dict)
+    return render_template("timetable.html", timetable_dict=timetable_dict, row_names=timetable_dict_df.index.values, column_names=timetable_dict_df.columns.values, row_data=list(timetable_dict_df.values.tolist()), zip=zip, call_summary_tables=[call_summary_df.to_html(classes='data')])
 
 # points page
 @app.route('/points')
@@ -292,9 +301,10 @@ def points():
 # icu duties page
 @app.route('/icu_duties')
 def icu_duties():
-    timetable = retrieve_timetable()
-    return render_template("icu_duties.html", timetable=timetable)
+    call_summary_dict = retrieve_call_summary()
+    return render_template("icu_duties.html", call_summary_dict=call_summary_dict)
 
+### DOWNLOAD ###
 # download timetable as pdf
 @app.route('/download_pdf')
 def download_timetable():
@@ -325,26 +335,21 @@ def download_icu_duties():
     response.headers['Content-Disposition'] = 'attachment; filename=icu_duties.pdf'
     return response
 
-# @app.route('/admin')
-# def admin():
-#     return redirect(url_for("user", content=name, age=2, array_list=["billy","jim","timmy"]))
-
+### DATABASE ###
 # Fetch data necessary for LP, runs LP, create new DB Temp table, returns formatted doctor's schedule
 @app.route('/retrieve_timetable', methods=['GET'])
 def retrieve_timetable():
     # Obtain user input for schedule start date and end date
     try:
-        query_start_date = request.form['start_date']
-        # query_start_date = '2020-07-16'
-        query_last_date = request.form['end_date']
-        # query_last_date = '2020-08-15'
+        query_start_date = '2020-07-16'
+        query_last_date = '2020-08-15'
 
         # Establish connection to DB
         conn, cur = create_connection()     
 
     except Exception as e:
         return (str(e)), 404
-    
+
     # Read all sheets from the excel file and insert into DB
     # try:
     #     A = readRoster()
@@ -355,7 +360,7 @@ def retrieve_timetable():
     
     # except Exception as e:
     #     return (str(e)), 404
-
+    
     # Get relevant data from DB
     try:
         # Fetch the constraints defined by the user from DB
@@ -556,7 +561,7 @@ def retrieve_timetable():
         close_connection(conn, cur)
 
         # returns the necessary data to render schedule
-        return overall_result, 200
+        return overall_result
         # return render_template("scratch.html", all_data_dict)
 
     except Exception as e:
@@ -669,8 +674,8 @@ def retrieve_call_summary():
         conn, cur = create_connection()
 
         # Obtain the schedule's start date and end date
-        start_date = request.form['start_date']
-        end_date = request.form['end_date']
+        start_date = '2020-07-16'
+        end_date = '2020-08-15'
 
     except Exception as e:
         return (str(e)), 404
@@ -743,7 +748,7 @@ def retrieve_call_summary():
         close_connection(conn, cur)
 
         # Return the month's call summary to UI
-        return overall_summary, 200
+        return overall_summary
 
     except Exception as e:
         return (str(e)), 404

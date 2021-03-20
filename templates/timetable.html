@@ -4,6 +4,42 @@
 
 {% block content %}
 
+<link rel="stylesheet" href="https://cdn.datatables.net/1.10.24/css/jquery.dataTables.min.css"/>
+
+<style>
+th {
+    text-align:center;
+}
+
+table {
+  width: 300%;
+  border-collapse: collapse;
+}
+
+.hack1 {
+  display: table;
+  table-layout: fixed;
+  width: 100%;
+}
+
+.hack2 {
+  display: table-cell;
+  overflow-x: auto;
+  width: 100%;
+}
+
+.my-custom-scrollbar {
+    position: relative;
+    height: 300px;
+    overflow: auto;
+}
+
+.table-wrapper-scroll-y {
+    display: block;
+}
+
+</style>    
+
 <br><br>
 
 <!-- TOOLTIP STARTS -->
@@ -77,46 +113,75 @@
             <div class="col-md-12 text-center text">
                 <h3>Timetable</h3>
                 <div class="row">
-                    <table class="table table-bordered table-striped mb-0">
-                        <thead>
-                            <tr>
-                                <th scope="col"></th>
-                                <th scope="col">A</th>
-                                <th scope="col">B</th>
-                                <th scope="col">C</th>
-                                <th scope="col">D</th>
-                                <th scope="col">E</th>
-                                <th scope="col">F</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                            {% for key,parent_dict_item in timetable_dict.items() %}
-                                <th>{{key}}</th>
-                                {% for key2, nested_value in parent_dict_item.items() %}
-                                    {% if nested_value == "Duty" %}
-                                        <td style=background-color:#51E2F5>
-                                            <!-- tooltip -->
-                                            <a href="#" data-toggle="modal" data-target="#updateModal" data-toggle="tooltip" title="Remarks from SGForm">Duty (ICU1)</a>
-                                            
-                                            <!-- ellipsis -->
-                                            <a style="cursor:pointer" href="#" data-toggle="modal" data-target="#commentModal"><i id="ellipsis" class="fas fa-ellipsis-v" style="color:rgb(158, 155, 155); float:right"></i></a>
-                                        </td>
-                                    {% elif nested_value == "On-leave" %}
-                                        <td style=background-color:#9DF9EF>{{nested_value}}</td>
-                                    {% elif nested_value == "On-call" %}
-                                        <td style=background-color:#EDF7F6>{{nested_value}}</td>
-                                    {% elif nested_value == "Working" %}
-                                        <td style=background-color:#FFA8B6>{{nested_value}}</td>
-                                    {% elif nested_value == "Off" %}
-                                        <td style=background-color:#A28089>{{nested_value}}</td>
-                                    {% endif %}
-                                {% endfor %}
-                            </tr>
-                            {% endfor %}
-                            </tr>
-                        </tbody>
-                    </table>
+                    <div class="table-wrapper-scroll-y my-custom-scrollbar">
+                    <div class="hack1">
+                        <div class="hack2">
+                            <table class="table table-bordered table-striped mb-0">
+                                <thead>
+                                    <tr>
+                                        <th></th>
+                                        {% for col in column_names %}
+                                        <th style="height:5px;width:500px">{{col}}</th>
+                                        {% endfor %}
+                                    </tr>
+                                </thead>
+                                
+                                <tbody>
+                                    {% for row_, data in zip(row_names,row_data) %}
+                                    <tr>
+                                        <th>{{row_}}</th>
+                                        {% for i in data %}
+                                            {% for key in i %}
+                                                {% if key == "Duty" %}
+                                                <td style=background-color:#51E2F5>
+                                                    <a href="#" data-toggle="modal" data-target="#updateModal" data-toggle="tooltip"
+                                                        title="Remarks from SGForm">{{key}}<br>({{i[key]}})</a>
+                                                    <a style="cursor:pointer" href="#" data-toggle="modal"
+                                                        data-target="#commentModal"><i id="ellipsis" class="fas fa-ellipsis-v"
+                                                            style="color:rgb(158, 155, 155); float:right"></i></a>
+                                                </td>
+                                                {% elif key == "Training" %}
+                                                <td style=background-color:#9DF9EF>
+                                                    <a href="#" data-toggle="modal" data-target="#updateModal" data-toggle="tooltip"
+                                                        title="Remarks from SGForm">{{key}} ({{i[key]}})</a>
+                                                    <a style="cursor:pointer" href="#" data-toggle="modal"
+                                                        data-target="#commentModal"><i id="ellipsis" class="fas fa-ellipsis-v"
+                                                            style="color:rgb(158, 155, 155); float:right"></i></a>
+                                                </td>
+                                                {% elif key == "Working" %}
+                                                <td style=background-color:#EDF7F6>
+                                                    <a href="#" data-toggle="modal" data-target="#updateModal" data-toggle="tooltip"
+                                                        title="Remarks from SGForm">{{key}}</a>
+                                                    <a style="cursor:pointer" href="#" data-toggle="modal"
+                                                        data-target="#commentModal"><i id="ellipsis" class="fas fa-ellipsis-v"
+                                                            style="color:rgb(158, 155, 155); float:right"></i></a>
+                                                </td>
+                                                {% elif key == "Priority Leave" %}
+                                                <td style=background-color:#FFA8B6>
+                                                    <a href="#" data-toggle="modal" data-target="#updateModal" data-toggle="tooltip"
+                                                        title="Remarks from SGForm">{{key}} ({{i[key]}})</a>
+                                                    <a style="cursor:pointer" href="#" data-toggle="modal"
+                                                        data-target="#commentModal"><i id="ellipsis" class="fas fa-ellipsis-v"
+                                                            style="color:rgb(158, 155, 155); float:right"></i></a>
+                                                </td>
+                                                {% elif key == "Off" %}
+                                                <td style=background-color:#A28089>
+                                                    <a href="#" data-toggle="modal" data-target="#updateModal" data-toggle="tooltip"
+                                                        title="Remarks from SGForm">{{key}} </a>
+                                                    <a style="cursor:pointer" href="#" data-toggle="modal"
+                                                        data-target="#commentModal"><i id="ellipsis" class="fas fa-ellipsis-v"
+                                                            style="color:rgb(158, 155, 155); float:right"></i></a>
+                                                </td>
+                                                {% endif %}
+                                            {% endfor %}						
+                                        {% endfor %}
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -131,32 +196,15 @@
             <div class="col-md-12 text-center">
                 <h3>Call Summary</h3>
                 <div class="row">
-                    <table class="table table-bordered table-striped mb-0">
-                        <thead>
-                            <tr>
-                                <th></th>
-                                <th scope="col">total</th>
-                                <th scope="col">total call</th>
-                                <th scope="col">Clinic 1</th>
-                                <th scope="col">Clinic 2</th>
-                                <th scope="col">amSat Clinic 4</th>
-                                <th scope="col">amSat Clinic 1</th>
-                                <th scope="col">amSat Clinic 3</th>
-                                <th scope="col">P</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                            {% for key,parent_dict_item in call_summary_dict.items() %}
-                                <th>{{key}}</th>
-                                {% for key2, nested_value in parent_dict_item.items() %}
-                                    <td>{{nested_value}}</td>
+                    <div class="hack1">
+                        <div class="hack2">
+                            <table class="table table-bordered table-striped mb-0">
+                                {% for table in call_summary_tables %}
+                                {{ table|safe }}
                                 {% endfor %}
-                            </tr>
-                            {% endfor %}
-                            </tr>
-                        </tbody>
-                    </table>
+                            </table>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -177,6 +225,16 @@
     </div>
 </div>
 <!-- BUTTON ENDS -->
+
+<script src="https://code.jquery.com/jquery-3.5.1.js"></script>
+<script src="https://cdn.datatables.net/1.10.24/js/jquery.dataTables.min.js"></script>
+<script>
+    $(document).ready(function() {
+    $('#example').DataTable( {
+        "pagingType": "full_numbers"
+    } );
+} );
+</script>
 
 {% endblock %}
 
