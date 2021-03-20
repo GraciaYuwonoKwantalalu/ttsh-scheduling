@@ -51,7 +51,6 @@ cur.execute("""CREATE TABLE IF NOT EXISTS Roster(
    first_position TEXT,
    second_position TEXT,
    posting TEXT,
-   points INTEGER,
    type TEXT
    );
 """)
