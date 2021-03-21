@@ -5,7 +5,7 @@ import json
 import pandas as pd
 from flask import Flask, redirect, url_for, render_template, request, session, flash, make_response, request
 from datetime import date, timedelta, datetime
-from helperFunctions import create_connection, close_connection, check_weekend, is_constraint_met
+from helperFunctions import create_connection, close_connection, check_weekend, check_day, check_month_num, is_constraint_met, readRoster, readDuties, readtraining, readpleave, readPh
 from lpFunction import run_lp
 from pprint import pprint
 # import datetime
@@ -337,12 +337,247 @@ def download_icu_duties():
 
 ### DATABASE ###
 # Fetch data necessary for LP, runs LP, create new DB Temp table, returns formatted doctor's schedule
+# @app.route('/retrieve_timetable', methods=['GET'])
+# def retrieve_timetable():
+#     # Obtain user input for schedule start date and end date
+#     try:
+#         query_start_date = '2020-07-16'
+#         query_last_date = '2020-08-15'
+#         # query_start_date = request.form['start_date']
+#         # query_last_date = request.form['end_date']
+
+#         # Establish connection to DB
+#         conn, cur = create_connection()     
+
+#     except Exception as e:
+#         return (str(e)), 404
+
+#     # Read all sheets from the excel file and insert into DB
+#     # try:
+#     #     A = readRoster()
+#     #     B = readTraining()
+#     #     C = readDuties()
+#     #     D = readPl()
+#     #     E = readPh()
+    
+#     # except Exception as e:
+#     #     return (str(e)), 404
+    
+#     # Get relevant data from DB
+#     try:
+#         # Fetch the constraints defined by the user from DB
+#         cur.execute("""SELECT * FROM Constraints;""")
+#         constraints_results = cur.fetchone()
+#         doctor_call_daily = constraints_results[1]
+#         day_off_monthly = constraints_results[2]
+#         max_call_month_4 = constraints_results[3]
+#         max_call_month_5 = constraints_results[4]
+#         total_call = constraints_results[5]
+#         clinic1 = constraints_results[6]
+#         clinic2 = constraints_results[7]
+#         amSat_clinic4 = constraints_results[8]
+#         amSat_clinic1 = constraints_results[9]
+#         amSat_clinic3 = constraints_results[10]
+#         p = constraints_results[11]
+
+#         # Fetch the doctor's name stored in DB
+#         cur.execute("""SELECT name FROM Roster;""")
+#         roster_results = cur.fetchall()
+
+#         # Drop previous Temp table, then create new Temp table with the doctor's name as column header
+#         cur.execute('''DROP TABLE IF EXISTS Temp;''')
+#         cur.execute("""CREATE TABLE IF NOT EXISTS Temp(date TEXT PRIMARY KEY);""")
+#         conn.commit()
+
+#         # Placing the name of doctors in a list AND adding doctor's name to Temp table as header
+#         doc_list = []
+#         for each in roster_results:
+#             doc_list.append(each[0])
+#             cur.execute('''ALTER TABLE Temp ADD COLUMN ''' + each[0] + ''' TEXT;''')
+
+#         # Fetch the training data stored in DB
+#         cur.execute("""SELECT * FROM Training WHERE start_date >= ? INTERSECT SELECT * FROM Training WHERE start_date <= ? 
+#         UNION SELECT * FROM Training WHERE end_date <= ? INTERSECT SELECT * FROM Training WHERE end_date >= ?;""",
+#         (query_start_date, query_last_date, query_last_date, query_start_date))
+#         training_results = cur.fetchall()
+
+#         # Fetch the duty data stored in DB
+#         cur.execute("""SELECT * FROM Duty WHERE start_date >= ? INTERSECT SELECT * FROM Duty WHERE start_date <= ? 
+#         UNION SELECT * FROM Duty WHERE end_date <= ? INTERSECT SELECT * FROM Duty WHERE end_date >= ?;""",
+#         (query_start_date, query_last_date, query_last_date, query_start_date))
+#         duty_results = cur.fetchall()
+
+#         # Fetch the priority leave data stored in DB
+#         cur.execute("""SELECT * FROM PriorityLeave WHERE start_date >= ? INTERSECT SELECT * FROM PriorityLeave WHERE start_date <= ? 
+#         UNION SELECT * FROM PriorityLeave WHERE end_date <= ? INTERSECT SELECT * FROM PriorityLeave WHERE end_date >= ?;""",
+#         (query_start_date, query_last_date, query_last_date, query_start_date))
+#         pl_results = cur.fetchall()
+
+#         # Fetch the public holiday data stored in DB
+#         cur.execute("""SELECT * FROM PublicHoliday;""")
+#         ph_results = cur.fetchall()
+
+#     except Exception as e:
+#         return (str(e)), 404
+
+#     # Run the LP and get the LP results that are stored in DB
+#     try:
+#         run_lp(doctor_call_daily, day_off_monthly, max_call_month_4, max_call_month_5, 
+#                 total_call, clinic1, clinic2, amSat_clinic4, amSat_clinic1, amSat_clinic3, p, 
+#                 duty_results, training_results, pl_results, ph_results)
+        
+#         # # Fetch the call LP data stored in DB (call LP data should only contain processed data for the requested schedule month)
+#         # cur.execute("""SELECT * FROM CallLP;""")
+#         # call_lp_results = cur.fetchall()
+
+#         # # Fetch the leave LP data stored in DB (leave LP data should only contain processed data for the requested schedule month)
+#         # cur.execute("""SELECT * FROM LeaveLP WHERE start_date >= ? INTERSECT SELECT * FROM LeaveLP WHERE start_date <= ? 
+#         # UNION SELECT * FROM LeaveLP WHERE end_date <= ? INTERSECT SELECT * FROM LeaveLP WHERE end_date >= ?;""",
+#         # (query_start_date, query_last_date, query_last_date, query_start_date))
+#         # leave_lp_results = cur.fetchall()
+
+#     except Exception as e:
+#         return (str(e)), 404
+    
+#     # Return the data in dictionary format to FrontEnd/UI
+#     try:
+#         # Dictionary to store all necessary data to render the main page timetable
+#         overall_result = {}
+
+#         # Appending all into dictionary with day as key and everything else as values
+#         sdate = datetime.strptime(query_start_date, '%Y-%m-%d').date()   # start date
+#         edate = datetime.strptime(query_last_date, '%Y-%m-%d').date()   # end date
+#         delta = edate - sdate       # as timedelta
+#         for date_diff in range(delta.days + 1):
+#             day = sdate + timedelta(days=date_diff)     # 2020-08-02 (datetime object format)
+#             day_key = day.strftime("%Y-%m-%d")          # 2020-08-02 (string format)
+
+#             # Initialize an sql statement for inserting a row into Temp table
+#             sqlstmt = '''INSERT INTO Temp(date,'''
+#             for each in doc_list:
+#                 sqlstmt += each + ''','''
+#             sqlstmt = sqlstmt[:-1] + """) VALUES ('""" + day_key + """',"""
+
+#             # Check if the date is a weekend or weekday
+#             weekend_checker = check_weekend(day)    # True: date is on a weekend; False: date is on a weekday
+
+#             # Check if date is a public holiday (based on public holidays stored in DB)
+#             if day in ph_results:
+#                 ph_checker = True   # Date is a public holiday
+#             else:
+#                 ph_checker = False  # Date is not a public holiday
+
+#             # Storing all doctor's training for schedule month in training dictionary
+#             training = {}
+#             for doc in training_results:
+#                 startDate = doc[4]
+#                 endDate = doc[5]
+#                 doc_name = doc[2]
+#                 training_name = doc[3]
+#                 if day >= datetime.strptime(startDate, '%Y-%m-%d').date() and day <= datetime.strptime(endDate, '%Y-%m-%d').date():
+#                     training[doc_name] = training_name
+            
+#             # Storing all doctor's duty for schedule month in duty dictionary
+#             duty = {}
+#             for doc in duty_results:
+#                 startDate = doc[4]
+#                 endDate = doc[5]
+#                 doc_name = doc[2]
+#                 duty_name = doc[3]
+#                 if day >= datetime.strptime(startDate, '%Y-%m-%d').date() and day <= datetime.strptime(endDate, '%Y-%m-%d').date():
+#                     duty[doc_name] = duty_name
+            
+#             # Storing all doctor's priority leave for schedule month in priority leave dictionary
+#             priority_leave = {}
+#             for doc in pl_results:
+#                 startDate = doc[4]
+#                 endDate = doc[5]
+#                 doc_name = doc[2]
+#                 leave_reason = doc[3]
+#                 if day >= datetime.strptime(startDate, '%Y-%m-%d').date() and day <= datetime.strptime(endDate, '%Y-%m-%d').date():
+#                     priority_leave[doc_name] = leave_reason
+            
+#             # # Storing all doctor's calls based on LP for schedule month in call_LP dictionary
+#             # call_LP = {}
+#             # for doc in call_lp_results:
+#             #     call_date = doc[3]
+#             #     doc_name = doc[2]
+#             #     call_type = doc[4]
+#             #     remark = doc[5]
+#             #     if day == datetime.strptime(call_date, '%Y-%m-%d').date():
+#             #         call_LP[doc_name] = call_type,remark
+            
+#             # # Storing all doctor's leaves based on LP for schedule month in leave_LP dictionary
+#             # leave_LP = {}
+#             # for doc in leave_lp_results:
+#             #     startDate = doc[3]
+#             #     endDate = doc[4]
+#             #     doc_name = doc[2]
+#             #     duration = doc[5]
+#             #     leave_type = doc[6]
+#             #     remark = doc[7]
+#             #     if day >= datetime.strptime(startDate, '%Y-%m-%d').date() and day <= datetime.strptime(endDate, '%Y-%m-%d').date():
+#             #         leave_LP[doc_name] = duration,leave_type,remark
+
+#             # Storing each day's activity by all doctors in one_day_dict
+#             one_day_dict = {}
+            
+#             # Determine each doctor's activity based on above dictionaries and collate into 1 dictionary
+#             for each_doc in doc_list:
+#                 one_doc_dict = {}
+
+#                 if each_doc in training:
+#                     one_doc_dict[each_doc] = {"Training": training[each_doc]}
+#                 elif each_doc in duty:
+#                     one_doc_dict[each_doc] = {"Duty": duty[each_doc]}
+#                 elif each_doc in priority_leave:
+#                     one_doc_dict[each_doc] = {"Priority Leave": priority_leave[each_doc]}
+#                 # elif each_doc in call_LP:
+#                 #     one_doc_dict[each_doc] = {call_LP[each_doc][0]: call_LP[each_doc][1]}
+#                 # elif each_doc in leave_LP:
+#                 #     one_doc_dict[each_doc] = {leave_LP[each_doc][1]: leave_LP[each_doc][2]}
+#                 elif weekend_checker == True or ph_checker == True:
+#                     one_doc_dict[each_doc] = {"Off": ""}
+#                 else:
+#                     one_doc_dict[each_doc] = {"Working": ""}
+
+#                 # Combine all the activity data into 1 single dictionary
+#                 one_day_dict[each_doc] = one_doc_dict[each_doc]
+
+#             # Combine one day's worth of data into 1 overall dictionary
+#             display_day = day.strftime("%d-%m-%Y")          # 31-12-2020 (string format)
+#             overall_result[display_day] = one_day_dict
+
+#             # Continuation of creating sql statement to insert values into Temp table
+#             temp_list = []
+#             for each in doc_list:
+#                 temp_list.append(str(one_day_dict[each]))
+#                 sqlstmt += '''?,'''
+#             sqlstmt = sqlstmt[:-1] + ''');'''   # Example: INSERT INTO Temp(date,name,...) VALUES ('2020-08-15','training',...);
+#             temp_tuple = tuple(temp_list)
+
+#             # Executing sql statement to add values into Temp table
+#             cur.execute(sqlstmt,temp_tuple)
+#             conn.commit()
+    
+#         # Close connection to DB
+#         close_connection(conn, cur)
+
+#         # returns the necessary data to render schedule
+#         return overall_result
+#         # return render_template("scratch.html", all_data_dict)
+
+#     except Exception as e:
+#         return (str(e)), 404
+
 @app.route('/retrieve_timetable', methods=['GET'])
 def retrieve_timetable():
     # Obtain user input for schedule start date and end date
     try:
         query_start_date = '2020-07-16'
         query_last_date = '2020-08-15'
+        # query_start_date = request.form['start_date']
+        # query_last_date = request.form['end_date']
 
         # Establish connection to DB
         conn, cur = create_connection()     
@@ -351,15 +586,15 @@ def retrieve_timetable():
         return (str(e)), 404
 
     # Read all sheets from the excel file and insert into DB
-    # try:
-    #     A = readRoster()
-    #     B = readTraining()
-    #     C = readDuties()
-    #     D = readPl()
-    #     E = readPh()
+    try:
+        A = readRoster()
+        B = readtraining(query_start_date,query_last_date)
+        C = readDuties(query_start_date,query_last_date)
+        D = readpleave(query_start_date,query_last_date)
+        E = readPh()
     
-    # except Exception as e:
-    #     return (str(e)), 404
+    except Exception as e:
+        return (str(e)), 404
     
     # Get relevant data from DB
     try:
@@ -393,6 +628,36 @@ def retrieve_timetable():
             doc_list.append(each[0])
             cur.execute('''ALTER TABLE Temp ADD COLUMN ''' + each[0] + ''' TEXT;''')
 
+        # Fetch the Senior doctor's name stored in DB
+        cur.execute("""SELECT name FROM Roster WHERE type ='S';""")
+        senior_roster_results = cur.fetchall()
+
+        # Drop previous TempS table, then create new TempS table with the senior doctor's name as column header
+        cur.execute('''DROP TABLE IF EXISTS TempS;''')
+        cur.execute("""CREATE TABLE IF NOT EXISTS TempS(date TEXT PRIMARY KEY);""")
+        conn.commit()
+
+        # Placing the name of senior doctors in a list AND adding doctor's name to TempS table as header
+        senior_doc_list = []
+        for each in senior_roster_results:
+            senior_doc_list.append(each[0])
+            cur.execute('''ALTER TABLE TempS ADD COLUMN ''' + each[0] + ''' TEXT;''')
+
+        # Fetch the Junior doctor's name stored in DB
+        cur.execute("""SELECT name FROM Roster WHERE type ='J';""")
+        junior_roster_results = cur.fetchall()
+
+        # Drop previous TempJ table, then create new TempJ table with the junior doctor's name as column header
+        cur.execute('''DROP TABLE IF EXISTS TempJ;''')
+        cur.execute("""CREATE TABLE IF NOT EXISTS TempJ(date TEXT PRIMARY KEY);""")
+        conn.commit()
+
+        # Placing the name of junior doctors in a list AND adding doctor's name to TempJ table as header
+        junior_doc_list = []
+        for each in junior_roster_results:
+            junior_doc_list.append(each[0])
+            cur.execute('''ALTER TABLE TempJ ADD COLUMN ''' + each[0] + ''' TEXT;''')
+
         # Fetch the training data stored in DB
         cur.execute("""SELECT * FROM Training WHERE start_date >= ? INTERSECT SELECT * FROM Training WHERE start_date <= ? 
         UNION SELECT * FROM Training WHERE end_date <= ? INTERSECT SELECT * FROM Training WHERE end_date >= ?;""",
@@ -411,6 +676,12 @@ def retrieve_timetable():
         (query_start_date, query_last_date, query_last_date, query_start_date))
         pl_results = cur.fetchall()
 
+        # Fetch the leave application data stored in DB
+        cur.execute("""SELECT * FROM LeaveApplication WHERE start_date >= ? INTERSECT SELECT * FROM LeaveApplication WHERE start_date <= ? 
+        UNION SELECT * FROM LeaveApplication WHERE end_date <= ? INTERSECT SELECT * FROM LeaveApplication WHERE end_date >= ?;""",
+        (query_start_date, query_last_date, query_last_date, query_start_date))
+        la_results = cur.fetchall()
+
         # Fetch the public holiday data stored in DB
         cur.execute("""SELECT * FROM PublicHoliday;""")
         ph_results = cur.fetchall()
@@ -424,15 +695,15 @@ def retrieve_timetable():
                 total_call, clinic1, clinic2, amSat_clinic4, amSat_clinic1, amSat_clinic3, p, 
                 duty_results, training_results, pl_results, ph_results)
         
-        # Fetch the call LP data stored in DB (call LP data should only contain processed data for the requested schedule month)
-        cur.execute("""SELECT * FROM CallLP;""")
-        call_lp_results = cur.fetchall()
+        # # Fetch the call LP data stored in DB (call LP data should only contain processed data for the requested schedule month)
+        # cur.execute("""SELECT * FROM CallLP;""")
+        # call_lp_results = cur.fetchall()
 
-        # Fetch the leave LP data stored in DB (leave LP data should only contain processed data for the requested schedule month)
-        cur.execute("""SELECT * FROM LeaveLP WHERE start_date >= ? INTERSECT SELECT * FROM LeaveLP WHERE start_date <= ? 
-        UNION SELECT * FROM LeaveLP WHERE end_date <= ? INTERSECT SELECT * FROM LeaveLP WHERE end_date >= ?;""",
-        (query_start_date, query_last_date, query_last_date, query_start_date))
-        leave_lp_results = cur.fetchall()
+        # # Fetch the leave LP data stored in DB (leave LP data should only contain processed data for the requested schedule month)
+        # cur.execute("""SELECT * FROM LeaveLP WHERE start_date >= ? INTERSECT SELECT * FROM LeaveLP WHERE start_date <= ? 
+        # UNION SELECT * FROM LeaveLP WHERE end_date <= ? INTERSECT SELECT * FROM LeaveLP WHERE end_date >= ?;""",
+        # (query_start_date, query_last_date, query_last_date, query_start_date))
+        # leave_lp_results = cur.fetchall()
 
     except Exception as e:
         return (str(e)), 404
@@ -441,6 +712,8 @@ def retrieve_timetable():
     try:
         # Dictionary to store all necessary data to render the main page timetable
         overall_result = {}
+        overall_result1 = {}
+        overall_result2 = {}
 
         # Appending all into dictionary with day as key and everything else as values
         sdate = datetime.strptime(query_start_date, '%Y-%m-%d').date()   # start date
@@ -449,12 +722,25 @@ def retrieve_timetable():
         for date_diff in range(delta.days + 1):
             day = sdate + timedelta(days=date_diff)     # 2020-08-02 (datetime object format)
             day_key = day.strftime("%Y-%m-%d")          # 2020-08-02 (string format)
+            display_day = check_day(day) + " " + day.strftime("%d-%m-%Y")   # Sunday 31-12-2020 (string format)
 
             # Initialize an sql statement for inserting a row into Temp table
             sqlstmt = '''INSERT INTO Temp(date,'''
             for each in doc_list:
                 sqlstmt += each + ''','''
             sqlstmt = sqlstmt[:-1] + """) VALUES ('""" + day_key + """',"""
+            
+            # Initialize an sql statement for inserting a row into TempS table
+            sqlstmt1 = '''INSERT INTO TempS(date,'''
+            for each in senior_doc_list:
+                sqlstmt1 += each + ''','''
+            sqlstmt1 = sqlstmt1[:-1] + """) VALUES ('""" + display_day + """',"""
+
+            # Initialize an sql statement for inserting a row into TempJ table
+            sqlstmt2 = '''INSERT INTO TempJ(date,'''
+            for each in junior_doc_list:
+                sqlstmt2 += each + ''','''
+            sqlstmt2 = sqlstmt2[:-1] + """) VALUES ('""" + display_day + """',"""
 
             # Check if the date is a weekend or weekday
             weekend_checker = check_weekend(day)    # True: date is on a weekend; False: date is on a weekday
@@ -495,30 +781,32 @@ def retrieve_timetable():
                 if day >= datetime.strptime(startDate, '%Y-%m-%d').date() and day <= datetime.strptime(endDate, '%Y-%m-%d').date():
                     priority_leave[doc_name] = leave_reason
             
-            # Storing all doctor's calls based on LP for schedule month in call_LP dictionary
-            call_LP = {}
-            for doc in call_lp_results:
-                call_date = doc[3]
-                doc_name = doc[2]
-                call_type = doc[4]
-                remark = doc[5]
-                if day == datetime.strptime(call_date, '%Y-%m-%d').date():
-                    call_LP[doc_name] = call_type,remark
+            # # Storing all doctor's calls based on LP for schedule month in call_LP dictionary
+            # call_LP = {}
+            # for doc in call_lp_results:
+            #     call_date = doc[3]
+            #     doc_name = doc[2]
+            #     call_type = doc[4]
+            #     remark = doc[5]
+            #     if day == datetime.strptime(call_date, '%Y-%m-%d').date():
+            #         call_LP[doc_name] = call_type,remark
             
-            # Storing all doctor's leaves based on LP for schedule month in leave_LP dictionary
-            leave_LP = {}
-            for doc in leave_lp_results:
-                startDate = doc[3]
-                endDate = doc[4]
-                doc_name = doc[2]
-                duration = doc[5]
-                leave_type = doc[6]
-                remark = doc[7]
-                if day >= datetime.strptime(startDate, '%Y-%m-%d').date() and day <= datetime.strptime(endDate, '%Y-%m-%d').date():
-                    leave_LP[doc_name] = duration,leave_type,remark
+            # # Storing all doctor's leaves based on LP for schedule month in leave_LP dictionary
+            # leave_LP = {}
+            # for doc in leave_lp_results:
+            #     startDate = doc[3]
+            #     endDate = doc[4]
+            #     doc_name = doc[2]
+            #     duration = doc[5]
+            #     leave_type = doc[6]
+            #     remark = doc[7]
+            #     if day >= datetime.strptime(startDate, '%Y-%m-%d').date() and day <= datetime.strptime(endDate, '%Y-%m-%d').date():
+            #         leave_LP[doc_name] = duration,leave_type,remark
 
             # Storing each day's activity by all doctors in one_day_dict
             one_day_dict = {}
+            senior_one_day = {}
+            junior_one_day = {}
             
             # Determine each doctor's activity based on above dictionaries and collate into 1 dictionary
             for each_doc in doc_list:
@@ -530,10 +818,25 @@ def retrieve_timetable():
                     one_doc_dict[each_doc] = {"Duty": duty[each_doc]}
                 elif each_doc in priority_leave:
                     one_doc_dict[each_doc] = {"Priority Leave": priority_leave[each_doc]}
-                elif each_doc in call_LP:
-                    one_doc_dict[each_doc] = {call_LP[each_doc][0]: call_LP[each_doc][1]}
-                elif each_doc in leave_LP:
-                    one_doc_dict[each_doc] = {"leave_LP[each_doc][1]": leave_LP[each_doc][2]}
+                # elif each_doc in call_LP:
+                #     one_doc_dict[each_doc] = {call_LP[each_doc][0]: call_LP[each_doc][1]}
+                # elif each_doc in leave_LP:    #la_results
+                    # leave_converter = {
+                    #     "Annual Leave" : "Leave (AL)",
+                    #     "Training Leave" : "Leave (Training)",
+                    #     "MC/Hospitalisation Leave" : "Leave (MC/HL)",
+                    #     "Reservist Leave" : "Leave (Reservist)",
+                    #     "Family Carre Leave" : "Leave (Family)",
+                    #     "Child Care Leave" : "Leave (Child)",
+                    #     "Marriage Leave" : "Leave (Marriage)",
+                    #     "Maternity Leave" : "Leave (Maternity)",
+                    #     "Paternity Leave" : "Leave (Paternity)",
+                    #     "Others": "Leave (Others)"
+                    # }
+                    # act_type = leave_LP[each_doc][1]
+                    # one_doc_dict[each_doc] = {leave_LP[each_doc][0] + " " + leave_converter[act_type]: leave_LP[each_doc][2]}
+                    # one_doc_dict[each_doc] = {leave_LP[each_doc][1]: leave_LP[each_doc][2]}       
+                    # one_doc_dict[each_doc] = {leave_converter[act_type]: leave_LP[each_doc][2]}   #No duration
                 elif weekend_checker == True or ph_checker == True:
                     one_doc_dict[each_doc] = {"Off": ""}
                 else:
@@ -543,7 +846,7 @@ def retrieve_timetable():
                 one_day_dict[each_doc] = one_doc_dict[each_doc]
 
             # Combine one day's worth of data into 1 overall dictionary
-            overall_result[day_key] = one_day_dict
+            overall_result[display_day] = one_day_dict
 
             # Continuation of creating sql statement to insert values into Temp table
             temp_list = []
@@ -556,12 +859,144 @@ def retrieve_timetable():
             # Executing sql statement to add values into Temp table
             cur.execute(sqlstmt,temp_tuple)
             conn.commit()
-    
+
+            # Determine each Senior doctor's activity based on above dictionaries and collate into 1 dictionary
+            for each_doc in senior_doc_list:
+                one_doc_dict = {}
+
+                if each_doc in training:
+                    one_doc_dict[each_doc] = {"Training": training[each_doc]}
+                elif each_doc in duty:
+                    one_doc_dict[each_doc] = {"Duty": duty[each_doc]}
+                elif each_doc in priority_leave:
+                    one_doc_dict[each_doc] = {"Priority Leave": priority_leave[each_doc]}
+                # elif each_doc in call_LP:
+                #     one_doc_dict[each_doc] = {call_LP[each_doc][0]: call_LP[each_doc][1]}
+                # elif each_doc in leave_LP:    #la_results
+                    # leave_converter = {
+                    #     "Annual Leave" : "Leave (AL)",
+                    #     "Training Leave" : "Leave (Training)",
+                    #     "MC/Hospitalisation Leave" : "Leave (MC/HL)",
+                    #     "Reservist Leave" : "Leave (Reservist)",
+                    #     "Family Carre Leave" : "Leave (Family)",
+                    #     "Child Care Leave" : "Leave (Child)",
+                    #     "Marriage Leave" : "Leave (Marriage)",
+                    #     "Maternity Leave" : "Leave (Maternity)",
+                    #     "Paternity Leave" : "Leave (Paternity)",
+                    #     "Others": "Leave (Others)"
+                    # }
+                    # act_type = leave_LP[each_doc][1]
+                    # one_doc_dict[each_doc] = {leave_LP[each_doc][0] + " " + leave_converter[act_type]: leave_LP[each_doc][2]}
+                    # one_doc_dict[each_doc] = {leave_LP[each_doc][1]: leave_LP[each_doc][2]}       
+                    # one_doc_dict[each_doc] = {leave_converter[act_type]: leave_LP[each_doc][2]}   #No duration
+                elif weekend_checker == True or ph_checker == True:
+                    one_doc_dict[each_doc] = {"Off": ""}
+                else:
+                    one_doc_dict[each_doc] = {"Working": ""}
+
+                # Combine all the activity data into 1 single dictionary
+                senior_one_day[each_doc] = one_doc_dict[each_doc]
+            
+            # Combine one day's worth of data into 1 overall dictionary
+            overall_result1[display_day] = senior_one_day
+
+            # Continuation of creating sql statement 1 to insert values into TempS table
+            temp_list = []
+            for each in senior_doc_list:
+                temp_list.append(str(senior_one_day[each]))
+                sqlstmt1 += '''?,'''
+            sqlstmt1 = sqlstmt1[:-1] + ''');'''   # Example: INSERT INTO TempS(date,name,...) VALUES ('2020-08-15','training',...);
+            temp_tuple = tuple(temp_list)
+
+            # Executing sql statement to add values into TempS table
+            cur.execute(sqlstmt1,temp_tuple)
+            conn.commit()
+
+            # Determine each Junior doctor's activity based on above dictionaries and collate into 1 dictionary
+            for each_doc in junior_doc_list:
+                one_doc_dict = {}
+
+                if each_doc in training:
+                    one_doc_dict[each_doc] = {"Training": training[each_doc]}
+                elif each_doc in duty:
+                    one_doc_dict[each_doc] = {"Duty": duty[each_doc]}
+                elif each_doc in priority_leave:
+                    one_doc_dict[each_doc] = {"Priority Leave": priority_leave[each_doc]}
+                # elif each_doc in call_LP:
+                #     one_doc_dict[each_doc] = {call_LP[each_doc][0]: call_LP[each_doc][1]}
+                # elif each_doc in leave_LP:    #la_results
+                    # leave_converter = {
+                    #     "Annual Leave" : "Leave (AL)",
+                    #     "Training Leave" : "Leave (Training)",
+                    #     "MC/Hospitalisation Leave" : "Leave (MC/HL)",
+                    #     "Reservist Leave" : "Leave (Reservist)",
+                    #     "Family Carre Leave" : "Leave (Family)",
+                    #     "Child Care Leave" : "Leave (Child)",
+                    #     "Marriage Leave" : "Leave (Marriage)",
+                    #     "Maternity Leave" : "Leave (Maternity)",
+                    #     "Paternity Leave" : "Leave (Paternity)",
+                    #     "Others": "Leave (Others)"
+                    # }
+                    # act_type = leave_LP[each_doc][1]
+                    # one_doc_dict[each_doc] = {leave_LP[each_doc][0] + " " + leave_converter[act_type]: leave_LP[each_doc][2]}
+                    # one_doc_dict[each_doc] = {leave_LP[each_doc][1]: leave_LP[each_doc][2]}       
+                    # one_doc_dict[each_doc] = {leave_converter[act_type]: leave_LP[each_doc][2]}   #No duration
+                elif weekend_checker == True or ph_checker == True:
+                    one_doc_dict[each_doc] = {"Off": ""}
+                else:
+                    one_doc_dict[each_doc] = {"Working": ""}
+
+                # Combine all the activity data into 1 single dictionary
+                junior_one_day[each_doc] = one_doc_dict[each_doc]
+
+            # Combine one day's worth of data into 1 overall dictionary
+            overall_result2[display_day] = junior_one_day
+
+            # Continuation of creating sql statement 2 to insert values into TempJ table
+            temp_list = []
+            for each in junior_doc_list:
+                temp_list.append(str(junior_one_day[each]))
+                sqlstmt2 += '''?,'''
+            sqlstmt2 = sqlstmt2[:-1] + ''');'''   # Example: INSERT INTO TempJ(date,name,...) VALUES ('2020-08-15','training',...);
+            temp_tuple = tuple(temp_list)
+
+            # Executing sql statement to add values into TempJ table
+            cur.execute(sqlstmt2,temp_tuple)
+            conn.commit()
+
+        # Changing the output to desired format
+        new = {}
+        for each_doc in doc_list:
+            overall_doc_activity = {}
+            for key,value in overall_result.items():
+                overall_doc_activity[key] = value[each_doc]
+            
+            new[each_doc] = overall_doc_activity
+        
+        new1 = {}
+        for each_doc in senior_doc_list:
+            overall_doc_activity = {}
+            for key,value in overall_result1.items():
+                overall_doc_activity[key] = value[each_doc]
+            
+            new1[each_doc] = overall_doc_activity
+        
+        new2 = {}
+        for each_doc in junior_doc_list:
+            overall_doc_activity = {}
+            for key,value in overall_result2.items():
+                overall_doc_activity[key] = value[each_doc]
+            
+            new2[each_doc] = overall_doc_activity
+        
+        # Put the dictionaries into list format: [Senior doctor dictionary, Junior doctor dictionary]
+        final = [new1,new2]
+        
         # Close connection to DB
         close_connection(conn, cur)
 
         # returns the necessary data to render schedule
-        return overall_result
+        return final
         # return render_template("scratch.html", all_data_dict)
 
     except Exception as e:
@@ -620,50 +1055,104 @@ def is_constraint_met_temp():
 # Updates the Temp table if constraints are still met after changes are made to the schedule
 @app.route('/update_timetable',methods=['POST'])
 def update_timetable():
-    # Obtain user input values from front-end UI for saving into the DB
-    activityType = request.form['type']
-    remark = request.form['remark']
-    doctor = request.form['doctor']
-    date = request.form['date']
-    start_date = request.form['start_date']
-    end_date = request.form['end_date']
+    try:
+        # Obtain user input values from front-end UI for saving into the DB
+        start_date = request.form['start_date']
+        end_date = request.form['end_date']
+        full_list = request.form['full_list']       #[Senior MO dictionary,Junior MO dictionary]
+
+        # Establish connection to DB
+        conn, cur = create_connection()
     
-    # Format the changes in dictionary format
-    input_data = {str(activityType) : str(remark)}
+    except Exception as e:
+        return (str(e)), 404
+    
+    try:        
+        # Delete previous CheckingS table and create a new CheckingS table to check whether changes made does not violate the constraints
+        cur.execute('''DROP TABLE IF EXISTS CheckingS;''')
+        cur.execute("""CREATE TABLE IF NOT EXISTS CheckingS AS SELECT * FROM TempS;""")
 
-    # Establish connection to DB
-    conn, cur = create_connection()
+        senior_dict = full_list[0]
 
-    # Delete and previous Checking table and create a new Checking table to check whether changes made does not violate the constraints
-    cur.execute('''DROP TABLE IF EXISTS Checking;''')
-    cur.execute("""CREATE TABLE IF NOT EXISTS Checking AS SELECT * FROM Temp""")
+        # Make changes to the CheckingS table to save user-made changes
+        # WARNING: Prone to SQL Injection Attack (Assumption is that the admin is trustworthy and won't jeopardise the system)
+        for key,value in senior_dict.items():
+            for daydate,activity in value.itmes():
+                sqlstmt = """UPDATE CheckingS SET """ + key + """ = ? WHERE date = ?;"""
+                cur.execute(sqlstmt,(activity,daydate))
+                conn.commit()
 
-    # Make changes to the Checking table to check constraint violation
-    # WARNING: Prone to SQL Injection Attack (Assumption is that the admin is trustworthy and won't jeopardise the system)
-    sqlstmt = """UPDATE Checking SET """ + doctor + """ = ? WHERE date = ?;"""
-    cur.execute(sqlstmt,(input_data,date))
-    conn.commit()
+        # Delete previous CheckingJ table and create a new CheckingJ table to check whether changes made does not violate the constraints
+        cur.execute('''DROP TABLE IF EXISTS CheckingJ;''')
+        cur.execute("""CREATE TABLE IF NOT EXISTS CheckingJ AS SELECT * FROM TempJ;""")
+        
+        junior_dict = full_list[1]
+        
+        # Make changes to the CheckingJ table to save user-made changes
+        # WARNING: Prone to SQL Injection Attack (Assumption is that the admin is trustworthy and won't jeopardise the system)
+        for key,value in junior_dict.items():
+            for daydate,activity in value.itmes():
+                sqlstmt = """UPDATE CheckingJ SET """ + key + """ = ? WHERE date = ?;"""
+                cur.execute(sqlstmt,(activity,daydate))
+                conn.commit()
 
-    # Check whether constraints are violated.
-    # WARNING: Prone to SQL Injection Attack (Assumption is that the admin is trustworthy and won't jeopardise the system)
-    checker = is_constraint_met('Checking', start_date, end_date)
+        # Merge the 2 dictionaries together to check constraints
+        full_list[0].update(full_list[1])
+        combined_dict = full_list[0]
 
-    # If constraints not violated, then make permanent changes to the Temp table
-    # WARNING: Prone to SQL Injection Attack (Assumption is that the admin is trustworthy and won't jeopardise the system)
-    if checker == True:
-        sqlstmt = """UPDATE Temp SET """ + doctor + """ = ? WHERE date = ?;"""
-        cur.execute(sqlstmt,(input_data,date))
-        conn.commit()
-        message = True
-    # Otherwise, do not make any changes to the Temp table and discard user's changes
-    else:
-        message = checker
+        # Delete previous Checking table and create a new Checking table to check whether changes made will violate the constraints
+        cur.execute('''DROP TABLE IF EXISTS Checking;''')
+        cur.execute("""CREATE TABLE IF NOT EXISTS Checking AS SELECT * FROM Temp;""")
+
+        # Make changes to the Checking table to check for constraint violations
+        # WARNING: Prone to SQL Injection Attack (Assumption is that the admin is trustworthy and won't jeopardise the system)
+        for key,value in combined_dict.items():
+            for daydate,activity in value.itmes():
+                sqlstmt = """UPDATE Checking SET """ + key + """ = ? WHERE date = ?;"""
+                cur.execute(sqlstmt,(activity,daydate))
+                conn.commit()
+
+        # Check whether constraints are violated.
+        # WARNING: Prone to SQL Injection Attack (Assumption is that the admin is trustworthy and won't jeopardise the system)
+        checker = is_constraint_met('Checking', start_date, end_date)
+
+        # If constraints not violated, then make permanent changes to the Temp, TempS and TempJ table
+        # WARNING: Prone to SQL Injection Attack (Assumption is that the admin is trustworthy and won't jeopardise the system)
+        if checker == True:
+            # Update the Temp table
+            cur.execute('''DROP TABLE IF EXISTS Temp;''')
+            conn.commit()
+            cur.execute("""CREATE TABLE IF NOT EXISTS Temp AS SELECT * FROM Checking;""")
+            conn.commit()
+
+            # Update the TempS table
+            cur.execute('''DROP TABLE IF EXISTS TempS;''')
+            conn.commit()
+            cur.execute("""CREATE TABLE IF NOT EXISTS TempS AS SELECT * FROM CheckingS;""")
+            conn.commit()
+
+            # Update the TempJ table
+            cur.execute('''DROP TABLE IF EXISTS TempJ;''')
+            conn.commit()
+            cur.execute("""CREATE TABLE IF NOT EXISTS TempJ AS SELECT * FROM CheckingJ;""")
+            conn.commit()
+
+            # Return the changed list of dictionary back to the UI to reflect the changes
+            message = True      # or return full_list?
+
+        # Otherwise, do not make any changes to the Temp table and discard user's changes, also return the constraints that failed
+        else:
+            message = checker
+
+    except Exception as e:
+        return (str(e)), 404
     
     # Close connection to DB
     close_connection(conn, cur)
 
     # Returns either True or constraints that are not met in the form: {date:[constraint1,constraint2],date:[constraint1],...}
     return message, 200
+
 
 # Retrieves the call summary based on the current Temp table in DB
 @app.route('/retrieve_call_summary', methods=['GET'])
@@ -994,26 +1483,30 @@ def insert_icu_2_duties():
 # Calculating and returning each doctor's number of points for the scheduled month
 @app.route('/retrieve_points_summary', methods=['GET'])
 def retrieve_points_summary():
-    # Obtain schedule start date and end date, also create connection to DB
+    # Create connection to DB and obtain the request month from UI
     try:
         # Establish connection to DB
         conn, cur = create_connection()
+
+        # Obtain the request month
+        request_month = request.form['request_month']
+        month_num = check_month_num(request_month)
 
     except Exception as e:
         return (str(e)), 404
 
     # Calculate the month's point summary for all doctors and return to UI
     try:
-        # Fetch the doctor's name stored in DB
-        cur.execute("""SELECT name FROM Roster;""")
-        roster_results = cur.fetchall()
+        # Fetch the Senior doctor's name stored in DB
+        cur.execute("""SELECT name FROM Roster WHERE type ='S';""")
+        senior_roster_results = cur.fetchall()
 
-        # Dictionary to store the scheduled month's point summary
-        overall_summary = {}
-
-        # Query Temp table for each doctor's schedule
-        for each in roster_results:
-            sqlstmt = """SELECT """ + each[0] + """ FROM Temp;"""   #each[0] refers to the doctor's name
+        # Dictionary to store the scheduled month's point summary for senior doctors
+        senior_summary = {}
+        
+        # Query TempS table for each doctor's schedule
+        for each in senior_roster_results:
+            sqlstmt = """SELECT """ + each[0] + """ FROM TempS;"""   #each[0] refers to the doctor's name
             cur.execute(sqlstmt)
             constraints_result = cur.fetchall()
 
@@ -1077,7 +1570,7 @@ def retrieve_points_summary():
             month_calls = counter_wd + counter_fri + counter_sat + counter_sun + counter_preph + counter_ph
 
             # Placing each day's call summary into a dictionary format
-            overall_summary[each[0]] = {
+            senior_summary[each[0]] = {
                 "Month calls" : month_calls,
                 "Month call points" : month_call_points,
                 "WD" : counter_wd,
@@ -1094,7 +1587,113 @@ def retrieve_points_summary():
                 "Clinic 4" : counter_clinic4,
                 "Duties" : counter_duty
             }
-                 
+
+            total_points = month_call_points + points_satsunam
+
+            sqlstmt = """UPDATE Points SET """ + month_num + """ = ? WHERE email = ?;""" #each[0] refers to the doctor's name
+            cur.execute(sqlstmt,(total_points,each[0]))
+            conn.commit()
+
+        # Fetch the Junior doctor's name stored in DB
+        cur.execute("""SELECT name FROM Roster WHERE type ='J';""")
+        junior_roster_results = cur.fetchall()
+
+        # Dictionary to store the scheduled month's point summary for junior doctors
+        junior_summary = {}
+
+        # Query TempJ table for each doctor's schedule
+        for each in junior_roster_results:
+            sqlstmt = """SELECT """ + each[0] + """ FROM TempJ;"""   #each[0] refers to the doctor's name
+            cur.execute(sqlstmt)
+            constraints_result = cur.fetchall()
+
+            # Counters to record the number of calls/duties/leave for each day assigned
+            counter_wd = 0
+            counter_fri = 0
+            counter_sat = 0
+            counter_sun = 0
+            counter_preph = 0
+            counter_ph = 0
+            counter_satsunam = 0
+            counter_leave = 0
+            counter_clinic1 = 0
+            counter_clinic2 = 0
+            counter_clinic3 = 0
+            counter_clinic4 = 0
+            counter_duty = 0
+
+            # Counting the calls/duties/leave from all doctors for each day
+            for element in constraints_result:
+                str_element = element[0].replace("'",'"')
+                dict_element = json.loads(str_element)
+                for key,value in dict_element.items():
+                    if value == 'c' or value == 'cr':
+                        counter_wd += 1
+                    elif value == 'cF' or value == 'crF':
+                        counter_fri += 1
+                    elif value == 'cSat' or value == 'crSat':
+                        counter_sat += 1
+                    elif value == 'cSun' or value == 'crSun':
+                        counter_sun += 1
+                    elif value == 'cpPH' or value == 'crpPH':
+                        counter_preph += 1
+                    elif value == 'cPH' or value == 'crPH':
+                        counter_ph += 1
+                    elif value == 'Clinic 1':
+                        counter_clinic1 += 1
+                    elif value == 'Clinic 2':
+                        counter_clinic2 += 1
+                    elif value == 'Clinic 3':
+                        counter_clinic3 += 1
+                    elif value == 'Clinic 4':
+                        counter_clinic4 += 1
+                    elif value == 'amSat Clinic 1' or value == 'amSat Clinic 2' or value == 'amSat Clinic 3' or value == 'amSat Clinic 4':
+                        counter_satsunam += 1
+                    elif value == 'amSun Clinic 1' or value == 'amSun Clinic 2' or value == 'amSun Clinic 3' or value == 'amSun Clinic 4':
+                        counter_satsunam += 1
+                    elif key == 'AM Leave' or key == 'PM Leave' or key == 'Whole Leave' or key == 'Priority Leave':
+                        counter_leave += 1
+                    if key == 'Duty':
+                        counter_duty += 1
+            
+            # Tabulating the total points for calls and duties
+            points_fri = 1.5 * counter_fri
+            points_sat = 2 * counter_sat
+            points_sun = 3 * counter_sun
+            points_preph = 2.5 * counter_preph
+            points_ph = 3 * counter_ph
+            points_satsunam = 0.5 * counter_satsunam
+            month_call_points = counter_wd + points_fri + points_sat + points_sun + points_preph + points_ph
+            month_calls = counter_wd + counter_fri + counter_sat + counter_sun + counter_preph + counter_ph
+
+            # Placing each day's call summary into a dictionary format
+            junior_summary[each[0]] = {
+                "Month calls" : month_calls,
+                "Month call points" : month_call_points,
+                "WD" : counter_wd,
+                "Fri" : points_fri,
+                "Sat" : points_sat,
+                "Sun" : points_sun,
+                "Pre-PH" : points_preph,
+                "PH" : points_ph,
+                "Sat/Sun AM" : points_satsunam,
+                "Leave" : counter_leave,
+                "Clinic 1" : counter_clinic1,
+                "Clinic 2" : counter_clinic2,
+                "Clinic 3" : counter_clinic3,
+                "Clinic 4" : counter_clinic4,
+                "Duties" : counter_duty
+            }
+
+            total_points = month_call_points + points_satsunam
+
+            sqlstmt = """UPDATE Points SET """ + month_num + """ = ? WHERE email = ?;""" #each[0] refers to the doctor's name
+            cur.execute(sqlstmt,(total_points,each[0]))
+            conn.commit()
+
+        # Place the 2 points summary dictionaries into a single list
+        overall_summary = [senior_summary,junior_summary]
+
         # Close connection to DB
         close_connection(conn, cur)
 
