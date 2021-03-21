@@ -1,4 +1,5 @@
 import sqlite3, datetime, json
+import pandas as pd
 from sqlite3 import Error
 from datetime import date, timedelta, datetime
 
@@ -31,6 +32,19 @@ def check_weekend(date):
         return True
     else:
         return False
+
+# Checks the day of the date
+def check_day(date):
+    week = {0: "Monday", 1: "Tuesday", 2: "Wednesday", 3: "Thursday", 4: "Friday", 5: "Saturday", 6: "Sunday"}
+    
+    # Check what is the value for the date
+    num = date.weekday()    # returns a value from 0-6 where 0 is Monday and 6 is Sunday
+    return week[num]
+
+# Check the number for the request month
+def check_month_num(request_month):
+    month = {"January": 1, "February": 2, "March": 3, "April": 4, "May": 5, "June": 6, "July": 7, "August": 8, "September": 9, "October": 10, "November": 11, "December": 12}
+    return month[request_month]
 
 # Checks whether constraints are met
 def is_constraint_met(table_name,start_date,end_date):
@@ -133,3 +147,266 @@ def is_constraint_met(table_name,start_date,end_date):
     
     except Exception as e:
         return (str(e))
+
+# Read Roster from excel file
+def readRoster():
+    # Establish connection to DB
+    conn, cur = create_connection() 
+
+    # Delete any existing data from Roster table from DB
+    cur.execute("""DELETE FROM Roster""")
+    conn.commit()
+
+    # Delete any existing data from Skill table from DB
+    cur.execute("""DELETE FROM Skill""")
+    conn.commit()
+
+    df = pd.read_excel (r'sample_excel.xlsx', sheet_name='Roster')
+    df.rename(columns=df.iloc[0], inplace = True)
+    df.drop([0], inplace = True)
+
+    '''
+    Structure: roster_dict = {
+                email 1:[name, first position, second position, posting, [skill 1,skill 2,...], type], 
+                email 2:[name, first position, second position, posting, [skill 1,skill 2,...], type],
+                ...
+            }
+    '''
+    roster_dict = {}
+
+    index = df.index
+    number_of_rows = len(index)
+
+    # Extract data and put into a dictionary
+    for i in range(number_of_rows):
+        email = df.iloc[i][0]
+        name = df.iloc[i][1]
+        first_position = df.iloc[i][2]
+        second_position = df.iloc[i][3]
+        posting = df.iloc[i][4]
+        json_skills = df.iloc[i][5]
+        skills = json_skills.split(';')
+        mo_type = df.iloc[i][6]
+        roster_dict[email] = [name,first_position,second_position,posting,skills,mo_type]
+
+        # Insert values into Roster table in DB
+        cur.execute("""INSERT OR IGNORE INTO Roster(email, name, first_position, second_position, posting, type) 
+                VALUES (?, ?, ?, ?, ?, ?);""", (email,name,first_position,second_position,posting,mo_type))
+        conn.commit()
+
+        # If a new staff joins the department, insert a fresh data column into Points table for that new staff; Old staff values are untouched
+        cur.execute("""INSERT OR IGNORE INTO Points(email, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12) 
+                VALUES (?, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);""", (email,))
+        conn.commit()
+
+        # Insert the multiple skills each staff has into Skill table in DB
+        for each_skill in skills:
+            cur.execute("""INSERT OR IGNORE INTO Skill(email, skill)  
+                    VALUES (?, ?);""", (email,each_skill))
+            conn.commit()
+    
+    # Close connection to DB
+    close_connection(conn, cur)
+
+    return roster_dict
+
+# Read Duty from excel file
+def readDuties(query_start_date,query_last_date):
+    # Establish connection to DB
+    conn, cur = create_connection() 
+
+    # Delete any existing data from Duty table from DB
+    cur.execute("""DELETE FROM Duty""")
+    conn.commit()
+    
+    df = pd.read_excel (r'sample_excel.xlsx', sheet_name='Duties')
+    #print(df)
+
+    '''
+    Structure: duties_dict = {
+                email 1:[name, duty name, start date, end date], 
+                email 2:[name, duty name, start date, end date],
+                ...
+            }
+    '''
+    duties_dict = {}
+
+    index = df.index
+    number_of_rows = len(index)
+    #print(number_of_rows)
+    #print()
+
+    #Extract data and put into a dictionary
+    for i in range(number_of_rows):
+        email = df.iloc[i][0]
+        name = df.iloc[i][1]
+        duty_name = df.iloc[i][2]
+        start_date = pd.to_datetime(df.iloc[i][3]).strftime('%Y-%m-%d')
+        #start_date = pd.to_datetime(df.iloc[i][3])
+        end_date = pd.to_datetime(df.iloc[i][4]).strftime('%Y-%m-%d')
+        #end_date = pd.to_datetime(df.iloc[i][4])
+        temp = {}
+        temp[start_date] = [name,duty_name,end_date]
+        #print(temp)
+
+        if email in duties_dict:
+            duties_dict[email].update(temp)
+        if email not in duties_dict:
+            duties_dict[email] = temp
+        
+        cur.execute("""INSERT OR IGNORE INTO Duty(email, name, duty_name, start_date, end_date) 
+                VALUES (?, ?, ?, ?, ?);""", (email,name,duty_name,start_date,end_date))
+        conn.commit()
+    
+    # Close connection to DB
+    close_connection(conn, cur)
+
+    #print(duties_dict)
+    return duties_dict
+
+# Read Training from excel file
+def readtraining(query_start_date,query_last_date):
+    # Establish connection to DB
+    conn, cur = create_connection() 
+
+    # Delete any existing data from Training table from DB
+    cur.execute("""DELETE FROM Training""")
+    conn.commit()
+
+    df = pd.read_excel (r'sample_excel.xlsx', sheet_name='Training')
+    #print(df)
+
+    '''
+    Structure: training_dict = {
+                email 1:[name, Training, start date, end date], 
+                email 2:[name, Training, start date, end date],
+                ...
+            }
+    '''
+    training_dict = {}
+
+    index = df.index
+    number_of_rows = len(index)
+    #print(number_of_rows)
+    #print()
+
+    #Extract data and put into a dictionary
+    for i in range(number_of_rows):
+        email = df.iloc[i][0]
+        name = df.iloc[i][1]
+        training = df.iloc[i][2]
+        start_date = pd.to_datetime(df.iloc[i][3]).strftime('%Y-%m-%d')
+        #start_date = pd.to_datetime(df.iloc[i][3])
+        end_date = pd.to_datetime(df.iloc[i][4]).strftime('%Y-%m-%d')
+        #end_date = pd.to_datetime(df.iloc[i][4])
+        temp = {}
+        temp[start_date] = [name,training,end_date]
+        #print(temp)
+
+        if email in training_dict:
+            training_dict[email].update(temp)
+        if email not in training_dict:
+            training_dict[email] = temp
+        
+        cur.execute("""INSERT OR IGNORE INTO Training(email, name, training, start_date, end_date) 
+                VALUES (?, ?, ?, ?, ?);""", (email,name,training,start_date,end_date))
+        conn.commit()
+
+    # Close connection to DB
+    close_connection(conn, cur)
+
+    #print(training_dict)
+    return training_dict
+
+# Read Priority Leave from excel file
+def readpleave(query_start_date,query_last_date):
+    # Establish connection to DB
+    conn, cur = create_connection() 
+
+    # Delete any existing data from Training table from DB
+    cur.execute("""DELETE FROM Training""")
+    conn.commit()
+
+    df = pd.read_excel (r'sample_excel.xlsx', sheet_name='Leaves')
+    #print(df)
+
+    '''
+    Structure: pleave_dict = {
+                email 1:[name, leave reason, start date, end date], 
+                email 2:[name, leave reason, start date, end date],
+                ...
+            }
+    '''
+    pleave_dict = {}
+
+    index = df.index
+    number_of_rows = len(index)
+    #print(number_of_rows)
+    #print()
+
+    #Extract data and put into a dictionary
+    for i in range(number_of_rows):
+        email = df.iloc[i][0]
+        name = df.iloc[i][1]
+        leave_reason = df.iloc[i][2]
+        start_date = pd.to_datetime(df.iloc[i][3]).strftime('%Y-%m-%d')
+        #start_date = pd.to_datetime(df.iloc[i][3])
+        end_date = pd.to_datetime(df.iloc[i][4]).strftime('%Y-%m-%d')
+        #end_date = pd.to_datetime(df.iloc[i][4])
+        temp = {}
+        temp[start_date] = [name,leave_reason,end_date]
+        #print(temp)
+
+        if email in pleave_dict:
+            pleave_dict[email].update(temp)
+        if email not in pleave_dict:
+            pleave_dict[email] = temp
+        
+        cur.execute("""INSERT OR IGNORE INTO PriorityLeave(email, name, reason, start_date, end_date) 
+                VALUES (?, ?, ?, ?, ?);""", (email,name,leave_reason,start_date,end_date))
+        conn.commit()
+
+    # Close connection to DB
+    close_connection(conn, cur)
+
+    #print(duties_dict)
+    return pleave_dict
+
+# [Currently not in use] Read Public Holiday from excel file
+def readPh():
+    # Establish connection to DB
+    conn, cur = create_connection() 
+
+    # Delete any existing data from PublicHoliday table from DB
+    cur.execute("""DELETE FROM PublicHoliday""")
+    conn.commit()
+
+    df = pd.read_excel (r'sample_excel.xlsx', sheet_name='Public Holiday')
+
+    '''
+    Structure: pl_dict = {
+                date 1:[name, day], 
+                date 2:[name, day],
+                ...
+            }
+    '''
+    ph_dict = {}
+
+    index = df.index
+    number_of_rows = len(index)
+
+    # Extract data and put into a dictionary
+    for i in range(number_of_rows):
+        date = pd.to_datetime(df.iloc[i][0]).strftime('%Y-%m-%d')
+        day = df.iloc[i][1]
+        name = df.iloc[i][2]
+        ph_dict[date] = [name,day]
+        cur.execute("""INSERT OR IGNORE INTO PublicHoliday(holiday_name, holiday_date, holiday_day) 
+                VALUES (?, ?, ?);""", (name,date,day))
+        conn.commit()
+
+    # Close connection to DB
+    close_connection(conn, cur)
+
+    # print(pl_dict)
+    return ph_dict
