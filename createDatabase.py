@@ -67,8 +67,19 @@ conn.commit()
 
 cur.execute("""CREATE TABLE IF NOT EXISTS Points(
    email TEXT,
-   points FLOAT,
-   PRIMARY KEY (email, points),
+   1 FLOAT,
+   2 FLOAT,
+   3 FLOAT,
+   4 FLOAT,
+   5 FLOAT,
+   6 FLOAT,
+   7 FLOAT,
+   8 FLOAT,
+   9 FLOAT,
+   10 FLOAT,
+   11 FLOAT,
+   12 FLOAT,
+   PRIMARY KEY (email),
    FOREIGN KEY (email) REFERENCES Roster (email)
    );
 """)

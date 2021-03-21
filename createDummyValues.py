@@ -75,38 +75,34 @@ cur.execute("""INSERT OR IGNORE INTO Skill(email, skill)
 conn.commit()
 
 #Table for doctor's points
-cur.execute("""INSERT OR IGNORE INTO Points(email, points) 
+cur.execute("""INSERT OR IGNORE INTO Points(email, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12) 
    VALUES
-   ('a@mail.com', '5'),
-   ('b@mail.com', '5'),
-   ('c@mail.com', '5'),
-   ('d@mail.com', '5'),
-   ('e@mail.com', '5'),
-   ('f@mail.com', '5'),
-   ('g@mail.com', '5'),  
-   ('h@mail.com', '5'),
-   ('i@mail.com', '5'), 
-   ('j@mail.com', '5'),
-   ('k@mail.com', '5'),
-   ('l@mail.com', '5'),
-   ('m@mail.com', '5'),
-   ('n@mail.com', '5'),
-   ('o@mail.com', '5'),
-   ('p@mail.com', '5'),
-   ('q@mail.com', '5'),
-   ('r@mail.com', '5'),
-   ('s@mail.com', '5'),
-   ('t@mail.com', '5'),
-   ('u@mail.com', '5'),
-   ('v@mail.com', '5'),
-   ('w@mail.com', '5'),
-   ('x@mail.com', '5'),
-   ('y@mail.com', '5'),
-   ('z@mail.com', '5'),
-   ('a@mail.com', '5'),
-   ('b@mail.com', '5'),
-   ('c@mail.com', '5'),
-   ('d@mail.com', '5')
+   ('a@mail.com', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0'),
+   ('b@mail.com', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0'),
+   ('c@mail.com', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0'),
+   ('d@mail.com', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0'),
+   ('e@mail.com', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0'),
+   ('f@mail.com', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0'),
+   ('g@mail.com', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0'),  
+   ('h@mail.com', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0'),
+   ('i@mail.com', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0'), 
+   ('j@mail.com', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0'),
+   ('k@mail.com', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0'),
+   ('l@mail.com', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0'),
+   ('m@mail.com', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0'),
+   ('n@mail.com', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0'),
+   ('o@mail.com', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0'),
+   ('p@mail.com', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0'),
+   ('q@mail.com', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0'),
+   ('r@mail.com', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0'),
+   ('s@mail.com', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0'),
+   ('t@mail.com', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0'),
+   ('u@mail.com', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0'),
+   ('v@mail.com', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0'),
+   ('w@mail.com', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0'),
+   ('x@mail.com', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0'),
+   ('y@mail.com', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0'),
+   ('z@mail.com', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0')
    ;""")
 conn.commit()
 
@@ -180,21 +176,21 @@ cur.execute("""INSERT OR IGNORE INTO Constraints(doctor_call_daily, day_off_mont
 conn.commit()
 
 # Table for public holidays in 2021
-cur.execute("""INSERT OR IGNORE INTO PublicHoliday(holiday_name, holiday_date, holiday_day) 
-   VALUES 
-   ('New Years Day', '2021-01-01', 'Friday'),
-   ('Chinese New Year', '2021-02-12', 'Friday'),
-   ('Chinese New Year', '2021-02-13', 'Saturday'),
-   ('Good Friday', '2021-04-02', 'Friday'),
-   ('Labour Day', '2021-05-01', 'Saturday'),
-   ('Hari Raya Puasa', '2021-05-13', 'Thursday'),
-   ('Vesak Day', '2021-05-26', 'Wednesday'),
-   ('Hari Raya Haji', '2021-07-20', 'Tuesday'),
-   ('National Day', '2021-08-09', 'Monday'),
-   ('Deepavali', '2021-11-04', 'Thursday'),
-   ('Christmas Day', '2021-12-25', 'Saturday')
-   ;""")
-conn.commit()
+# cur.execute("""INSERT OR IGNORE INTO PublicHoliday(holiday_name, holiday_date, holiday_day) 
+#    VALUES 
+#    ('New Years Day', '2020-01-01', 'Wednesday'),
+#    ('Chinese New Year', '2020-01-25', 'Saturday'),
+#    ('Chinese New Year', '2020-01-26', 'Sunday'),
+#    ('Good Friday', '2020-04-10', 'Friday'),
+#    ('Labour Day', '2020-05-01', 'Friday'),
+#    ('Hari Raya Puasa', '2020-05-24', 'Sunday'),
+#    ('Vesak Day', '2020-05-07', 'Thursday'),
+#    ('Hari Raya Haji', '2020-07-31', 'Friday'),
+#    ('National Day', '2020-08-09', 'Sunday'),
+#    ('Deepavali', '2020-11-14', 'Saturday'),
+#    ('Christmas Day', '2020-12-25', 'Friday')
+#    ;""")
+# conn.commit()
 
 # Close connection to DB
 close_connection(conn, cur)
