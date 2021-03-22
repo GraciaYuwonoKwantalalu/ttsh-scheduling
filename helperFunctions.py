@@ -1,4 +1,4 @@
-import sqlite3, datetime, json
+import sqlite3, datetime, json, pyodbc
 import pandas as pd
 from sqlite3 import Error
 from datetime import date, timedelta, datetime
@@ -29,9 +29,9 @@ def check_weekend(date):
     # Check what is the value for the date
     num = date.weekday()    # returns a value from 0-6 where 0 is Monday and 6 is Sunday
     if num in weekend:
-        return True
+        return 'True'
     else:
-        return False
+        return 'False'
 
 # Checks the day of the date
 def check_day(date):
@@ -67,6 +67,10 @@ def is_constraint_met(table_name,start_date,end_date):
         return (str(e))
 
     try:
+        # # If not must use the below 2 lines to convert the format
+        # start_date = datetime.strptime(start_date, '%d-%m-%Y').strftime('%Y-%m-%d')
+        # end_date = datetime.strptime(end_date, '%d-%m-%Y').strftime('%Y-%m-%d')
+
         # Manipulating the dates for the function to work
         sdate = datetime.strptime(start_date, '%Y-%m-%d').date()   # start date
         edate = datetime.strptime(end_date, '%Y-%m-%d').date()   # end date
@@ -131,9 +135,18 @@ def is_constraint_met(table_name,start_date,end_date):
                 not_met.append("amSat Clinic 3")
             if counter_p < p:
                 not_met.append("P")
+            
+            if not_met:
+                temp = {}
+                temp[day_key] = not_met
+        
+            if day_key in dict_notmet:
+                dict_notmet[day_key].update(not_met)
+            elif day_key not in dict_notmet:
+                dict_notmet[day_key] = not_met
 
         # Dictionary to store the overall days and constraints that are not met
-        dict_notmet[day_key] = not_met
+        # dict_notmet[day_key] = not_met
 
         # Close connection to DB
         close_connection(conn, cur)
@@ -143,7 +156,7 @@ def is_constraint_met(table_name,start_date,end_date):
             return dict_notmet
         # Return True when constraints met
         else:
-            return True
+            return 'True'
     
     except Exception as e:
         return (str(e))
@@ -162,8 +175,8 @@ def readRoster():
     conn.commit()
 
     df = pd.read_excel (r'sample_excel.xlsx', sheet_name='Roster')
-    df.rename(columns=df.iloc[0], inplace = True)
-    df.drop([0], inplace = True)
+    # df.rename(columns=df.iloc[0], inplace = True)
+    # df.drop([0], inplace = True)
 
     '''
     Structure: roster_dict = {
@@ -187,15 +200,15 @@ def readRoster():
         json_skills = df.iloc[i][5]
         skills = json_skills.split(';')
         mo_type = df.iloc[i][6]
-        roster_dict[email] = [name,first_position,second_position,posting,skills,mo_type]
+        roster_dict[email] = [str(name),first_position,second_position,posting,skills,mo_type]
 
         # Insert values into Roster table in DB
         cur.execute("""INSERT OR IGNORE INTO Roster(email, name, first_position, second_position, posting, type) 
-                VALUES (?, ?, ?, ?, ?, ?);""", (email,name,first_position,second_position,posting,mo_type))
+                VALUES (?, ?, ?, ?, ?, ?);""", (email,str(name),first_position,second_position,posting,mo_type))
         conn.commit()
 
         # If a new staff joins the department, insert a fresh data column into Points table for that new staff; Old staff values are untouched
-        cur.execute("""INSERT OR IGNORE INTO Points(email, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12) 
+        cur.execute("""INSERT OR IGNORE INTO Points(email, '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12') 
                 VALUES (?, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);""", (email,))
         conn.commit()
 
@@ -208,6 +221,7 @@ def readRoster():
     # Close connection to DB
     close_connection(conn, cur)
 
+    # print(roster_dict)
     return roster_dict
 
 # Read Duty from excel file
@@ -236,6 +250,12 @@ def readDuties(query_start_date,query_last_date):
     #print(number_of_rows)
     #print()
 
+    # If not must use the below 2 lines to convert the format
+    # query_start_date = datetime.strptime(query_start_date, '%d-%m-%Y').strftime('%Y-%m-%d')
+    # query_last_date = datetime.strptime(query_last_date, '%d-%m-%Y').strftime('%Y-%m-%d')
+    # print(query_start_date)
+    # print(query_last_date)
+    # print()
     #Extract data and put into a dictionary
     for i in range(number_of_rows):
         email = df.iloc[i][0]
@@ -246,7 +266,7 @@ def readDuties(query_start_date,query_last_date):
         end_date = pd.to_datetime(df.iloc[i][4]).strftime('%Y-%m-%d')
         #end_date = pd.to_datetime(df.iloc[i][4])
         temp = {}
-        temp[start_date] = [name,duty_name,end_date]
+        temp[start_date] = [str(name),duty_name,end_date]
         #print(temp)
 
         if email in duties_dict:
@@ -255,13 +275,13 @@ def readDuties(query_start_date,query_last_date):
             duties_dict[email] = temp
         
         cur.execute("""INSERT OR IGNORE INTO Duty(email, name, duty_name, start_date, end_date) 
-                VALUES (?, ?, ?, ?, ?);""", (email,name,duty_name,start_date,end_date))
+                VALUES (?, ?, ?, ?, ?);""", (email,str(name),duty_name,start_date,end_date))
         conn.commit()
     
     # Close connection to DB
     close_connection(conn, cur)
 
-    #print(duties_dict)
+    # print(duties_dict)
     return duties_dict
 
 # Read Training from excel file
@@ -290,6 +310,10 @@ def readtraining(query_start_date,query_last_date):
     #print(number_of_rows)
     #print()
 
+    # If not must use the below 2 lines to convert the format
+    # query_start_date = datetime.strptime(query_start_date, '%d-%m-%Y').strftime('%Y-%m-%d')
+    # query_last_date = datetime.strptime(query_last_date, '%d-%m-%Y').strftime('%Y-%m-%d')
+
     #Extract data and put into a dictionary
     for i in range(number_of_rows):
         email = df.iloc[i][0]
@@ -300,7 +324,7 @@ def readtraining(query_start_date,query_last_date):
         end_date = pd.to_datetime(df.iloc[i][4]).strftime('%Y-%m-%d')
         #end_date = pd.to_datetime(df.iloc[i][4])
         temp = {}
-        temp[start_date] = [name,training,end_date]
+        temp[start_date] = [str(name),training,end_date]
         #print(temp)
 
         if email in training_dict:
@@ -309,13 +333,13 @@ def readtraining(query_start_date,query_last_date):
             training_dict[email] = temp
         
         cur.execute("""INSERT OR IGNORE INTO Training(email, name, training, start_date, end_date) 
-                VALUES (?, ?, ?, ?, ?);""", (email,name,training,start_date,end_date))
+                VALUES (?, ?, ?, ?, ?);""", (email,str(name),training,start_date,end_date))
         conn.commit()
 
     # Close connection to DB
     close_connection(conn, cur)
 
-    #print(training_dict)
+    # print(training_dict)
     return training_dict
 
 # Read Priority Leave from excel file
@@ -327,7 +351,7 @@ def readpleave(query_start_date,query_last_date):
     cur.execute("""DELETE FROM Training""")
     conn.commit()
 
-    df = pd.read_excel (r'sample_excel.xlsx', sheet_name='Leaves')
+    df = pd.read_excel (r'sample_excel.xlsx', sheet_name='Priority Leave')
     #print(df)
 
     '''
@@ -344,6 +368,10 @@ def readpleave(query_start_date,query_last_date):
     #print(number_of_rows)
     #print()
 
+    # If not must use the below 2 lines to convert the format
+    # query_start_date = datetime.strptime(query_start_date, '%d-%m-%Y').strftime('%Y-%m-%d')
+    # query_last_date = datetime.strptime(query_last_date, '%d-%m-%Y').strftime('%Y-%m-%d')
+
     #Extract data and put into a dictionary
     for i in range(number_of_rows):
         email = df.iloc[i][0]
@@ -354,7 +382,7 @@ def readpleave(query_start_date,query_last_date):
         end_date = pd.to_datetime(df.iloc[i][4]).strftime('%Y-%m-%d')
         #end_date = pd.to_datetime(df.iloc[i][4])
         temp = {}
-        temp[start_date] = [name,leave_reason,end_date]
+        temp[start_date] = [str(name),leave_reason,end_date]
         #print(temp)
 
         if email in pleave_dict:
@@ -363,13 +391,13 @@ def readpleave(query_start_date,query_last_date):
             pleave_dict[email] = temp
         
         cur.execute("""INSERT OR IGNORE INTO PriorityLeave(email, name, reason, start_date, end_date) 
-                VALUES (?, ?, ?, ?, ?);""", (email,name,leave_reason,start_date,end_date))
+                VALUES (?, ?, ?, ?, ?);""", (email,str(name),leave_reason,start_date,end_date))
         conn.commit()
 
     # Close connection to DB
     close_connection(conn, cur)
 
-    #print(duties_dict)
+    # print(pleave_dict)
     return pleave_dict
 
 # [Currently not in use] Read Public Holiday from excel file
@@ -408,5 +436,199 @@ def readPh():
     # Close connection to DB
     close_connection(conn, cur)
 
-    # print(pl_dict)
+    # print(ph_dict)
     return ph_dict
+
+# Check for clashes in the excel file
+def clashes(query_start_date,query_last_date):
+    # Format the start and end dates of the schedule to appropriate format
+    # query_start_date = datetime.strptime(query_start_date, '%d-%m-%Y').strftime('%Y-%m-%d')
+    # query_last_date = datetime.strptime(query_last_date, '%d-%m-%Y').strftime('%Y-%m-%d')
+    
+    # Combined dictionary to store all the data from the excel file for the scheduled dates
+    combined = {}
+    
+    # Reading and storing the excel file data
+    sdate = datetime.strptime(query_start_date, '%Y-%m-%d').date()   # start date
+    edate = datetime.strptime(query_last_date, '%Y-%m-%d').date()   # end date
+    delta = edate - sdate       # as timedelta
+    for date_diff in range(delta.days + 1):
+        day = sdate + timedelta(days=date_diff)     # 2020-08-02 (datetime object format)
+        day_key = day.strftime("%Y-%m-%d")          # 2020-08-02 (string format)
+        display_day = check_day(day) + " " + day.strftime("%d-%m-%Y")   # Sunday 31-12-2020 (string format)
+        
+        # Read Training from excel and store inside training_list
+        training_list = []
+        df = pd.read_excel (r'sample_excel.xlsx', sheet_name='Training')
+        index = df.index
+        number_of_rows = len(index)
+        for i in range(number_of_rows):
+            start_date = pd.to_datetime(df.iloc[i][3]).strftime('%Y-%m-%d')
+            end_date = pd.to_datetime(df.iloc[i][4]).strftime('%Y-%m-%d')
+            if day >= datetime.strptime(start_date, '%Y-%m-%d').date() and day <= datetime.strptime(end_date, '%Y-%m-%d').date():
+                email = df.iloc[i][0]
+                name = df.iloc[i][1]
+                training = df.iloc[i][2]
+                training_list.append([email,str(name),training,start_date,end_date])
+        
+        # Read Duties from excel and store inside duty_list
+        duty_list = []
+        df = pd.read_excel (r'sample_excel.xlsx', sheet_name='Duties')
+        index = df.index
+        number_of_rows = len(index)
+        for i in range(number_of_rows):
+            start_date = pd.to_datetime(df.iloc[i][3]).strftime('%Y-%m-%d')
+            end_date = pd.to_datetime(df.iloc[i][4]).strftime('%Y-%m-%d')
+            if day >= datetime.strptime(start_date, '%Y-%m-%d').date() and day <= datetime.strptime(end_date, '%Y-%m-%d').date():
+                email = df.iloc[i][0]
+                name = df.iloc[i][1]
+                duty_name = df.iloc[i][2]
+                duty_list.append([email,str(name),duty_name,start_date,end_date])
+        
+        # Read Priority Leave from excel and store inside pl_list
+        pl_list = []
+        df = pd.read_excel (r'sample_excel.xlsx', sheet_name='Priority Leave')
+        index = df.index
+        number_of_rows = len(index)
+        for i in range(number_of_rows):
+            start_date = pd.to_datetime(df.iloc[i][3]).strftime('%Y-%m-%d')
+            end_date = pd.to_datetime(df.iloc[i][4]).strftime('%Y-%m-%d')
+            if day >= datetime.strptime(start_date, '%Y-%m-%d').date() and day <= datetime.strptime(end_date, '%Y-%m-%d').date():
+                email = df.iloc[i][0]
+                name = df.iloc[i][1]
+                leave_reason = df.iloc[i][2]
+                pl_list.append([email,str(name),leave_reason,start_date,end_date])
+
+        # Merging all the lists into 1 single combined dictionary
+        combined[day_key] = {"Training": training_list,"Duties": duty_list, "Priority Leave": pl_list}
+
+    # Read the excel data stored in the combined dictionary to determine if there are clashes
+    clash_dict = {}
+    for date,value in combined.items():
+        doc_list = []
+        clash_doc_list = []
+        full_list = []
+        clash_list = []
+        for activity,lists in value.items():
+            for each in lists:
+                if each[0] not in doc_list:
+                    doc_list.append(each[0])
+                else:
+                    if each[0] not in clash_doc_list:
+                        clash_doc_list.append(each[0])
+                each.append(activity)
+                full_list.append(each)
+        
+        # If there are doctors having schedule clashes, start populating the clash_dict
+        if len(clash_doc_list) != 0:
+            unique_doc_list = []      
+            for c in full_list:
+                activity_type_list = []   
+                if c[0] in clash_doc_list and c[0] not in unique_doc_list:
+                    clash_list.append(c)
+                    unique_doc_list.append(c[0])
+                    activity_type_list.append(c[5])
+                    for i in full_list:
+                        if i[0] == c[0] and i[5] not in activity_type_list:
+                            activity_type_list.append(i[5])
+                    if date in clash_dict:
+                        clash_dict[date].append([c[0],c[1],activity_type_list])
+                    elif date not in clash_dict:
+                        clash_dict[date] = [[c[0],c[1],activity_type_list]]
+    
+    # If there are clashes, return the clashes dictionary
+    if clash_dict:       
+        return clash_dict       # Format: {date:[ [email,name,[Training,Duty,Priority Leave]], [email,name,[Training,Duty,Priority Leave]]], date: ...}
+    # If there are no clashes, return False
+    else:
+        return 'False'
+
+# Export Points table into excel file
+def exportPoints():
+    # Establish connection to DB
+    conn, cur = create_connection()
+
+    # Query from Points Table in DB and put into a Pandas Dataframe
+    script = """SELECT * FROM Points;"""
+    cur.execute(script)
+    columns = [desc[0] for desc in cur.description]
+    data = cur.fetchall()
+    df = pd.DataFrame(list(data), columns=columns)
+
+    # Writing the Dataframe data into an excel file and saving the excel file
+    writer = pd.ExcelWriter('points.xlsx')
+    df.to_excel(writer, sheet_name='Points')
+    writer.save()
+
+    # Close connection to DB
+    close_connection(conn, cur)
+
+    return 'True'
+
+# Export Temp table into excel file
+def exportSchedule():
+    # Establish connection to DB
+    conn, cur = create_connection()
+
+    # Query from Temp Table in DB and put into a Pandas Dataframe
+    script = """SELECT * FROM Temp;"""
+    cur.execute(script)
+    columns = [desc[0] for desc in cur.description]
+    data = cur.fetchall()
+    df = pd.DataFrame(list(data), columns=columns)
+
+    # Writing the Dataframe data into an excel file and saving the excel file
+    writer = pd.ExcelWriter('schedule.xlsx')
+    df.to_excel(writer, sheet_name='Schedule')
+    writer.save()
+
+    # Close connection to DB
+    close_connection(conn, cur)
+
+    return 'True'
+
+# Export ICU1Duty table into excel file
+def exportICU1Duty():
+    # Establish connection to DB
+    conn, cur = create_connection()
+
+    # Query from ICU1Duty Table in DB and put into a Pandas Dataframe
+    script = """SELECT * FROM ICU1Duty;"""
+    cur.execute(script)
+    columns = [desc[0] for desc in cur.description]
+    data = cur.fetchall()
+    df = pd.DataFrame(list(data), columns=columns)
+
+    # Writing the Dataframe data into an excel file and saving the excel file
+    writer = pd.ExcelWriter('ICU1.xlsx')
+    df.to_excel(writer, sheet_name='ICU1Duty')
+    writer.save()
+
+    # Close connection to DB
+    close_connection(conn, cur)
+
+    return 'True'
+
+# Export ICU2Duty table into excel file
+def exportICU2Duty():
+    # Establish connection to DB
+    conn, cur = create_connection()
+
+    # Query from ICU2Duty Table in DB and put into a Pandas Dataframe
+    script = """SELECT * FROM ICU2Duty;"""
+    cur.execute(script)
+    columns = [desc[0] for desc in cur.description]
+    data = cur.fetchall()
+    df = pd.DataFrame(list(data), columns=columns)
+
+    # Writing the Dataframe data into an excel file and saving the excel file
+    writer = pd.ExcelWriter('ICU2.xlsx')
+    df.to_excel(writer, sheet_name='ICU2Duty')
+    writer.save()
+
+    # Close connection to DB
+    close_connection(conn, cur)
+
+    return 'True'
+
+
