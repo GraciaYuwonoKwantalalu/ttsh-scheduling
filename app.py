@@ -360,11 +360,11 @@ def retrieve_timetable():
     try:
         clash_checker = clashes(query_start_date,query_last_date)
         if clash_checker == 'False':
-            readRoster()
-            readtraining(query_start_date,query_last_date)
-            readDuties(query_start_date,query_last_date)
-            readpleave(query_start_date,query_last_date)
-            readPh()
+            A = readRoster()
+            B = readtraining(query_start_date,query_last_date)
+            C = readDuties(query_start_date,query_last_date)
+            D = readpleave(query_start_date,query_last_date)
+            # E = readPh()
         else:
             return clash_checker, 501
 
@@ -380,13 +380,13 @@ def retrieve_timetable():
         day_off_monthly = constraints_results[2]
         max_call_month_4 = constraints_results[3]
         max_call_month_5 = constraints_results[4]
-        total_call = constraints_results[5]
-        clinic1 = constraints_results[6]
-        clinic2 = constraints_results[7]
-        amSat_clinic4 = constraints_results[8]
-        amSat_clinic1 = constraints_results[9]
-        amSat_clinic3 = constraints_results[10]
-        p = constraints_results[11]
+        # total_call = constraints_results[5]
+        # clinic1 = constraints_results[6]
+        # clinic2 = constraints_results[7]
+        # amSat_clinic4 = constraints_results[8]
+        # amSat_clinic1 = constraints_results[9]
+        # amSat_clinic3 = constraints_results[10]
+        # p = constraints_results[11]
 
         # Fetch the doctor's name stored in DB
         cur.execute("""SELECT name FROM Roster;""")
@@ -458,6 +458,11 @@ def retrieve_timetable():
         (query_start_date, query_last_date, query_last_date, query_start_date))
         la_results = cur.fetchall()
 
+        # Fetch the call request data stored in DB
+        cur.execute("""SELECT * FROM CallRequest WHERE date >= ? AND date <= ?;""",
+        (query_start_date, query_last_date))
+        cr_results = cur.fetchall()
+
         # Fetch the public holiday data stored in DB
         cur.execute("""SELECT * FROM PublicHoliday;""")
         ph_results = cur.fetchall()
@@ -466,10 +471,9 @@ def retrieve_timetable():
         return (str(e)), 403
 
     # Run the LP and get the LP results that are stored in DB
+    # The input for run_lp is from read_excel functions above + days_for_dates_v3 + excel2matrix
     try:
-        run_lp(doctor_call_daily, day_off_monthly, max_call_month_4, max_call_month_5, 
-                total_call, clinic1, clinic2, amSat_clinic4, amSat_clinic1, amSat_clinic3, p, 
-                duty_results, training_results, pl_results, ph_results)
+        run_lp(doctor_call_daily, day_off_monthly, max_call_month_4, max_call_month_5, query_start_date, query_last_date, doc_list, A, B, C, D)
         
         # # Fetch the call LP data stored in DB (call LP data should only contain processed data for the requested schedule month)
         # cur.execute("""SELECT * FROM CallLP;""")
