@@ -447,7 +447,7 @@ def readLeaveApplication(doc_list,query_start_date, query_last_date):
     # Establish connection to DB
     conn, cur = create_connection()
 
-    # Fetch the call request data stored in DB
+    # Fetch the leave application data stored in DB
     cur.execute("""SELECT * FROM LeaveApplication WHERE start_date >= ? INTERSECT SELECT * FROM LeaveApplication WHERE start_date <= ? 
         UNION SELECT * FROM LeaveApplication WHERE end_date <= ? INTERSECT SELECT * FROM LeaveApplication WHERE end_date >= ?;""",
     (query_start_date, query_last_date, query_last_date, query_start_date))
