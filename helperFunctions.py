@@ -348,7 +348,7 @@ def readpleave(query_start_date,query_last_date):
     conn, cur = create_connection() 
 
     # Delete any existing data from Training table from DB
-    cur.execute("""DELETE FROM Training""")
+    cur.execute("""DELETE FROM PriorityLeave""")
     conn.commit()
 
     df = pd.read_excel (r'sample_excel.xlsx', sheet_name='Priority Leave')
@@ -399,6 +399,93 @@ def readpleave(query_start_date,query_last_date):
 
     # print(pleave_dict)
     return pleave_dict
+
+# Read Call Request from DB
+def readCallRequest(doc_list,query_start_date, query_last_date):
+    # Establish connection to DB
+    conn, cur = create_connection()
+
+    # Fetch the call request data stored in DB
+    cur.execute("""SELECT * FROM CallRequest WHERE date >= ? AND date <= ?;""",
+    (query_start_date, query_last_date))
+    cr_results = cur.fetchall()
+
+    '''
+    Structure: cr_dict = {
+                email 1:[name, request type, remark], 
+                email 2:[name, request type, remark],
+                ...
+            }
+    '''
+
+    # Dictionary to store the call request results
+    cr_dict = {}
+
+    # Reading from the DB results
+    for each in cr_results:
+        email = each[1]
+        name = each[2]
+        request_type = each[4]
+        date = pd.to_datetime(each[3]).strftime('%Y-%m-%d')
+        remark = each[5]
+
+        temp = {}
+        temp[date] = [str(name),request_type,remark]
+
+        if email in cr_dict:
+            cr_dict[email].update(temp)
+        if email not in cr_dict:
+            cr_dict[email] = temp
+    
+    # Close connection to DB
+    close_connection(conn, cur)
+
+    return cr_dict
+
+# Read Leave Application from DB
+def readLeaveApplication(doc_list,query_start_date, query_last_date):
+    # Establish connection to DB
+    conn, cur = create_connection()
+
+    # Fetch the call request data stored in DB
+    cur.execute("""SELECT * FROM LeaveApplication WHERE start_date >= ? INTERSECT SELECT * FROM LeaveApplication WHERE start_date <= ? 
+        UNION SELECT * FROM LeaveApplication WHERE end_date <= ? INTERSECT SELECT * FROM LeaveApplication WHERE end_date >= ?;""",
+    (query_start_date, query_last_date, query_last_date, query_start_date))
+    la_results = cur.fetchall()
+
+    '''
+    Structure: la_dict = {
+                email 1:[name, request type, remark], 
+                email 2:[name, request type, remark],
+                ...
+            }
+    '''
+
+    # Dictionary to store the call request results
+    la_dict = {}
+
+    # Reading from the DB results
+    for each in la_results:
+        email = each[1]
+        name = each[2]
+        leave_type = each[6]
+        start_date = pd.to_datetime(each[3]).strftime('%Y-%m-%d')
+        end_date = pd.to_datetime(each[4]).strftime('%Y-%m-%d')
+        remark = each[7]
+        duration = each[5]
+
+        temp = {}
+        temp[start_date] = [str(name),leave_type,end_date, duration, remark]
+
+        if email in la_dict:
+            la_dict[email].update(temp)
+        if email not in la_dict:
+            la_dict[email] = temp
+    
+    # Close connection to DB
+    close_connection(conn, cur)
+
+    return la_dict
 
 # [Currently not in use] Read Public Holiday from excel file
 def readPh():
