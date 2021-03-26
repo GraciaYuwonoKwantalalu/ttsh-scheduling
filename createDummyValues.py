@@ -164,9 +164,9 @@ conn.commit()
 # This table data should be obtained from employee emails 
 cur.execute("""INSERT OR IGNORE INTO CallRequest(email, name, date, request_type, remark) 
    VALUES
-   ('V', 'V', '2020-07-21', 'No call only', 'Busy'),
-   ('W', 'W', '2020-07-21', 'No call & no weekend duty', 'Very busy'),
-   ('X', 'X', '2020-07-21', 'On Call', NULL)
+   ('V', 'V', '2020-03-21', 'No call only', 'Busy'),
+   ('W', 'W', '2020-03-21', 'No call & no weekend duty', 'Very busy'),
+   ('X', 'X', '2020-03-21', 'On Call', NULL)
    ;""")
 conn.commit()
 
@@ -176,21 +176,21 @@ cur.execute("""INSERT OR IGNORE INTO Constraints(doctor_call_daily, day_off_mont
 conn.commit()
 
 # Table for public holidays in 2020
-cur.execute("""INSERT OR IGNORE INTO PublicHoliday(holiday_name, holiday_date, holiday_day) 
-   VALUES 
-   ('New Years Day', '2020-01-01', 'Wednesday'),
-   ('Chinese New Year', '2020-01-25', 'Saturday'),
-   ('Chinese New Year', '2020-01-26', 'Sunday'),
-   ('Good Friday', '2020-04-10', 'Friday'),
-   ('Labour Day', '2020-05-01', 'Friday'),
-   ('Hari Raya Puasa', '2020-05-24', 'Sunday'),
-   ('Vesak Day', '2020-05-07', 'Thursday'),
-   ('Hari Raya Haji', '2020-07-31', 'Friday'),
-   ('National Day', '2020-08-09', 'Sunday'),
-   ('Deepavali', '2020-11-14', 'Saturday'),
-   ('Christmas Day', '2020-12-25', 'Friday')
-   ;""")
-conn.commit()
+# cur.execute("""INSERT OR IGNORE INTO PublicHoliday(holiday_name, holiday_date, holiday_day) 
+#    VALUES 
+#    ('New Years Day', '2020-01-01', 'Wednesday'),
+#    ('Chinese New Year', '2020-01-25', 'Saturday'),
+#    ('Chinese New Year', '2020-01-26', 'Sunday'),
+#    ('Good Friday', '2020-04-10', 'Friday'),
+#    ('Labour Day', '2020-05-01', 'Friday'),
+#    ('Hari Raya Puasa', '2020-05-24', 'Sunday'),
+#    ('Vesak Day', '2020-05-07', 'Thursday'),
+#    ('Hari Raya Haji', '2020-07-31', 'Friday'),
+#    ('National Day', '2020-08-09', 'Sunday'),
+#    ('Deepavali', '2020-11-14', 'Saturday'),
+#    ('Christmas Day', '2020-12-25', 'Friday')
+#    ;""")
+# conn.commit()
 
 # Close connection to DB
 close_connection(conn, cur)
