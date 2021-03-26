@@ -5,7 +5,7 @@ import json
 import pandas as pd
 from flask import Flask, redirect, url_for, render_template, request, session, flash, make_response, request
 from datetime import date, timedelta, datetime
-from helperFunctions import create_connection, close_connection, check_weekend, check_day, check_month_num, is_constraint_met, readRoster, readDuties, readtraining, readpleave, readPh, clashes, exportPoints, exportSchedule, exportICU1Duty, exportICU2Duty
+from helperFunctions import create_connection, close_connection, check_weekend, check_day, check_month_num, check_eveph, is_constraint_met, readRoster, readDuties, readtraining, readpleave, readCallRequest, readLeaveApplication, readPh, clashes, exportPoints, exportSchedule, exportICU1Duty, exportICU2Duty, email_json
 from lpFunction import run_lp
 from pprint import pprint
 # import datetime
@@ -364,9 +364,11 @@ def retrieve_timetable():
             B = readtraining(query_start_date,query_last_date)
             C = readDuties(query_start_date,query_last_date)
             D = readpleave(query_start_date,query_last_date)
-            # E = readPh()
+            E = readPh()
         else:
             return clash_checker, 501
+        
+        F = email_json(query_start_date,query_last_date)
 
     except Exception as e:
         return (str(e)), 402
@@ -463,9 +465,9 @@ def retrieve_timetable():
         (query_start_date, query_last_date))
         cr_results = cur.fetchall()
 
-        # Fetch the public holiday data stored in DB
-        cur.execute("""SELECT * FROM PublicHoliday;""")
-        ph_results = cur.fetchall()
+        # Fetch the public holiday data stored in DB (Will remove publicholiday table in DB)
+        # cur.execute("""SELECT * FROM PublicHoliday;""")
+        # ph_results = cur.fetchall()
 
     except Exception as e:
         return (str(e)), 403
@@ -473,11 +475,55 @@ def retrieve_timetable():
     # Run the LP and get the LP results that are stored in DB
     # The input for run_lp is from read_excel functions above + days_for_dates_v3 + excel2matrix
     try:
-        run_lp(doctor_call_daily, day_off_monthly, max_call_month_4, max_call_month_5, query_start_date, query_last_date, doc_list, A, B, C, D)
+        lp_result = run_lp(doctor_call_daily, day_off_monthly, max_call_month_4, max_call_month_5, query_start_date, query_last_date, doc_list, A, B, C, D)
         
-        # # Fetch the call LP data stored in DB (call LP data should only contain processed data for the requested schedule month)
-        # cur.execute("""SELECT * FROM CallLP;""")
-        # call_lp_results = cur.fetchall()
+        # Insert lp results into DB
+        for doc,monthly_activity in lp_result.items():
+            cur.execute("""SELECT name FROM Roster where email = ?""",(doc,))
+            query_result = cur.fetchone()
+            doc_name = query_result[0]
+            for each_day in monthly_activity:
+                if each_day[1] == 1:
+                    day = check_day(datetime.strptime(each_day[0], '%Y-%m-%d').date())
+                    cr_dict = readCallRequest(doc_list,query_start_date,query_last_date)
+                    check_ph_eve = check_eveph(each_day[0],E)
+                    if doc in cr_dict:
+                        if day == 'Friday':
+                            request_type = 'crF'
+                        elif day == 'Saturday':
+                            request_type = 'crSat'
+                        elif day == 'Sunday':
+                            request_type = 'crSun'
+                        elif day in E:
+                            request_type = 'crPH'
+                        elif check_ph_eve == True:
+                            request_type = 'crpPH'
+                        else:
+                            request_type = 'cr'
+                        remark = cr_dict[doc][2]
+                    # When doctors assigned calls but they did not request for calls
+                    else:
+                        if day == 'Friday':
+                            request_type = 'cF'
+                        elif day == 'Saturday':
+                            request_type = 'cSat'
+                        elif day == 'Sunday':
+                            request_type = 'cSun'
+                        elif day in E:
+                            request_type = 'cPH'
+                        elif check_ph_eve == True:
+                            request_type = 'cpPH'
+                        else:
+                            request_type = 'c'
+                        remark = 'NULL'
+                    
+                    cur.execute("""INSERT INTO CallLP (email,name,date,request_type,remark) VALUES (?,?,?,?,?);""",
+                    (doc,doc_name,each_day[0],request_type,remark))
+                    conn.commit()
+
+        # Fetch the call LP data stored in DB (call LP data should only contain processed data for the requested schedule month)
+        cur.execute("""SELECT * FROM CallLP;""")
+        call_lp_results = cur.fetchall()
 
         # # Fetch the leave LP data stored in DB (leave LP data should only contain processed data for the requested schedule month)
         # cur.execute("""SELECT * FROM LeaveLP WHERE start_date >= ? INTERSECT SELECT * FROM LeaveLP WHERE start_date <= ? 
@@ -526,7 +572,7 @@ def retrieve_timetable():
             weekend_checker = check_weekend(day)    # True: date is on a weekend; False: date is on a weekday
 
             # Check if date is a public holiday (based on public holidays stored in DB)
-            if day in ph_results:
+            if day in E:
                 ph_checker = 'True'   # Date is a public holiday
             else:
                 ph_checker = 'False'  # Date is not a public holiday
@@ -561,15 +607,15 @@ def retrieve_timetable():
                 if day >= datetime.strptime(startDate, '%Y-%m-%d').date() and day <= datetime.strptime(endDate, '%Y-%m-%d').date():
                     priority_leave[doc_name] = leave_reason
             
-            # # Storing all doctor's calls based on LP for schedule month in call_LP dictionary
-            # call_LP = {}
-            # for doc in call_lp_results:
-            #     call_date = doc[3]
-            #     doc_name = doc[2]
-            #     call_type = doc[4]
-            #     remark = doc[5]
-            #     if day == datetime.strptime(call_date, '%Y-%m-%d').date():
-            #         call_LP[doc_name] = call_type,remark
+            # Storing all doctor's calls based on LP for schedule month in call_LP dictionary
+            call_LP = {}
+            for doc in call_lp_results:
+                call_date = doc[3]
+                doc_name = doc[2]
+                call_type = doc[4]
+                remark = doc[5]
+                if day == datetime.strptime(call_date, '%Y-%m-%d').date():
+                    call_LP[doc_name] = call_type,remark
             
             # # Storing all doctor's leaves based on LP for schedule month in leave_LP dictionary
             # leave_LP = {}
@@ -598,8 +644,8 @@ def retrieve_timetable():
                     one_doc_dict[each_doc] = {"Duty": duty[each_doc]}
                 elif each_doc in priority_leave:
                     one_doc_dict[each_doc] = {"Priority Leave": priority_leave[each_doc]}
-                # elif each_doc in call_LP:
-                #     one_doc_dict[each_doc] = {call_LP[each_doc][0]: call_LP[each_doc][1]}
+                elif each_doc in call_LP:
+                    one_doc_dict[each_doc] = {call_LP[each_doc][0]: call_LP[each_doc][1]}
                 # elif each_doc in leave_LP:    #la_results
                     # leave_converter = {
                     #     "Annual Leave" : "Leave (AL)",
@@ -650,8 +696,8 @@ def retrieve_timetable():
                     one_doc_dict[each_doc] = {"Duty": duty[each_doc]}
                 elif each_doc in priority_leave:
                     one_doc_dict[each_doc] = {"Priority Leave": priority_leave[each_doc]}
-                # elif each_doc in call_LP:
-                #     one_doc_dict[each_doc] = {call_LP[each_doc][0]: call_LP[each_doc][1]}
+                elif each_doc in call_LP:
+                    one_doc_dict[each_doc] = {call_LP[each_doc][0]: call_LP[each_doc][1]}
                 # elif each_doc in leave_LP:    #la_results
                     # leave_converter = {
                     #     "Annual Leave" : "Leave (AL)",
@@ -702,8 +748,8 @@ def retrieve_timetable():
                     one_doc_dict[each_doc] = {"Duty": duty[each_doc]}
                 elif each_doc in priority_leave:
                     one_doc_dict[each_doc] = {"Priority Leave": priority_leave[each_doc]}
-                # elif each_doc in call_LP:
-                #     one_doc_dict[each_doc] = {call_LP[each_doc][0]: call_LP[each_doc][1]}
+                elif each_doc in call_LP:
+                    one_doc_dict[each_doc] = {call_LP[each_doc][0]: call_LP[each_doc][1]}
                 # elif each_doc in leave_LP:    #la_results
                     # leave_converter = {
                     #     "Annual Leave" : "Leave (AL)",
@@ -1046,118 +1092,118 @@ def retrieve_call_summary():
         return (str(e)), 402
 
 # API endpoint to check public holidays
-@app.route('/check_public_holiday', methods=['GET'])
-def check_ph():
-    try:
-        # Establish connection to DB
-        conn, cur = create_connection()
+# @app.route('/check_public_holiday', methods=['GET'])
+# def check_ph():
+#     try:
+#         # Establish connection to DB
+#         conn, cur = create_connection()
 
-        # Obtain the schedule's start date and end date
-        start_date = request.form['start_date']         # Must be in this format of dd-mm-yyyy
-        end_date = request.form['end_date']             # Must be in this format of dd-mm-yyyy
+#         # Obtain the schedule's start date and end date
+#         start_date = request.form['start_date']         # Must be in this format of dd-mm-yyyy
+#         end_date = request.form['end_date']             # Must be in this format of dd-mm-yyyy
 
-        # If not must use the below 2 lines to convert the format
-        start_date = datetime.strptime(start_date, '%d-%m-%Y').strftime('%Y-%m-%d')
-        end_date = datetime.strptime(end_date, '%d-%m-%Y').strftime('%Y-%m-%d')
+#         # If not must use the below 2 lines to convert the format
+#         start_date = datetime.strptime(start_date, '%d-%m-%Y').strftime('%Y-%m-%d')
+#         end_date = datetime.strptime(end_date, '%d-%m-%Y').strftime('%Y-%m-%d')
 
-        # Delete any old data inside PublicHoliday table in DB
-        cur.execute("""DELETE FROM PublicHoliday""")
-        conn.commit()
+#         # Delete any old data inside PublicHoliday table in DB
+#         cur.execute("""DELETE FROM PublicHoliday""")
+#         conn.commit()
 
-    except Exception as e:
-        return (str(e)), 404
+#     except Exception as e:
+#         return (str(e)), 404
     
-    try:
-        # Manipulating the dates for the function to work
-        sdate = datetime.strptime(start_date, '%Y-%m-%d').date()   # start date
-        edate = datetime.strptime(end_date, '%Y-%m-%d').date()   # end date
-        syear = sdate.year
-        eyear = edate.year
+#     try:
+#         # Manipulating the dates for the function to work
+#         sdate = datetime.strptime(start_date, '%Y-%m-%d').date()   # start date
+#         edate = datetime.strptime(end_date, '%Y-%m-%d').date()   # end date
+#         syear = sdate.year
+#         eyear = edate.year
 
-        # Weekdays as a tuple
-        weekDays = ("Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday")
+#         # Weekdays as a tuple
+#         weekDays = ("Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday")
 
-        sg_Holiday = []
-        count = 0
+#         sg_Holiday = []
+#         count = 0
 
-        # When the scheduled month is within the same year
-        if syear == eyear:
-            # Singapore Holidays - the starting year
-            for holiday in sorted(holidays.Singapore(years=syear).items()):
-                # Get the day of that week
-                holiday_date = holiday[0]
-                holiday_day = holiday_date.weekday()
-                holiday_weekday = weekDays[holiday_day]
+#         # When the scheduled month is within the same year
+#         if syear == eyear:
+#             # Singapore Holidays - the starting year
+#             for holiday in sorted(holidays.Singapore(years=syear).items()):
+#                 # Get the day of that week
+#                 holiday_date = holiday[0]
+#                 holiday_day = holiday_date.weekday()
+#                 holiday_weekday = weekDays[holiday_day]
                 
-                count += 1
+#                 count += 1
                 
-                case = {
-                    "ID": count,
-                    "HolidayName":holiday[1],
-                    "HolidayDate":format(holiday[0]),
-                    "HolidayDay":format(holiday_weekday)
-                }
+#                 case = {
+#                     "ID": count,
+#                     "HolidayName":holiday[1],
+#                     "HolidayDate":format(holiday[0]),
+#                     "HolidayDay":format(holiday_weekday)
+#                 }
 
-                cur.execute("""INSERT OR IGNORE INTO PublicHoliday(holiday_id, holiday_name, holiday_date, holiday_day) 
-                VALUES (?, ?, ?, ?);""", (count,holiday[1],format(holiday[0]),format(holiday_weekday)))
-                conn.commit()
+#                 cur.execute("""INSERT OR IGNORE INTO PublicHoliday(holiday_id, holiday_name, holiday_date, holiday_day) 
+#                 VALUES (?, ?, ?, ?);""", (count,holiday[1],format(holiday[0]),format(holiday_weekday)))
+#                 conn.commit()
 
-                sg_Holiday.append(case)
+#                 sg_Holiday.append(case)
 
-        # When the scheduled month spills over into the next year
-        else:
-            # Singapore Holidays - the starting year
-            for holiday in sorted(holidays.Singapore(years=syear).items()):
-                # Get the day of that week
-                holiday_date = holiday[0]
-                holiday_day = holiday_date.weekday()
-                holiday_weekday = weekDays[holiday_day]
+#         # When the scheduled month spills over into the next year
+#         else:
+#             # Singapore Holidays - the starting year
+#             for holiday in sorted(holidays.Singapore(years=syear).items()):
+#                 # Get the day of that week
+#                 holiday_date = holiday[0]
+#                 holiday_day = holiday_date.weekday()
+#                 holiday_weekday = weekDays[holiday_day]
                 
-                count += 1
+#                 count += 1
                 
-                case = {
-                    "ID": count,
-                    "HolidayName":holiday[1],
-                    "HolidayDate":format(holiday[0]),
-                    "HolidayDay":format(holiday_weekday)
-                }
+#                 case = {
+#                     "ID": count,
+#                     "HolidayName":holiday[1],
+#                     "HolidayDate":format(holiday[0]),
+#                     "HolidayDay":format(holiday_weekday)
+#                 }
 
-                cur.execute("""INSERT OR IGNORE INTO PublicHoliday(holiday_id, holiday_name, holiday_date, holiday_day) 
-                VALUES (?, ?, ?, ?);""", (count,holiday[1],format(holiday[0]),format(holiday_weekday)))
-                conn.commit()
+#                 cur.execute("""INSERT OR IGNORE INTO PublicHoliday(holiday_id, holiday_name, holiday_date, holiday_day) 
+#                 VALUES (?, ?, ?, ?);""", (count,holiday[1],format(holiday[0]),format(holiday_weekday)))
+#                 conn.commit()
 
-                sg_Holiday.append(case)
+#                 sg_Holiday.append(case)
 
-            # Singapore Holidays - the ending year
-            for holiday in sorted(holidays.Singapore(years=eyear).items()):
-                # Get the day of that week
-                holiday_date = holiday[0]
-                holiday_day = holiday_date.weekday()
-                holiday_weekday = weekDays[holiday_day]
+#             # Singapore Holidays - the ending year
+#             for holiday in sorted(holidays.Singapore(years=eyear).items()):
+#                 # Get the day of that week
+#                 holiday_date = holiday[0]
+#                 holiday_day = holiday_date.weekday()
+#                 holiday_weekday = weekDays[holiday_day]
                 
-                count += 1
+#                 count += 1
                 
-                case = {
-                    "ID": count,
-                    "HolidayName":holiday[1],
-                    "HolidayDate":format(holiday[0]),
-                    "HolidayDay":format(holiday_weekday)
-                }
+#                 case = {
+#                     "ID": count,
+#                     "HolidayName":holiday[1],
+#                     "HolidayDate":format(holiday[0]),
+#                     "HolidayDay":format(holiday_weekday)
+#                 }
 
-                cur.execute("""INSERT OR IGNORE INTO PublicHoliday(holiday_id, holiday_name, holiday_date, holiday_day) 
-                VALUES (?, ?, ?, ?);""", (count,holiday[1],format(holiday[0]),format(holiday_weekday)))
-                conn.commit()
+#                 cur.execute("""INSERT OR IGNORE INTO PublicHoliday(holiday_id, holiday_name, holiday_date, holiday_day) 
+#                 VALUES (?, ?, ?, ?);""", (count,holiday[1],format(holiday[0]),format(holiday_weekday)))
+#                 conn.commit()
 
-                sg_Holiday.append(case)
+#                 sg_Holiday.append(case)
 
-        # Close connection to DB
-        close_connection(conn, cur)
+#         # Close connection to DB
+#         close_connection(conn, cur)
 
-        # Return the public holidays for the year to UI
-        return(str(sg_Holiday)), 200
+#         # Return the public holidays for the year to UI
+#         return(str(sg_Holiday)), 200
 
-    except Exception as e:
-        return (str(e)), 404
+#     except Exception as e:
+#         return (str(e)), 404
 
 # Checking and storing the ICU 1 Duty for the scheduled month
 @app.route('/insert_icu_1_duties', methods=['POST'])
