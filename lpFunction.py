@@ -3,6 +3,7 @@ import pandas as pd
 from pulp import *
 from datetime import date, timedelta, datetime
 from helperFunctions import create_connection, close_connection, readRoster, readCallRequest, readLeaveApplication, readtraining, readDuties, readpleave
+from pprint import pprint
 
 # Reads from the excelresult variables and displays in matrix format
 def generalmatrix(excelsheet_result,doc_list,sdate,edate,delta):
@@ -37,12 +38,6 @@ def call_matrix(doc_list,query_start_date,query_last_date,delta):
     # List to store the matrix for LP
     combined_list = []
 
-    # Changing dates from text to datetime object format
-    # sdate = datetime.strptime(query_start_date, '%Y-%m-%d').date()   # start date
-    # edate = datetime.strptime(query_last_date, '%Y-%m-%d').date()   # end date
-    # delta = query_last_date - query_start_date       # as timedelta
-    # sdate = query_start_date    # Changing the variable name only
-
     # Convert datetime objects to string format to query DB
     string_start_date = query_start_date.strftime("%Y-%m-%d")
     string_end_date = query_last_date.strftime("%Y-%m-%d")
@@ -60,7 +55,7 @@ def call_matrix(doc_list,query_start_date,query_last_date,delta):
                 checking_flag = False
                 for sdates,detailed in cr_dict[doc].items():
                     sdateo = datetime.strptime(sdates, '%Y-%m-%d').date()
-                    if day == sdateo:
+                    if day == sdateo and detailed[1] == "On Call":
                         checking_flag = True
 
                 if checking_flag == False:
@@ -78,12 +73,6 @@ def call_matrix(doc_list,query_start_date,query_last_date,delta):
 def leave_matrix(doc_list,query_start_date,query_last_date,delta):
     # List to store the matrix for LP
     combined_list = []
-
-    # Changing dates from text to datetime object format
-    # sdate = datetime.strptime(query_start_date, '%Y-%m-%d').date()   # start date
-    # edate = datetime.strptime(query_last_date, '%Y-%m-%d').date()   # end date
-    # delta = query_last_date - query_start_date       # as timedelta
-    # sdate = query_start_date    # Changing the variable name only
 
     # Convert datetime objects to string format to query DB
     string_start_date = query_start_date.strftime("%Y-%m-%d")
@@ -220,8 +209,6 @@ def run_lp(doctor_call_daily, day_off_monthly, max_call_month_4, max_call_month_
         dates_between_Start_N_End_Date.append(dateOnly)
         yearOnly = day.strftime("%Y")
         yearOnlyInt = int(yearOnly)
-        # mthOnly = day.strftime("%m")
-        # dayOnly = day.strftime("%d")
 
         day = day.weekday()
         weekdayOnly = weekDays[day]
@@ -229,9 +216,9 @@ def run_lp(doctor_call_daily, day_off_monthly, max_call_month_4, max_call_month_
         case = {
             "HolidayDate":dateOnly,
             "yearInt":yearOnlyInt,
-            #"year":yearOnly,
-            #"mth":mthOnly,
-            #"day":dayOnly,
+            "year":yearOnly,
+            "mth":mthOnly,
+            "day":dayOnly,
             "weekday":weekdayOnly
         }
         
@@ -241,11 +228,8 @@ def run_lp(doctor_call_daily, day_off_monthly, max_call_month_4, max_call_month_
             yearList.append(yearOnly)
 
     holidate=[]
-    # print(dates_info)
     for i in dates_info:
-        #print(i)
         weekdayOnly = i['weekday']
-        # yearInt = i['yearInt']
         pointScore = 0
         loopday.append(weekdayOnly)
         if weekdayOnly == "Monday":
@@ -277,31 +261,30 @@ def run_lp(doctor_call_daily, day_off_monthly, max_call_month_4, max_call_month_
         pointsList.append(pointScore)
 
     points=[]
-    friday=[] #added new
-    saturday=[] #added new
-    sunday=[] #added new
-    holidayDay=[] #added new
-    SatSun=[] #added new
+    friday=[] 
+    saturday=[] 
+    sunday=[]
+    holidayDay=[]
+    SatSun=[]
     dicts=readRoster()
     for i in range(0,len(dicts)): 
         points.append(pointsList)
 
     Days=[]
-    for i in range(delta.days+1):
-        # print(i)
+    for i in range(1,delta.days+2):
         Days.append(i)
 
-    for i in range(1,delta.days+1):
+    for i in range(delta.days+1):
         if(loopday[i]=="Friday" or loopday[i]=="Saturday" or loopday[i]=="Sunday"):
             weekends.append(Days[i]) 
-        if(loopday[i]=="Saturday" or loopday[i]=="Sunday"): #added new
-            SatSun.append(Days[i]) #added new
-        if(loopday[i]=="Friday"): #added new
-            friday.append(Days[i]) #added new
-        if(loopday[i]=="Saturday"): #added new
-            saturday.append(Days[i]) #added new
-        if(loopday[i]=="Sunday"): #added new
-            sunday.append(Days[i]) #added new
+        if(loopday[i]=="Saturday" or loopday[i]=="Sunday"):
+            SatSun.append(Days[i])
+        if(loopday[i]=="Friday"):
+            friday.append(Days[i]) 
+        if(loopday[i]=="Saturday"): 
+            saturday.append(Days[i]) 
+        if(loopday[i]=="Sunday"):
+            sunday.append(Days[i])
     for i in holidate: 
         holidayDay.append(dates_between_Start_N_End_Date.index(i)+1)
 
@@ -422,7 +405,6 @@ def run_lp(doctor_call_daily, day_off_monthly, max_call_month_4, max_call_month_
     lpDict={}
 
     for v in prob.variables():
-        # print (v.name.split("_")[1], "=", v.varValue)
         doc = v.name.split("_")[1]
         day= int(v.name.split("_")[2])
         output=int(v.varValue)
@@ -444,7 +426,6 @@ def run_lp(doctor_call_daily, day_off_monthly, max_call_month_4, max_call_month_
     # Sort Array according to day
     for key in lpDict:
         lpDict[key] = Sort(lpDict[key])
-    #print(lpDict)
 
     #output with date for database
     lpDict2= lpDict
@@ -458,29 +439,5 @@ def run_lp(doctor_call_daily, day_off_monthly, max_call_month_4, max_call_month_
             lpDict2[key][i][0]=dates_between_Start_N_End_Date[(lpDict2[key][i][0])-1]
         callArray.append(docArray)
         docArray=[]
-    #print(callArray)
-    print(lpDict2)
+    pprint(lpDict2)
     return lpDict2
-
-# query_start_date = '2020-03-01'
-# query_last_date = '2020-04-01'
-
-# # Establish connection to DB
-# conn, cur = create_connection()
-
-# # Fetch the doctor's name stored in DB
-# cur.execute("""SELECT name FROM Roster;""")
-# roster_results = cur.fetchall()
-# doc_list = []
-# for each in roster_results:
-#     doc_list.append(each[0])
-
-# # Close connection to DB
-# close_connection(conn, cur)
-
-# A = readRoster()
-# B = readtraining(query_start_date,query_last_date)
-# C = readDuties(query_start_date,query_last_date)
-# D = readpleave(query_start_date,query_last_date)
-
-# run_lp(3, 4, 6, 7, query_start_date, query_last_date, doc_list, A, B, C, D)
