@@ -75,36 +75,41 @@ th {
     <div class="container">
         <div class="row">
             <div class="col-md-12 text-center text">
+                <form method='post'>
                 <h3>ICU 2</h3>
                 <div class="row">
                     <div class="table-wrapper-scroll-y my-custom-scrollbar">
-                    <table class="table table-bordered table-striped mb-0">
-                        <thead>
-                            <tr>
-                                <th></th>
-                                <th><input type='text' placeholder='Dr A'></th>
-                                <th><input type='text' placeholder='Dr B'></th>
-                                <th><input type='text' placeholder='Dr C'></th>
-                                <th><input type='text' placeholder='Dr D'></th>
-                                <th scope="col">Total On Call</th>
-                            </tr>
-                        </thead>
+                        <table class="table table-bordered table-striped mb-0">
+                            <thead>
+                                <tr>
+                                    <th></th>
+                                    <th><input type='text' placeholder='Dr A'></th>
+                                    <th><input type='text' placeholder='Dr B'></th>
+                                    <th><input type='text' placeholder='Dr C'></th>
+                                    <th><input type='text' placeholder='Dr D'></th>
+                                    <th scope="col">Total On Call</th>
+                                </tr>
+                            </thead>
 
-                        <tbody>
-                            <tr>
-                            {% for key,overall_summary_item in call_summary_dict.items() %}
-                                <th>{{key}}</th>
-                                <td><input type='text'></td>
-                                <td><input type='text'></td>
-                                <td><input type='text'></td>
-                                <td><input type='text'></td>
-                                <td>1</td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
+                            <tbody>
+                                <tr>
+                                {% for key,overall_summary_item in call_summary_dict.items() %}
+                                    <th>{{key}}</th>
+                                        <td><input type='text' name='first'></td>
+                                        <td><input type='text' name='second'></td>
+                                        <td><input type='text' name='third'></td>
+                                        <td><input type='text' name='fourth'></td>
+                                        <td>1</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                        <br><br>
                     </div>
                 </div>
+                <br><br>
+                <input class="contact-button" type='button' value='Submit' />
+                </form>
             </div>
         </div>
     </div>

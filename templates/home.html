@@ -3,6 +3,11 @@
 {% block title %}Points{% endblock %}
 
 {% block content %}
+<link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+<link rel="stylesheet" href="/resources/demos/style.css">
+<script src="https://code.jquery.com/jquery-1.12.4.js"></script>
+<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+
 <!-- WELCOME STARTS -->
 <div class="banner" id="banner">
     <div style="background-image: url('../static/images/ttsh_building.jpg'); ">
@@ -35,25 +40,25 @@
                     <form action='extract_dates' method='post'>
                         Selected Month:
                         <select name='selected_month' class="form-control">
-                            <option>Jan</option>
-                            <option>Feb</option>
-                            <option>Mar</option>
-                            <option>Apr</option>
+                            <option>January</option>
+                            <option>February</option>
+                            <option>March</option>
+                            <option>April</option>
                             <option>May</option>
-                            <option>Jun</option>
-                            <option>Jul</option>
-                            <option>Aug</option>
-                            <option>Sep</option>
-                            <option>Oct</option>
-                            <option>Nov</option>
-                            <option>Dec</option>
+                            <option>June</option>
+                            <option>July</option>
+                            <option>August</option>
+                            <option>September</option>
+                            <option>October</option>
+                            <option>November</option>
+                            <option>December</option>
                         </select>
                         <br>
                         Start Date:
-                        <input type='date' name='start_date' class="form-control"/>
+                        <input type='text' id="startDate" name='start_date' placeholder="dd-mm-yyyy" class="form-control"/>
                         <br>
                         End Date:
-                        <input type='date' name='end_date' class="form-control"/>
+                        <input type='text' id="endDate" name='end_date' placeholder="dd-mm-yyyy" class="form-control"/>
                         <br><br>
                         <input class="contact-button" type='submit' value='Generate' />
                     </form>
@@ -63,4 +68,14 @@
     </div>
 </div>
 <!-- EMAIL FILTER MODAL ENDS -->
+
+<script>
+$('input[id$=startDate]').datepicker({
+    dateFormat: 'dd-mm-yy'
+});
+
+$('input[id$=endDate]').datepicker({
+    dateFormat: 'dd-mm-yy'
+});
+</script>
 {% endblock %}

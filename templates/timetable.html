@@ -4,8 +4,6 @@
 
 {% block content %}
 
-<link rel="stylesheet" href="https://cdn.datatables.net/1.10.24/css/jquery.dataTables.min.css"/>
-
 <style>
 th {
     text-align:center;
@@ -37,7 +35,6 @@ table {
 .table-wrapper-scroll-y {
     display: block;
 }
-
 </style>    
 
 <br><br>
@@ -60,18 +57,20 @@ table {
                 <div class="modal-body">
                     Please specify type & remarks.
                     <div class="contact-form">
-                        <form action='email_filter' method='post'>
-                            <select>
-                                <option>Duties</option>
-                                <option>On-Leave</option>
+                        <form method='post'>
+                            <select id="selected_type">
+                                <option value="Duty">Duty</option>
+                                <option value="On-Leave">On-Leave</option>
+                                <option value="On-Call">On-Call</option>
+                                <option value="Off (No Call)">Off (No Call)</option>
+                                <option value="Off (Null)">Off (Null)</option>
+                                <option value="Working">Working</option>
                             </select>
 
-                            <select>
-                                <option>ICU 1</option>
-                                <option>ICU 2</option>
+                            <select id="selected_details">
                             </select>
                             <br><br>
-                            <input class="contact-button" type='submit' value='Update' />
+                            <input class="contact-button" type='submit' value='Update' id="update-type-button"/>
                         </form>
                     </div>
                 </div>
@@ -82,21 +81,21 @@ table {
 <!-- UPDATE MODAL ENDS -->
 
 <!-- COMMENT MODAL STARTS -->
-<div class="modal fade bd-example-modal-sm" id="commentModal" tabindex="-1" role="dialog" aria-labelledby="commentModal" aria-hidden="true">
+<div class="modal fade bd-example-modal-sm" id="commentModal" role="dialog">
     <div class="modal-dialog modal-sm">
         <div class="modal-content">
             <div class="col text-center">
                 <div class="modal-header">
-                    <h3 class="modal-title" id="commentModal">Update Type & Remarks
+                    <h3 class="modal-title">Update Type & Remarks
                     <button type="button" class="close" data-dismiss="modal">&times;</button></h3>
                 </div>
                 <div class="modal-body">
                     Please type in your comment.
                     <div class="contact-form">
-                        <form action='email_filter' method='post'>
-                            <input type='text' name='comment' placeholder="Comment" class="form-control"/>
+                        <form method='post'>
+                            <input type='text' id='comment' placeholder="Comment" class="form-control"/>
                             <br><br>
-                            <input class="contact-button" type='submit' value='Update' />
+                            <input class="contact-button" type='button' value='Update' id="update-comment-button"/>
                         </form>
                     </div>
                 </div>
@@ -106,12 +105,12 @@ table {
 </div>
 <!-- COMMENT MODAL ENDS -->
 
-<!-- TIMETABLE STARTS -->
-<div class="testimonials" id="timetable_table">
+<!-- TIMETABLE (JUNIOR) STARTS -->
+<div class="testimonials" id="timetable_table_junior">
     <div class="container">
         <div class="row">
             <div class="col-md-12 text-center text">
-                <h3>Timetable</h3>
+                <h3>Timetable (Junior Doctors)</h3>
                 <div class="row">
                     <div class="table-wrapper-scroll-y my-custom-scrollbar">
                     <div class="hack1">
@@ -119,63 +118,66 @@ table {
                             <table class="table table-bordered table-striped mb-0">
                                 <thead>
                                     <tr>
-                                        <th></th>
-                                        {% for col in column_names %}
-                                        <th style="height:5px;width:500px">{{col}}</th>
+                                        <th><div style="width:100px;"></div></th>
+                                        {% for status, doctors in timetable_dict.items() %}
+                                            {% for doctor,schedule in doctors.items() %}
+                                                {% for date, allocation in schedule.items() %}
+                                                    <th><div style="width:100px;">{{date.split()[0]}}<br>{{date.split()[1]}}</div></th>
+                                                {% endfor %}
+                                            {% endfor %}
                                         {% endfor %}
                                     </tr>
                                 </thead>
                                 
                                 <tbody>
-                                    {% for row_, data in zip(row_names,row_data) %}
                                     <tr>
-                                        <th>{{row_}}</th>
-                                        {% for i in data %}
-                                            {% for key in i %}
-                                                {% if key == "Duty" %}
-                                                <td style=background-color:#51E2F5>
-                                                    <a href="#" data-toggle="modal" data-target="#updateModal" data-toggle="tooltip"
-                                                        title="Remarks from SGForm">{{key}}<br>({{i[key]}})</a>
-                                                    <a style="cursor:pointer" href="#" data-toggle="modal"
-                                                        data-target="#commentModal"><i id="ellipsis" class="fas fa-ellipsis-v"
-                                                            style="color:rgb(158, 155, 155); float:right"></i></a>
-                                                </td>
-                                                {% elif key == "Training" %}
-                                                <td style=background-color:#9DF9EF>
-                                                    <a href="#" data-toggle="modal" data-target="#updateModal" data-toggle="tooltip"
-                                                        title="Remarks from SGForm">{{key}} ({{i[key]}})</a>
-                                                    <a style="cursor:pointer" href="#" data-toggle="modal"
-                                                        data-target="#commentModal"><i id="ellipsis" class="fas fa-ellipsis-v"
-                                                            style="color:rgb(158, 155, 155); float:right"></i></a>
-                                                </td>
-                                                {% elif key == "Working" %}
-                                                <td style=background-color:#EDF7F6>
-                                                    <a href="#" data-toggle="modal" data-target="#updateModal" data-toggle="tooltip"
-                                                        title="Remarks from SGForm">{{key}}</a>
-                                                    <a style="cursor:pointer" href="#" data-toggle="modal"
-                                                        data-target="#commentModal"><i id="ellipsis" class="fas fa-ellipsis-v"
-                                                            style="color:rgb(158, 155, 155); float:right"></i></a>
-                                                </td>
-                                                {% elif key == "Priority Leave" %}
-                                                <td style=background-color:#FFA8B6>
-                                                    <a href="#" data-toggle="modal" data-target="#updateModal" data-toggle="tooltip"
-                                                        title="Remarks from SGForm">{{key}} ({{i[key]}})</a>
-                                                    <a style="cursor:pointer" href="#" data-toggle="modal"
-                                                        data-target="#commentModal"><i id="ellipsis" class="fas fa-ellipsis-v"
-                                                            style="color:rgb(158, 155, 155); float:right"></i></a>
-                                                </td>
-                                                {% elif key == "Off" %}
-                                                <td style=background-color:#A28089>
-                                                    <a href="#" data-toggle="modal" data-target="#updateModal" data-toggle="tooltip"
-                                                        title="Remarks from SGForm">{{key}} </a>
-                                                    <a style="cursor:pointer" href="#" data-toggle="modal"
-                                                        data-target="#commentModal"><i id="ellipsis" class="fas fa-ellipsis-v"
-                                                            style="color:rgb(158, 155, 155); float:right"></i></a>
-                                                </td>
-                                                {% endif %}
-                                            {% endfor %}						
-                                        {% endfor %}
-                                    </tr>
+                                    {% for status, doctors in timetable_dict.items() %}
+                                        {% if status == "J" %}
+                                            {% for doctor, schedule in doctors.items() %}
+                                                <td><b>{{doctor}}</b></td>
+                                                {% for date, allocation in schedule.items() %}
+                                                    {% for type, remarks in allocation.items() %}
+                                                        {% if type == "Duty" %}
+                                                        <td style=background-color:#9FEDD7>
+                                                            <a href="#" data-toggle="modal" data-target="#updateModal" data-toggle="tooltip"
+                                                                title="Remarks from SGForm" id="{{doctor}}-{{date}}">{{type}}<br>({{remarks}})</a>
+                                                            <a style="cursor:pointer" id="{{doctor}}-{{date}}" onclick="showCommentModal(id)">
+                                                                <i id="ellipsis" class="fas fa-ellipsis-v" style="color:rgb(158, 155, 155); float:right"></i></a>
+                                                        </td>
+                                                        {% elif type == "Training" %}
+                                                        <td style=background-color:#FBE8A6>
+                                                            <a href="#" data-toggle="modal" data-target="#updateModal" data-toggle="tooltip"
+                                                                title="Remarks from SGForm" id="{{doctor}}-{{date}}">{{type}} ({{remarks}})</a>
+                                                            <a style="cursor:pointer" id="{{doctor}}-{{date}}" onclick="showCommentModal(id)">
+                                                                <i id="ellipsis" class="fas fa-ellipsis-v" style="color:rgb(158, 155, 155); float:right"></i></a>
+                                                        </td>
+                                                        {% elif type == "Working" %}
+                                                        <td style=background-color:#FCE181>
+                                                            <a href="#" data-toggle="modal" data-target="#updateModal"
+                                                                title="" id="{{doctor}}-{{date}}">{{type}}</a>
+                                                            <a style="cursor:pointer" id="{{doctor}}-{{date}}" onclick="showCommentModal(id)">
+                                                                <i id="ellipsis" class="fas fa-ellipsis-v" style="color:rgb(158, 155, 155); float:right"></i></a>
+                                                        </td>
+                                                        {% elif type == "Priority Leave" %}
+                                                        <td style=background-color:#D3E3FC>
+                                                            <a href="#" data-toggle="modal" data-target="#updateModal" data-toggle="tooltip"
+                                                                title="Remarks from SGForm" id="{{doctor}}-{{date}}">{{type}} ({{remarks}})</a>
+                                                            <a style="cursor:pointer" id="{{doctor}}-{{date}}" onclick="showCommentModal(id)">
+                                                                <i id="ellipsis" class="fas fa-ellipsis-v" style="color:rgb(158, 155, 155); float:right"></i></a>
+                                                        </td>
+                                                        {% elif type == "Off" %}
+                                                        <td style=background-color:#FEF9C7>
+                                                            <a href="#" data-toggle="modal" data-target="#updateModal" 
+                                                                title="Remarks from SGForm" id="{{doctor}}-{{date}}">{{type}}</a>
+                                                            <a style="cursor:pointer" id="{{doctor}}-{{date}}" onclick="showCommentModal(id)">
+                                                                <i id="ellipsis" class="fas fa-ellipsis-v" style="color:rgb(158, 155, 155); float:right"></i></a>
+                                                        </td>
+                                                        {% endif %}    
+                                                    {% endfor %}
+                                                {% endfor %}
+                                                </tr>
+                                            {% endfor %}
+                                        {% endif %}
                                     {% endfor %}
                                 </tbody>
                             </table>
@@ -187,29 +189,93 @@ table {
         </div>
     </div>
 </div>
-<!-- TIMETABLE ENDS -->
+<!-- TIMETABLE (JUNIOR) ENDS -->
 
-<!-- CALL SUMMARY STARTS -->
-<div class="portfolio" id="call_summary_table">
+<!-- TIMETABLE (SENIOR) STARTS -->
+<div class="portfolio" id="timetable_table_senior">
     <div class="container">
         <div class="row">
-            <div class="col-md-12 text-center">
-                <h3>Call Summary</h3>
+            <div class="col-md-12 text-center text">
+                <h3>Timetable (Junior Doctors)</h3>
                 <div class="row">
+                    <div class="table-wrapper-scroll-y my-custom-scrollbar">
                     <div class="hack1">
                         <div class="hack2">
                             <table class="table table-bordered table-striped mb-0">
-                                {% for table in call_summary_tables %}
-                                {{ table|safe }}
-                                {% endfor %}
+                                <thead>
+                                    <tr>
+                                        <th><div style="width:100px;"></div></th>
+                                        {% for status, doctors in timetable_dict.items() %}
+                                            {% for doctor,schedule in doctors.items() %}
+                                                {% for date, allocation in schedule.items() %}
+                                                    <th><div style="width:100px;">{{date.split()[0]}}<br>{{date.split()[1]}}</div></th>
+                                                {% endfor %}
+                                            {% endfor %}
+                                        {% endfor %}
+                                    </tr>
+                                </thead>
+                                
+                                <tbody>
+                                    <tr>
+                                    {% for status, doctors in timetable_dict.items() %}
+                                        {% if status == "J" %}
+                                            {% for doctor, schedule in doctors.items() %}
+                                                <td><b>{{doctor}}</b></td>
+                                                {% for date, allocation in schedule.items() %}
+                                                    {% for type, remarks in allocation.items() %}
+                                                        {% if type == "Duty" %}
+                                                        <td style=background-color:#9FEDD7>
+                                                            <a href="#" data-toggle="modal" data-target="#updateModal" data-toggle="tooltip"
+                                                                title="Remarks from SGForm" id="{{doctor}}-{{date}}">{{type}}<br>({{remarks}})</a>
+                                                            <a style="cursor:pointer" id="{{doctor}}-{{date}}" onclick="showCommentModal(id)">
+                                                                <i id="ellipsis" class="fas fa-ellipsis-v" style="color:rgb(158, 155, 155); float:right"></i></a>
+                                                        </td>
+                                                        {% elif type == "Training" %}
+                                                        <td style=background-color:#FBE8A6>
+                                                            <a href="#" data-toggle="modal" data-target="#updateModal" data-toggle="tooltip"
+                                                                title="Remarks from SGForm" id="{{doctor}}-{{date}}">{{type}} ({{remarks}})</a>
+                                                            <a style="cursor:pointer" id="{{doctor}}-{{date}}" onclick="showCommentModal(id)">
+                                                                <i id="ellipsis" class="fas fa-ellipsis-v" style="color:rgb(158, 155, 155); float:right"></i></a>
+                                                        </td>
+                                                        {% elif type == "Working" %}
+                                                        <td style=background-color:#FCE181>
+                                                            <a href="#" data-toggle="modal" data-target="#updateModal"
+                                                                title="Remarks from FormSG" id="{{doctor}}-{{date}}">{{type}}</a>
+                                                            <a style="cursor:pointer" id="{{doctor}}-{{date}}" onclick="showCommentModal(id)">
+                                                                <i id="ellipsis" class="fas fa-ellipsis-v" style="color:rgb(158, 155, 155); float:right"></i></a>
+                                                        </td>
+                                                        {% elif type == "Priority Leave" %}
+                                                        <td style=background-color:#D3E3FC>
+                                                            <a href="#" data-toggle="modal" data-target="#updateModal" data-toggle="tooltip"
+                                                                title="Remarks from SGForm" id="{{doctor}}-{{date}}">{{type}} ({{remarks}})</a>
+                                                            <a style="cursor:pointer" id="{{doctor}}-{{date}}" onclick="showCommentModal(id)">
+                                                                <i id="ellipsis" class="fas fa-ellipsis-v" style="color:rgb(158, 155, 155); float:right"></i></a>
+                                                        </td>
+                                                        {% elif type == "Off" %}
+                                                        <td style=background-color:#FEF9C7>
+                                                            <a href="#" data-toggle="modal" data-target="#updateModal" 
+                                                                title="Remarks from SGForm" id="{{doctor}}-{{date}}">{{type}}</a>
+                                                            <a style="cursor:pointer" id="{{doctor}}-{{date}}" onclick="showCommentModal(id)">
+                                                                <i id="ellipsis" class="fas fa-ellipsis-v" style="color:rgb(158, 155, 155); float:right"></i></a>
+                                                        </td>
+                                                        {% endif %}    
+                                                    {% endfor %}
+                                                {% endfor %}
+                                                </tr>
+                                            {% endfor %}
+                                        {% endif %}
+                                    {% endfor %}
+                                </tbody>
                             </table>
                         </div>
+                    </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
+    </div>    
 </div>
+<!-- TIMETABLE (SENIOR) ENDS -->
 
 <!-- BUTTON STARTS -->
 <div class="call-to-action">
@@ -226,15 +292,59 @@ table {
 </div>
 <!-- BUTTON ENDS -->
 
-<script src="https://code.jquery.com/jquery-3.5.1.js"></script>
-<script src="https://cdn.datatables.net/1.10.24/js/jquery.dataTables.min.js"></script>
 <script>
-    $(document).ready(function() {
-    $('#example').DataTable( {
-        "pagingType": "full_numbers"
-    } );
-} );
-</script>
+function showCommentModal(id) {
+    $("#commentModal").modal("show");
 
+    $('#update-comment-button').click(function(){
+        var comment = document.getElementById("comment").value;
+        $("#commentModal").modal("hide");
+        var tooltip = document.getElementById(id);
+        tooltip.title = comment; 
+        tooltip.id = "updated" . id;
+    });
+}
+
+document.getElementById('selected_type').onchange=function(){
+    var type = this;
+    var details = document.getElementById("selected_details");
+    var option = document.createElement("option");
+    document.getElementById("selected_details").options.length = 0;
+    
+    if (type.value == "Duty") {
+        var details_array = {'ICU 1':'ICU 1', 'ICU 2':'ICU 2', 'ICU 3':'ICU 3', 'ICU 4':'ICU 4',
+                            'Clinic 1':'Clinic 1', 'Clinic 2':'Clinic 2', 'Clinic 3':'Clinic 3', 'Clinic 4':'Clinic 4',
+                            'amSat Clinic 1':'amSat Clinic 1', 'amSat Clinic 3':'amSat Clinic 3', 'amSat Clinic 4':'amSat Clinic 4', 'P':'P'};
+        
+    } else if (type.value == "On-Leave") {
+        var details_array = {'Leave (AL)':'Leave (AL)', 'Leave (Training)':'Leave (Training)', 'Leave (MC/HL)':'Leave (MC/HL)', 'Leave (Reservist)':'Leave (Reservist)',
+                            'Leave (Family)':'Leave (Family)', 'Leave (Child)':'Leave (Child)', 'Leave (Marriage)':'Leave (Marriage)', 'Leave (Maternity)':'Leave (Maternity)',
+                            'Leave (Paternity)':'Leave (Paternity)', 'Leave (Others)':'Leave (Others)'};
+
+    } else if (type.value == "On-Call") {
+        var details_array = {'c':'c', 'cr':'cr', 'cF':'cF', 'cSat':'cSat',
+                            'cSun':'cSun', 'cpPh':'cpPh', 'cPH':'cPH', 'crF':'crF',
+                            'crSat':'crSat', 'crSun':'crSun', 'crpPH':'crpPH', 'crPH':'crPH'};
+
+    } else if (type.value == "Off (No Call)") {
+        var details_array = {}
+
+    } else if (type.value == "Off (Null)") {
+        var details_array = {};
+
+    } else {
+        var details_array = {};
+    }
+
+    for(index in details_array) {
+        details.options[details.options.length] = new Option(details_array[index], index);
+    }
+
+    $('#update-type-button').click(function(){
+        console.log(type.value)
+        console.log(details.value)
+    });
+}
+</script>
 {% endblock %}
 
