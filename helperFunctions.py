@@ -11,7 +11,7 @@ def create_connection():
         cur = conn.cursor()
         return conn, cur
     except Error as e:
-        print(e)
+        # print(e)
         return (str(e))
 
 # Close a database connection to a SQLite database
@@ -20,7 +20,7 @@ def close_connection(conn, cur):
         cur.close()
         conn.close()
     except Error as e:
-        print(e)
+        # print(e)
         return (str(e))
 
 # Checks whether a date is a weekday or weekend
@@ -241,6 +241,10 @@ def readDuties(query_start_date,query_last_date):
     # Delete any existing data from Duty table from DB
     cur.execute("""DELETE FROM Duty""")
     conn.commit()
+
+    # Reset the auto incremental numbers when each month's schedule is being generated
+    cur.execute("""DELETE FROM sqlite_sequence WHERE name = 'Duty';""")
+    conn.commit()
     
     df = pd.read_excel (r'sample_excel.xlsx', sheet_name='Duties')
     #print(df)
@@ -302,6 +306,10 @@ def readtraining(query_start_date,query_last_date):
     cur.execute("""DELETE FROM Training""")
     conn.commit()
 
+    # Reset the auto incremental numbers when each month's schedule is being generated
+    cur.execute("""DELETE FROM sqlite_sequence WHERE name = 'Training';""")
+    conn.commit()
+
     df = pd.read_excel (r'sample_excel.xlsx', sheet_name='Training')
     #print(df)
 
@@ -358,6 +366,10 @@ def readpleave(query_start_date,query_last_date):
 
     # Delete any existing data from Training table from DB
     cur.execute("""DELETE FROM PriorityLeave""")
+    conn.commit()
+
+    # Reset the auto incremental numbers when each month's schedule is being generated
+    cur.execute("""DELETE FROM sqlite_sequence WHERE name = 'PriorityLeave';""")
     conn.commit()
 
     df = pd.read_excel (r'sample_excel.xlsx', sheet_name='Priority Leave')
@@ -496,17 +508,9 @@ def readLeaveApplication(doc_list,query_start_date, query_last_date):
 
     return la_dict
 
-# [Currently not in use] Read Public Holiday from excel file
+# Read Public Holiday from excel file
 def readPh():
-    # Establish connection to DB
-    conn, cur = create_connection() 
-
-    # Delete any existing data from PublicHoliday table from DB
-    cur.execute("""DELETE FROM PublicHoliday""")
-    conn.commit()
-
     df = pd.read_excel (r'sample_excel.xlsx', sheet_name='Public Holiday')
-
     '''
     Structure: pl_dict = {
                 date 1:[name, day], 
@@ -525,12 +529,6 @@ def readPh():
         day = df.iloc[i][1]
         name = df.iloc[i][2]
         ph_dict[date] = [name,day]
-        cur.execute("""INSERT OR IGNORE INTO PublicHoliday(holiday_name, holiday_date, holiday_day) 
-                VALUES (?, ?, ?);""", (name,date,day))
-        conn.commit()
-
-    # Close connection to DB
-    close_connection(conn, cur)
 
     # print(ph_dict)
     return ph_dict
@@ -639,35 +637,13 @@ def clashes(query_start_date,query_last_date):
     else:
         return 'False'
 
-# Export Points table into excel file
-def exportPoints():
-    # Establish connection to DB
-    conn, cur = create_connection()
-
-    # Query from Points Table in DB and put into a Pandas Dataframe
-    script = """SELECT * FROM Points;"""
-    cur.execute(script)
-    columns = [desc[0] for desc in cur.description]
-    data = cur.fetchall()
-    df = pd.DataFrame(list(data), columns=columns)
-
-    # Writing the Dataframe data into an excel file and saving the excel file
-    writer = pd.ExcelWriter('points.xlsx')
-    df.to_excel(writer, sheet_name='Points')
-    writer.save()
-
-    # Close connection to DB
-    close_connection(conn, cur)
-
-    return 'True'
-
-# Export Temp table into excel file
-def exportSchedule():
+# Export TempS table into excel file
+def exportScheduleS():
     # Establish connection to DB
     conn, cur = create_connection()
 
     # Query from Temp Table in DB and put into a Pandas Dataframe
-    script = """SELECT * FROM Temp;"""
+    script = """SELECT * FROM TempS;"""
     cur.execute(script)
     columns = [desc[0] for desc in cur.description]
     data = cur.fetchall()
@@ -675,7 +651,7 @@ def exportSchedule():
 
     # Writing the Dataframe data into an excel file and saving the excel file
     writer = pd.ExcelWriter('schedule.xlsx')
-    df.to_excel(writer, sheet_name='Schedule')
+    df.to_excel(writer, sheet_name='SeniorSchedule')
     writer.save()
 
     # Close connection to DB
@@ -683,43 +659,21 @@ def exportSchedule():
 
     return 'True'
 
-# Export ICU1Duty table into excel file
-def exportICU1Duty():
+# Export TempJ table into excel file
+def exportScheduleJ():
     # Establish connection to DB
     conn, cur = create_connection()
 
-    # Query from ICU1Duty Table in DB and put into a Pandas Dataframe
-    script = """SELECT * FROM ICU1Duty;"""
+    # Query from Temp Table in DB and put into a Pandas Dataframe
+    script = """SELECT * FROM TempJ;"""
     cur.execute(script)
     columns = [desc[0] for desc in cur.description]
     data = cur.fetchall()
     df = pd.DataFrame(list(data), columns=columns)
 
     # Writing the Dataframe data into an excel file and saving the excel file
-    writer = pd.ExcelWriter('ICU1.xlsx')
-    df.to_excel(writer, sheet_name='ICU1Duty')
-    writer.save()
-
-    # Close connection to DB
-    close_connection(conn, cur)
-
-    return 'True'
-
-# Export ICU2Duty table into excel file
-def exportICU2Duty():
-    # Establish connection to DB
-    conn, cur = create_connection()
-
-    # Query from ICU2Duty Table in DB and put into a Pandas Dataframe
-    script = """SELECT * FROM ICU2Duty;"""
-    cur.execute(script)
-    columns = [desc[0] for desc in cur.description]
-    data = cur.fetchall()
-    df = pd.DataFrame(list(data), columns=columns)
-
-    # Writing the Dataframe data into an excel file and saving the excel file
-    writer = pd.ExcelWriter('ICU2.xlsx')
-    df.to_excel(writer, sheet_name='ICU2Duty')
+    writer = pd.ExcelWriter('schedule.xlsx')
+    df.to_excel(writer, sheet_name='JuniorSchedule')
     writer.save()
 
     # Close connection to DB
@@ -948,7 +902,23 @@ def email_json(start_dateA,end_dateA):
         needed_emails.pop(i[0])
     
     ### Establish connection to DB
-    conn, cur = create_connection() 
+    conn, cur = create_connection()
+
+    # Delete any existing data from Training table from DB
+    cur.execute("""DELETE FROM LeaveApplication""")
+    conn.commit()
+
+    # Delete any existing data from Training table from DB
+    cur.execute("""DELETE FROM CallRequest""")
+    conn.commit()
+
+    # Reset the auto incremental numbers when each month's schedule is being generated
+    cur.execute("""DELETE FROM sqlite_sequence WHERE name = 'LeaveApplication';""")
+    conn.commit()
+
+    # Reset the auto incremental numbers when each month's schedule is being generated
+    cur.execute("""DELETE FROM sqlite_sequence WHERE name = 'CallRequest';""")
+    conn.commit()
         
     for i in range(len(needed_emails)):       
         myStartDate = start_dateA
@@ -983,3 +953,69 @@ def email_json(start_dateA,end_dateA):
     close_connection(conn, cur)
     
     return needed_emails
+
+# # Export ICU1Duty table into excel file
+# def exportICU1Duty():
+#     # Establish connection to DB
+#     conn, cur = create_connection()
+
+#     # Query from ICU1Duty Table in DB and put into a Pandas Dataframe
+#     script = """SELECT * FROM ICU1Duty;"""
+#     cur.execute(script)
+#     columns = [desc[0] for desc in cur.description]
+#     data = cur.fetchall()
+#     df = pd.DataFrame(list(data), columns=columns)
+
+#     # Writing the Dataframe data into an excel file and saving the excel file
+#     writer = pd.ExcelWriter('ICU1.xlsx')
+#     df.to_excel(writer, sheet_name='ICU1Duty')
+#     writer.save()
+
+#     # Close connection to DB
+#     close_connection(conn, cur)
+
+#     return 'True'
+
+# # Export ICU2Duty table into excel file
+# def exportICU2Duty():
+#     # Establish connection to DB
+#     conn, cur = create_connection()
+
+#     # Query from ICU2Duty Table in DB and put into a Pandas Dataframe
+#     script = """SELECT * FROM ICU2Duty;"""
+#     cur.execute(script)
+#     columns = [desc[0] for desc in cur.description]
+#     data = cur.fetchall()
+#     df = pd.DataFrame(list(data), columns=columns)
+
+#     # Writing the Dataframe data into an excel file and saving the excel file
+#     writer = pd.ExcelWriter('ICU2.xlsx')
+#     df.to_excel(writer, sheet_name='ICU2Duty')
+#     writer.save()
+
+#     # Close connection to DB
+#     close_connection(conn, cur)
+
+#     return 'True'
+
+# # Export Points table into excel file
+# def exportPoints():
+#     # Establish connection to DB
+#     conn, cur = create_connection()
+
+#     # Query from Points Table in DB and put into a Pandas Dataframe
+#     script = """SELECT * FROM Points;"""
+#     cur.execute(script)
+#     columns = [desc[0] for desc in cur.description]
+#     data = cur.fetchall()
+#     df = pd.DataFrame(list(data), columns=columns)
+
+#     # Writing the Dataframe data into an excel file and saving the excel file
+#     writer = pd.ExcelWriter('points.xlsx')
+#     df.to_excel(writer, sheet_name='Points')
+#     writer.save()
+
+#     # Close connection to DB
+#     close_connection(conn, cur)
+
+#     return 'True'

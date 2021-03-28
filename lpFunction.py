@@ -209,6 +209,8 @@ def run_lp(doctor_call_daily, day_off_monthly, max_call_month_4, max_call_month_
         dates_between_Start_N_End_Date.append(dateOnly)
         yearOnly = day.strftime("%Y")
         yearOnlyInt = int(yearOnly)
+        mthOnly = day.strftime("%m")
+        dayOnly = day.strftime("%d")
 
         day = day.weekday()
         weekdayOnly = weekDays[day]
@@ -439,5 +441,5 @@ def run_lp(doctor_call_daily, day_off_monthly, max_call_month_4, max_call_month_
             lpDict2[key][i][0]=dates_between_Start_N_End_Date[(lpDict2[key][i][0])-1]
         callArray.append(docArray)
         docArray=[]
-    pprint(lpDict2)
+    # pprint(lpDict2)
     return lpDict2

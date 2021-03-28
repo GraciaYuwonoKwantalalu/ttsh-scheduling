@@ -5,7 +5,7 @@ import json
 import pandas as pd
 from flask import Flask, redirect, url_for, render_template, request, session, flash, make_response, request
 from datetime import date, timedelta, datetime
-from helperFunctions import create_connection, close_connection, check_weekend, check_day, check_month_num, check_eveph, is_constraint_met, readRoster, readDuties, readtraining, readpleave, readCallRequest, readLeaveApplication, readPh, clashes, exportPoints, exportSchedule, exportICU1Duty, exportICU2Duty, email_json
+from helperFunctions import create_connection, close_connection, check_weekend, check_day, check_month_num, check_eveph, is_constraint_met, readRoster, readDuties, readtraining, readpleave, readCallRequest, readLeaveApplication, readPh, clashes, exportScheduleS, exportScheduleJ, email_json
 from lpFunction import run_lp
 from pprint import pprint
 # import datetime
@@ -335,6 +335,17 @@ def download_icu_duties():
     response.headers['Content-Disposition'] = 'attachment; filename=icu_duties.pdf'
     return response
 
+# Downloading Senior & Junior timetables as csv
+@app.route('/download_timetables_csv', methods=['GET'])
+def download_schedules_csv():
+    # Download the senior doctor schedule
+    senior_schedule = exportScheduleS()
+
+    # Download the junior doctor schedule
+    junior_schedule = exportScheduleJ()
+
+    return 'True'
+
 ### DATABASE ###
 # Fetch data necessary for LP, runs LP, create new DB tables, returns formatted doctor's schedule in a dictionary of list
 @app.route('/retrieve_timetable', methods=['GET'])
@@ -368,7 +379,7 @@ def retrieve_timetable():
         else:
             return clash_checker, 501
         
-        F = email_json(query_start_date,query_last_date)
+        # F = email_json(query_start_date,query_last_date)
 
     except Exception as e:
         return (str(e)), 402
@@ -461,9 +472,9 @@ def retrieve_timetable():
         la_results = cur.fetchall()
 
         # Fetch the call request data stored in DB
-        cur.execute("""SELECT * FROM CallRequest WHERE date >= ? AND date <= ?;""",
-        (query_start_date, query_last_date))
-        cr_results = cur.fetchall()
+        # cur.execute("""SELECT * FROM CallRequest WHERE date >= ? AND date <= ?;""",
+        # (query_start_date, query_last_date))
+        # cr_results = cur.fetchall()
 
         # Fetch the public holiday data stored in DB (Will remove publicholiday table in DB)
         # cur.execute("""SELECT * FROM PublicHoliday;""")
@@ -475,32 +486,57 @@ def retrieve_timetable():
     # Run the LP and get the LP results that are stored in DB
     # The input for run_lp is from read_excel functions above + days_for_dates_v3 + excel2matrix
     try:
+        # Delete any existing data from CallLP table from DB
+        cur.execute("""DELETE FROM CallLP""")
+        conn.commit()
+
+        # Reset the auto incremental numbers when each month's schedule is being generated
+        cur.execute("""DELETE FROM sqlite_sequence WHERE name = 'CallLP';""")
+        conn.commit()
+
+        # Delete any existing data from LeaveLP table from DB
+        cur.execute("""DELETE FROM LeaveLP""")
+        conn.commit()
+
+        # Reset the auto incremental numbers when each month's schedule is being generated
+        cur.execute("""DELETE FROM sqlite_sequence WHERE name = 'LeaveLP';""")
+        conn.commit()
+
         lp_result = run_lp(doctor_call_daily, day_off_monthly, max_call_month_4, max_call_month_5, query_start_date, query_last_date, doc_list, A, B, C, D)
-        
+
         # Insert lp results into DB
         for doc,monthly_activity in lp_result.items():
+
             cur.execute("""SELECT name FROM Roster where email = ?""",(doc,))
             query_result = cur.fetchone()
             doc_name = query_result[0]
+
+
             for each_day in monthly_activity:
                 if each_day[1] == 1:
                     day = check_day(datetime.strptime(each_day[0], '%Y-%m-%d').date())
                     cr_dict = readCallRequest(doc_list,query_start_date,query_last_date)
                     check_ph_eve = check_eveph(each_day[0],E)
                     if doc in cr_dict:
-                        if day == 'Friday':
-                            request_type = 'crF'
-                        elif day == 'Saturday':
-                            request_type = 'crSat'
-                        elif day == 'Sunday':
-                            request_type = 'crSun'
-                        elif day in E:
-                            request_type = 'crPH'
-                        elif check_ph_eve == True:
-                            request_type = 'crpPH'
-                        else:
-                            request_type = 'cr'
-                        remark = cr_dict[doc][2]
+                        for key,value in cr_dict[doc].items():
+                            if value[1] == 'On Call':
+                                if day == 'Friday':
+                                    request_type = 'crF'
+                                elif day == 'Saturday':
+                                    request_type = 'crSat'
+                                elif day == 'Sunday':
+                                    request_type = 'crSun'
+                                elif day in E:
+                                    request_type = 'crPH'
+                                elif check_ph_eve == True:
+                                    request_type = 'crpPH'
+                                else:
+                                    request_type = 'cr'
+                                if value[2] == None:
+                                    new_remark = ''
+                                    remark = new_remark
+                                else:
+                                    remark = cr_dict[doc][2]
                     # When doctors assigned calls but they did not request for calls
                     else:
                         if day == 'Friday':
@@ -515,8 +551,8 @@ def retrieve_timetable():
                             request_type = 'cpPH'
                         else:
                             request_type = 'c'
-                        remark = 'NULL'
-                    
+                        remark = ''
+
                     cur.execute("""INSERT INTO CallLP (email,name,date,request_type,remark) VALUES (?,?,?,?,?);""",
                     (doc,doc_name,each_day[0],request_type,remark))
                     conn.commit()
@@ -525,11 +561,75 @@ def retrieve_timetable():
         cur.execute("""SELECT * FROM CallLP;""")
         call_lp_results = cur.fetchall()
 
-        # # Fetch the leave LP data stored in DB (leave LP data should only contain processed data for the requested schedule month)
-        # cur.execute("""SELECT * FROM LeaveLP WHERE start_date >= ? INTERSECT SELECT * FROM LeaveLP WHERE start_date <= ? 
-        # UNION SELECT * FROM LeaveLP WHERE end_date <= ? INTERSECT SELECT * FROM LeaveLP WHERE end_date >= ?;""",
-        # (query_start_date, query_last_date, query_last_date, query_start_date))
-        # leave_lp_results = cur.fetchall()
+        # Populate the LeaveLP table in DB
+        # Update LeaveLP with approved leave applications, update LeaveApplication with rejected applications by adding (Rejected) in the remark column
+        for each_leave_row in la_results:
+            call_flag = False
+            training_flag = False
+            duty_flag = False
+            pl_flag = False
+
+            # Search the CallLP table for any calls that are within the leave application dates
+            cur.execute("""SELECT * FROM CallLP WHERE email = ? AND date >= ? AND date <= ?""",(each_leave_row[1],each_leave_row[3],each_leave_row[4]))
+            callLP_each_result = cur.fetchall()
+            # When the leave application dates are not within the CallLP date for that doctor
+            if len(callLP_each_result) == 0:
+                call_flag = True
+
+            # Search the Training table for any trainings that are within the leave application dates
+            cur.execute("""SELECT * FROM Training WHERE start_date >= ? INTERSECT SELECT * FROM Training WHERE start_date <= ? 
+            UNION SELECT * FROM Training WHERE end_date <= ? INTERSECT SELECT * FROM Training WHERE end_date >= ?;""",
+            (each_leave_row[3], each_leave_row[4], each_leave_row[4], each_leave_row[3]))
+            training_each_result = cur.fetchall()
+            # When the leave application dates are not within the Training dates for that doctor
+            if len(training_each_result) == 0:
+                training_flag = True
+            
+            # Search the Duty table for any duties that are within the leave application dates
+            cur.execute("""SELECT * FROM Duty WHERE start_date >= ? INTERSECT SELECT * FROM Duty WHERE start_date <= ? 
+            UNION SELECT * FROM Duty WHERE end_date <= ? INTERSECT SELECT * FROM Duty WHERE end_date >= ?;""",
+            (each_leave_row[3], each_leave_row[4], each_leave_row[4], each_leave_row[3]))
+            duty_each_result = cur.fetchall()
+            # When the leave application dates are not within the Duty dates for that doctor
+            if len(duty_each_result) == 0:
+                duty_flag = True
+            
+            # Search the PriorityLeave table for any priority leaves that are within the leave application dates
+            cur.execute("""SELECT * FROM PriorityLeave WHERE start_date >= ? INTERSECT SELECT * FROM PriorityLeave WHERE start_date <= ? 
+            UNION SELECT * FROM PriorityLeave WHERE end_date <= ? INTERSECT SELECT * FROM PriorityLeave WHERE end_date >= ?;""",
+            (each_leave_row[3], each_leave_row[4], each_leave_row[4], each_leave_row[3]))
+            pl_each_result = cur.fetchall()
+            # When the leave application dates are not within the PriorityLeave dates for that doctor
+            if len(pl_each_result) == 0:
+                pl_flag = True
+
+            # Accept the leave application when all flags are True by updating LeaveLP Table in DB
+            if call_flag == True and training_flag == True and duty_flag == True and pl_flag == True:
+                cur.execute("""INSERT INTO LeaveLP (email,name,start_date,end_date,duration,leave_type,remark) VALUES (?,?,?,?,?,?,?);""",
+                (each_leave_row[1],each_leave_row[2],each_leave_row[3],each_leave_row[4],each_leave_row[5],each_leave_row[6],each_leave_row[7]))
+                conn.commit()
+            # Reject those leave application that clash with training/duty/calls/priorityleave by updating LeaveApplication Table remark column with (Rejected) behind any remarks already present
+            else:
+                old_remark = each_leave_row[7]
+                if old_remark == None:
+                    new_remark = "(Rejected)"
+                    cur.execute("""UPDATE LeaveApplication SET remark = ? WHERE leave_id = ?;""",
+                    (new_remark,each_leave_row[0]))
+                    conn.commit()
+                elif "(Rejected)" not in old_remark:
+                    if old_remark != None:
+                        new_remark = old_remark + " (Rejected)"
+                    else:
+                        new_remark = "(Rejected)"
+                    cur.execute("""UPDATE LeaveApplication SET remark = ? WHERE leave_id = ?;""",
+                    (new_remark,each_leave_row[0]))
+                    conn.commit()
+
+        # Fetch the leave LP data stored in DB (leave LP data should only contain processed data for the requested schedule month)
+        cur.execute("""SELECT * FROM LeaveLP WHERE start_date >= ? INTERSECT SELECT * FROM LeaveLP WHERE start_date <= ? 
+        UNION SELECT * FROM LeaveLP WHERE end_date <= ? INTERSECT SELECT * FROM LeaveLP WHERE end_date >= ?;""",
+        (query_start_date, query_last_date, query_last_date, query_start_date))
+        leave_lp_results = cur.fetchall()
 
     except Exception as e:
         return (str(e)), 404
@@ -618,16 +718,16 @@ def retrieve_timetable():
                     call_LP[doc_name] = call_type,remark
             
             # # Storing all doctor's leaves based on LP for schedule month in leave_LP dictionary
-            # leave_LP = {}
-            # for doc in leave_lp_results:
-            #     startDate = doc[3]
-            #     endDate = doc[4]
-            #     doc_name = doc[2]
-            #     duration = doc[5]
-            #     leave_type = doc[6]
-            #     remark = doc[7]
-            #     if day >= datetime.strptime(startDate, '%Y-%m-%d').date() and day <= datetime.strptime(endDate, '%Y-%m-%d').date():
-            #         leave_LP[doc_name] = duration,leave_type,remark
+            leave_LP = {}
+            for doc in leave_lp_results:
+                startDate = doc[3]
+                endDate = doc[4]
+                doc_name = doc[2]
+                duration = doc[5]
+                leave_type = doc[6]
+                remark = doc[7]
+                if day >= datetime.strptime(startDate, '%Y-%m-%d').date() and day <= datetime.strptime(endDate, '%Y-%m-%d').date():
+                    leave_LP[doc_name] = duration,leave_type,remark
 
             # Storing each day's activity by all doctors in one_day_dict
             one_day_dict = {}
@@ -646,23 +746,27 @@ def retrieve_timetable():
                     one_doc_dict[each_doc] = {"Priority Leave": priority_leave[each_doc]}
                 elif each_doc in call_LP:
                     one_doc_dict[each_doc] = {call_LP[each_doc][0]: call_LP[each_doc][1]}
-                # elif each_doc in leave_LP:    #la_results
-                    # leave_converter = {
-                    #     "Annual Leave" : "Leave (AL)",
-                    #     "Training Leave" : "Leave (Training)",
-                    #     "MC/Hospitalisation Leave" : "Leave (MC/HL)",
-                    #     "Reservist Leave" : "Leave (Reservist)",
-                    #     "Family Carre Leave" : "Leave (Family)",
-                    #     "Child Care Leave" : "Leave (Child)",
-                    #     "Marriage Leave" : "Leave (Marriage)",
-                    #     "Maternity Leave" : "Leave (Maternity)",
-                    #     "Paternity Leave" : "Leave (Paternity)",
-                    #     "Others": "Leave (Others)"
-                    # }
-                    # act_type = leave_LP[each_doc][1]
+                elif each_doc in leave_LP:
+                    leave_converter = {
+                        "Annual Leave" : "Leave (AL)",
+                        "Training Leave" : "Leave (Training)",
+                        "MC/Hospitalisation Leave" : "Leave (MC/HL)",
+                        "Reservist Leave" : "Leave (Reservist)",
+                        "Family Carre Leave" : "Leave (Family)",
+                        "Child Care Leave" : "Leave (Child)",
+                        "Marriage Leave" : "Leave (Marriage)",
+                        "Maternity Leave" : "Leave (Maternity)",
+                        "Paternity Leave" : "Leave (Paternity)",
+                        "Others": "Leave (Others)"
+                    }
+                    if leave_LP[each_doc][2] == None:
+                        new_remark = ''
+                    else:
+                        new_remark = leave_LP[each_doc][2]
+                    act_type = leave_LP[each_doc][1]
                     # one_doc_dict[each_doc] = {leave_LP[each_doc][0] + " " + leave_converter[act_type]: leave_LP[each_doc][2]}
                     # one_doc_dict[each_doc] = {leave_LP[each_doc][1]: leave_LP[each_doc][2]}       
-                    # one_doc_dict[each_doc] = {leave_converter[act_type]: leave_LP[each_doc][2]}   #No duration
+                    one_doc_dict[each_doc] = {leave_converter[act_type]: new_remark}   # No duration
                 elif weekend_checker == 'True' or ph_checker == 'True':
                     one_doc_dict[each_doc] = {"Off": ""}
                 else:
@@ -698,23 +802,27 @@ def retrieve_timetable():
                     one_doc_dict[each_doc] = {"Priority Leave": priority_leave[each_doc]}
                 elif each_doc in call_LP:
                     one_doc_dict[each_doc] = {call_LP[each_doc][0]: call_LP[each_doc][1]}
-                # elif each_doc in leave_LP:    #la_results
-                    # leave_converter = {
-                    #     "Annual Leave" : "Leave (AL)",
-                    #     "Training Leave" : "Leave (Training)",
-                    #     "MC/Hospitalisation Leave" : "Leave (MC/HL)",
-                    #     "Reservist Leave" : "Leave (Reservist)",
-                    #     "Family Carre Leave" : "Leave (Family)",
-                    #     "Child Care Leave" : "Leave (Child)",
-                    #     "Marriage Leave" : "Leave (Marriage)",
-                    #     "Maternity Leave" : "Leave (Maternity)",
-                    #     "Paternity Leave" : "Leave (Paternity)",
-                    #     "Others": "Leave (Others)"
-                    # }
-                    # act_type = leave_LP[each_doc][1]
+                elif each_doc in leave_LP:
+                    leave_converter = {
+                        "Annual Leave" : "Leave (AL)",
+                        "Training Leave" : "Leave (Training)",
+                        "MC/Hospitalisation Leave" : "Leave (MC/HL)",
+                        "Reservist Leave" : "Leave (Reservist)",
+                        "Family Carre Leave" : "Leave (Family)",
+                        "Child Care Leave" : "Leave (Child)",
+                        "Marriage Leave" : "Leave (Marriage)",
+                        "Maternity Leave" : "Leave (Maternity)",
+                        "Paternity Leave" : "Leave (Paternity)",
+                        "Others": "Leave (Others)"
+                    }
+                    if leave_LP[each_doc][2] == None:
+                        new_remark = ''
+                    else:
+                        new_remark = leave_LP[each_doc][2]
+                    act_type = leave_LP[each_doc][1]
                     # one_doc_dict[each_doc] = {leave_LP[each_doc][0] + " " + leave_converter[act_type]: leave_LP[each_doc][2]}
                     # one_doc_dict[each_doc] = {leave_LP[each_doc][1]: leave_LP[each_doc][2]}       
-                    # one_doc_dict[each_doc] = {leave_converter[act_type]: leave_LP[each_doc][2]}   #No duration
+                    one_doc_dict[each_doc] = {leave_converter[act_type]: new_remark}   # No duration
                 elif weekend_checker == 'True' or ph_checker == 'True':
                     one_doc_dict[each_doc] = {"Off": ""}
                 else:
@@ -750,23 +858,27 @@ def retrieve_timetable():
                     one_doc_dict[each_doc] = {"Priority Leave": priority_leave[each_doc]}
                 elif each_doc in call_LP:
                     one_doc_dict[each_doc] = {call_LP[each_doc][0]: call_LP[each_doc][1]}
-                # elif each_doc in leave_LP:    #la_results
-                    # leave_converter = {
-                    #     "Annual Leave" : "Leave (AL)",
-                    #     "Training Leave" : "Leave (Training)",
-                    #     "MC/Hospitalisation Leave" : "Leave (MC/HL)",
-                    #     "Reservist Leave" : "Leave (Reservist)",
-                    #     "Family Carre Leave" : "Leave (Family)",
-                    #     "Child Care Leave" : "Leave (Child)",
-                    #     "Marriage Leave" : "Leave (Marriage)",
-                    #     "Maternity Leave" : "Leave (Maternity)",
-                    #     "Paternity Leave" : "Leave (Paternity)",
-                    #     "Others": "Leave (Others)"
-                    # }
-                    # act_type = leave_LP[each_doc][1]
+                elif each_doc in leave_LP:
+                    leave_converter = {
+                        "Annual Leave" : "Leave (AL)",
+                        "Training Leave" : "Leave (Training)",
+                        "MC/Hospitalisation Leave" : "Leave (MC/HL)",
+                        "Reservist Leave" : "Leave (Reservist)",
+                        "Family Carre Leave" : "Leave (Family)",
+                        "Child Care Leave" : "Leave (Child)",
+                        "Marriage Leave" : "Leave (Marriage)",
+                        "Maternity Leave" : "Leave (Maternity)",
+                        "Paternity Leave" : "Leave (Paternity)",
+                        "Others": "Leave (Others)"
+                    }
+                    if leave_LP[each_doc][2] == None:
+                        new_remark = ''
+                    else:
+                        new_remark = leave_LP[each_doc][2]
+                    act_type = leave_LP[each_doc][1]
                     # one_doc_dict[each_doc] = {leave_LP[each_doc][0] + " " + leave_converter[act_type]: leave_LP[each_doc][2]}
                     # one_doc_dict[each_doc] = {leave_LP[each_doc][1]: leave_LP[each_doc][2]}       
-                    # one_doc_dict[each_doc] = {leave_converter[act_type]: leave_LP[each_doc][2]}   #No duration
+                    one_doc_dict[each_doc] = {leave_converter[act_type]: new_remark}   # No duration
                 elif weekend_checker == 'True' or ph_checker == 'True':
                     one_doc_dict[each_doc] = {"Off": ""}
                 else:
@@ -903,7 +1015,7 @@ def update_timetable():
         start_date = datetime.strptime(start_date, '%d-%m-%Y').strftime('%Y-%m-%d')
         end_date = datetime.strptime(end_date, '%d-%m-%Y').strftime('%Y-%m-%d')
 
-        full_list = request.form['full_list']       #[Senior MO dictionary,Junior MO dictionary]
+        full_list = request.form['full_dict']       # {'S': Senior MO dictionary, 'J': Junior MO dictionary}
 
         # Establish connection to DB
         conn, cur = create_connection()
@@ -982,7 +1094,7 @@ def update_timetable():
             conn.commit()
 
             # Return the changed list of dictionary back to the UI to reflect the changes
-            message = True      # or return full_list?
+            message = True
 
         # Otherwise, do not make any changes to the Temp table and discard user's changes, also return the constraints that failed
         else:
@@ -1090,120 +1202,6 @@ def retrieve_call_summary():
 
     except Exception as e:
         return (str(e)), 402
-
-# API endpoint to check public holidays
-# @app.route('/check_public_holiday', methods=['GET'])
-# def check_ph():
-#     try:
-#         # Establish connection to DB
-#         conn, cur = create_connection()
-
-#         # Obtain the schedule's start date and end date
-#         start_date = request.form['start_date']         # Must be in this format of dd-mm-yyyy
-#         end_date = request.form['end_date']             # Must be in this format of dd-mm-yyyy
-
-#         # If not must use the below 2 lines to convert the format
-#         start_date = datetime.strptime(start_date, '%d-%m-%Y').strftime('%Y-%m-%d')
-#         end_date = datetime.strptime(end_date, '%d-%m-%Y').strftime('%Y-%m-%d')
-
-#         # Delete any old data inside PublicHoliday table in DB
-#         cur.execute("""DELETE FROM PublicHoliday""")
-#         conn.commit()
-
-#     except Exception as e:
-#         return (str(e)), 404
-    
-#     try:
-#         # Manipulating the dates for the function to work
-#         sdate = datetime.strptime(start_date, '%Y-%m-%d').date()   # start date
-#         edate = datetime.strptime(end_date, '%Y-%m-%d').date()   # end date
-#         syear = sdate.year
-#         eyear = edate.year
-
-#         # Weekdays as a tuple
-#         weekDays = ("Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday")
-
-#         sg_Holiday = []
-#         count = 0
-
-#         # When the scheduled month is within the same year
-#         if syear == eyear:
-#             # Singapore Holidays - the starting year
-#             for holiday in sorted(holidays.Singapore(years=syear).items()):
-#                 # Get the day of that week
-#                 holiday_date = holiday[0]
-#                 holiday_day = holiday_date.weekday()
-#                 holiday_weekday = weekDays[holiday_day]
-                
-#                 count += 1
-                
-#                 case = {
-#                     "ID": count,
-#                     "HolidayName":holiday[1],
-#                     "HolidayDate":format(holiday[0]),
-#                     "HolidayDay":format(holiday_weekday)
-#                 }
-
-#                 cur.execute("""INSERT OR IGNORE INTO PublicHoliday(holiday_id, holiday_name, holiday_date, holiday_day) 
-#                 VALUES (?, ?, ?, ?);""", (count,holiday[1],format(holiday[0]),format(holiday_weekday)))
-#                 conn.commit()
-
-#                 sg_Holiday.append(case)
-
-#         # When the scheduled month spills over into the next year
-#         else:
-#             # Singapore Holidays - the starting year
-#             for holiday in sorted(holidays.Singapore(years=syear).items()):
-#                 # Get the day of that week
-#                 holiday_date = holiday[0]
-#                 holiday_day = holiday_date.weekday()
-#                 holiday_weekday = weekDays[holiday_day]
-                
-#                 count += 1
-                
-#                 case = {
-#                     "ID": count,
-#                     "HolidayName":holiday[1],
-#                     "HolidayDate":format(holiday[0]),
-#                     "HolidayDay":format(holiday_weekday)
-#                 }
-
-#                 cur.execute("""INSERT OR IGNORE INTO PublicHoliday(holiday_id, holiday_name, holiday_date, holiday_day) 
-#                 VALUES (?, ?, ?, ?);""", (count,holiday[1],format(holiday[0]),format(holiday_weekday)))
-#                 conn.commit()
-
-#                 sg_Holiday.append(case)
-
-#             # Singapore Holidays - the ending year
-#             for holiday in sorted(holidays.Singapore(years=eyear).items()):
-#                 # Get the day of that week
-#                 holiday_date = holiday[0]
-#                 holiday_day = holiday_date.weekday()
-#                 holiday_weekday = weekDays[holiday_day]
-                
-#                 count += 1
-                
-#                 case = {
-#                     "ID": count,
-#                     "HolidayName":holiday[1],
-#                     "HolidayDate":format(holiday[0]),
-#                     "HolidayDay":format(holiday_weekday)
-#                 }
-
-#                 cur.execute("""INSERT OR IGNORE INTO PublicHoliday(holiday_id, holiday_name, holiday_date, holiday_day) 
-#                 VALUES (?, ?, ?, ?);""", (count,holiday[1],format(holiday[0]),format(holiday_weekday)))
-#                 conn.commit()
-
-#                 sg_Holiday.append(case)
-
-#         # Close connection to DB
-#         close_connection(conn, cur)
-
-#         # Return the public holidays for the year to UI
-#         return(str(sg_Holiday)), 200
-
-#     except Exception as e:
-#         return (str(e)), 404
 
 # Checking and storing the ICU 1 Duty for the scheduled month
 @app.route('/insert_icu_1_duties', methods=['POST'])
@@ -1554,11 +1552,11 @@ def retrieve_points_summary():
                 "Duties" : counter_duty
             }
 
-            total_points = month_call_points + points_satsunam
+            # total_points = month_call_points + points_satsunam
 
-            sqlstmt = """UPDATE Points SET '""" + str(month_num) + """' = ? WHERE email = ?;""" #each[0] refers to the doctor's name
-            cur.execute(sqlstmt,(total_points,each[0]))
-            conn.commit()
+            # sqlstmt = """UPDATE Points SET '""" + str(month_num) + """' = ? WHERE email = ?;""" #each[0] refers to the doctor's name
+            # cur.execute(sqlstmt,(total_points,each[0]))
+            # conn.commit()
 
         # Place the 2 points summary dictionaries into a single dictionary
         overall_summary = {'S': senior_summary, 'J': junior_summary}
@@ -1572,17 +1570,16 @@ def retrieve_points_summary():
     except Exception as e:
         return (str(e)), 402
 
-# Reset the points system for the doctors
-@app.route('/reset_points', methods=['GET'])
-def reset_points():
-    # Export current points from Points table in DB
-    exportPoints()
-
-    # Read from Roster and re-create the Points table in DB
-    readRoster()
-
-    return 'True'
-
-
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
+
+# # Reset the points system for the doctors
+# @app.route('/reset_points', methods=['GET'])
+# def reset_points():
+#     # Export current points from Points table in DB
+#     exportPoints()
+
+#     # Read from Roster and re-create the Points table in DB
+#     readRoster()
+
+#     return 'True'
