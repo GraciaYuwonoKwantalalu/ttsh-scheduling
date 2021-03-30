@@ -5,7 +5,7 @@ import json
 import pandas as pd
 from flask import Flask, redirect, url_for, render_template, request, session, flash, make_response, request
 from datetime import date, timedelta, datetime
-from helperFunctions import create_connection, close_connection, check_weekend, check_day, check_month_num, check_eveph, is_constraint_met, readRoster, readDuties, readtraining, readpleave, readCallRequest, readLeaveApplication, readPh, clashes, exportScheduleS, exportScheduleJ, email_json
+from helperFunctions import create_connection, close_connection, check_weekend, check_day, check_month_num, check_eveph, is_constraint_met, readRoster, readDuties, readtraining, readpleave, readCallRequest, readLeaveApplication, readPh, clashes, exportScheduleS, exportScheduleJ, email_json, produce_doctor_dictionary
 from lpFunction import run_lp
 from pprint import pprint
 # import datetime
@@ -393,19 +393,11 @@ def retrieve_timetable():
         day_off_monthly = constraints_results[2]
         max_call_month_4 = constraints_results[3]
         max_call_month_5 = constraints_results[4]
-        # total_call = constraints_results[5]
-        # clinic1 = constraints_results[6]
-        # clinic2 = constraints_results[7]
-        # amSat_clinic4 = constraints_results[8]
-        # amSat_clinic1 = constraints_results[9]
-        # amSat_clinic3 = constraints_results[10]
-        # p = constraints_results[11]
 
         # Fetch the doctor's name stored in DB
         cur.execute("""SELECT name FROM Roster;""")
         roster_results = cur.fetchall()
-        # print(roster_results)
-        # print()
+
         # Drop previous Temp table, then create new Temp table with the doctor's name as column header
         cur.execute('''DROP TABLE IF EXISTS Temp;''')
         cur.execute("""CREATE TABLE IF NOT EXISTS Temp(date TEXT PRIMARY KEY);""")
@@ -475,10 +467,6 @@ def retrieve_timetable():
         # cur.execute("""SELECT * FROM CallRequest WHERE date >= ? AND date <= ?;""",
         # (query_start_date, query_last_date))
         # cr_results = cur.fetchall()
-
-        # Fetch the public holiday data stored in DB (Will remove publicholiday table in DB)
-        # cur.execute("""SELECT * FROM PublicHoliday;""")
-        # ph_results = cur.fetchall()
 
     except Exception as e:
         return (str(e)), 403
@@ -1261,15 +1249,16 @@ def insert_icu_1_duties():
         if len(error_list) != 0:
             cur.execute("""DELETE FROM ICU1Duty""")
             conn.commit()
-            message = error_list
+            message = {'error':error_list}
+
         # Return True when constraint for all days is met
         else:
-            message = True
+            message = 'True'
 
         # Close connection to DB
         close_connection(conn, cur)
 
-        #Returns True or list of dates with constraint not met
+        #Returns True or dictionary of list containing dates with constraint not met
         return message, 200
 
     except Exception as e:
@@ -1569,6 +1558,45 @@ def retrieve_points_summary():
     
     except Exception as e:
         return (str(e)), 402
+
+@app.route('/retrieve_past_schedule', methods=['GET'])
+def read_past_schedule():
+    # Reading from Senior Doctor file
+    df1 = pd.read_excel (r'scheduleS.xlsx', sheet_name='SeniorSchedule')
+    
+    index1 = df1.index
+    number_of_rows1 = len(index1)
+
+    # Get the senior doctor names in 1 list
+    senior_doc_name = []
+    for col in df1.columns:
+        senior_doc_name.append(col)
+    senior_doc_name.pop(0)
+    senior_doc_name.pop(0)
+
+    # Obtain the senior doctor dictionary
+    senior_doc_dict = produce_doctor_dictionary(senior_doc_name,number_of_rows1,df1)
+    
+    # Reading from Junior Doctor file
+    df2 = pd.read_excel (r'scheduleJ.xlsx', sheet_name='JuniorSchedule')
+
+    index2 = df2.index
+    number_of_rows2 = len(index2)
+
+    # Get the junior doctor names in 1 list
+    junior_doc_name = []
+    for col in df2.columns:
+        junior_doc_name.append(col)
+    junior_doc_name.pop(0)
+    junior_doc_name.pop(0)
+    
+    # Obtain the junior doctor dictionary
+    junior_doc_dict = produce_doctor_dictionary(junior_doc_name,number_of_rows2,df2)
+
+    # Put everything in format for front-end: {'S': senior_doc_dict, 'J': junior_doc_dict}      
+    final_dict = {'S': senior_doc_dict, 'J': junior_doc_dict}
+    
+    return final_dict
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
