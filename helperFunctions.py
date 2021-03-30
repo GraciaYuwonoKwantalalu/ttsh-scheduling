@@ -11,7 +11,6 @@ def create_connection():
         cur = conn.cursor()
         return conn, cur
     except Error as e:
-        # print(e)
         return (str(e))
 
 # Close a database connection to a SQLite database
@@ -20,7 +19,6 @@ def close_connection(conn, cur):
         cur.close()
         conn.close()
     except Error as e:
-        # print(e)
         return (str(e))
 
 # Checks whether a date is a weekday or weekend
@@ -76,10 +74,6 @@ def is_constraint_met(table_name,start_date,end_date):
         return (str(e))
 
     try:
-        # # If not must use the below 2 lines to convert the format
-        # start_date = datetime.strptime(start_date, '%d-%m-%Y').strftime('%Y-%m-%d')
-        # end_date = datetime.strptime(end_date, '%d-%m-%Y').strftime('%Y-%m-%d')
-
         # Manipulating the dates for the function to work
         sdate = datetime.strptime(start_date, '%Y-%m-%d').date()   # start date
         edate = datetime.strptime(end_date, '%Y-%m-%d').date()   # end date
@@ -148,14 +142,12 @@ def is_constraint_met(table_name,start_date,end_date):
             if not_met:
                 temp = {}
                 temp[day_key] = not_met
-        
+
+            # Building dictionary to store the overall days and constraints that are not met
             if day_key in dict_notmet:
                 dict_notmet[day_key].update(not_met)
             elif day_key not in dict_notmet:
                 dict_notmet[day_key] = not_met
-
-        # Dictionary to store the overall days and constraints that are not met
-        # dict_notmet[day_key] = not_met
 
         # Close connection to DB
         close_connection(conn, cur)
@@ -183,9 +175,7 @@ def readRoster():
     cur.execute("""DELETE FROM Skill""")
     conn.commit()
 
-    df = pd.read_excel (r'sample_excel.xlsx', sheet_name='Roster')
-    # df.rename(columns=df.iloc[0], inplace = True)
-    # df.drop([0], inplace = True)
+    df = pd.read_excel (r'information_excel.xlsx', sheet_name='Roster')
 
     '''
     Structure: roster_dict = {
@@ -230,7 +220,6 @@ def readRoster():
     # Close connection to DB
     close_connection(conn, cur)
 
-    # print(roster_dict)
     return roster_dict
 
 # Read Duty from excel file
@@ -246,8 +235,7 @@ def readDuties(query_start_date,query_last_date):
     cur.execute("""DELETE FROM sqlite_sequence WHERE name = 'Duty';""")
     conn.commit()
     
-    df = pd.read_excel (r'sample_excel.xlsx', sheet_name='Duties')
-    #print(df)
+    df = pd.read_excel (r'information_excel.xlsx', sheet_name='Duties')
 
     '''
     Structure: duties_dict = {
@@ -260,27 +248,16 @@ def readDuties(query_start_date,query_last_date):
 
     index = df.index
     number_of_rows = len(index)
-    #print(number_of_rows)
-    #print()
 
-    # If not must use the below 2 lines to convert the format
-    # query_start_date = datetime.strptime(query_start_date, '%d-%m-%Y').strftime('%Y-%m-%d')
-    # query_last_date = datetime.strptime(query_last_date, '%d-%m-%Y').strftime('%Y-%m-%d')
-    # print(query_start_date)
-    # print(query_last_date)
-    # print()
     #Extract data and put into a dictionary
     for i in range(number_of_rows):
         email = df.iloc[i][0]
         name = df.iloc[i][1]
         duty_name = df.iloc[i][2]
         start_date = pd.to_datetime(df.iloc[i][3]).strftime('%Y-%m-%d')
-        #start_date = pd.to_datetime(df.iloc[i][3])
         end_date = pd.to_datetime(df.iloc[i][4]).strftime('%Y-%m-%d')
-        #end_date = pd.to_datetime(df.iloc[i][4])
         temp = {}
         temp[start_date] = [str(name),duty_name,end_date]
-        #print(temp)
 
         if email in duties_dict:
             duties_dict[email].update(temp)
@@ -294,7 +271,6 @@ def readDuties(query_start_date,query_last_date):
     # Close connection to DB
     close_connection(conn, cur)
 
-    # print(duties_dict)
     return duties_dict
 
 # Read Training from excel file
@@ -310,8 +286,7 @@ def readtraining(query_start_date,query_last_date):
     cur.execute("""DELETE FROM sqlite_sequence WHERE name = 'Training';""")
     conn.commit()
 
-    df = pd.read_excel (r'sample_excel.xlsx', sheet_name='Training')
-    #print(df)
+    df = pd.read_excel (r'information_excel.xlsx', sheet_name='Training')
 
     '''
     Structure: training_dict = {
@@ -324,12 +299,6 @@ def readtraining(query_start_date,query_last_date):
 
     index = df.index
     number_of_rows = len(index)
-    #print(number_of_rows)
-    #print()
-
-    # If not must use the below 2 lines to convert the format
-    # query_start_date = datetime.strptime(query_start_date, '%d-%m-%Y').strftime('%Y-%m-%d')
-    # query_last_date = datetime.strptime(query_last_date, '%d-%m-%Y').strftime('%Y-%m-%d')
 
     #Extract data and put into a dictionary
     for i in range(number_of_rows):
@@ -337,12 +306,9 @@ def readtraining(query_start_date,query_last_date):
         name = df.iloc[i][1]
         training = df.iloc[i][2]
         start_date = pd.to_datetime(df.iloc[i][3]).strftime('%Y-%m-%d')
-        #start_date = pd.to_datetime(df.iloc[i][3])
         end_date = pd.to_datetime(df.iloc[i][4]).strftime('%Y-%m-%d')
-        #end_date = pd.to_datetime(df.iloc[i][4])
         temp = {}
         temp[start_date] = [str(name),training,end_date]
-        #print(temp)
 
         if email in training_dict:
             training_dict[email].update(temp)
@@ -356,7 +322,6 @@ def readtraining(query_start_date,query_last_date):
     # Close connection to DB
     close_connection(conn, cur)
 
-    # print(training_dict)
     return training_dict
 
 # Read Priority Leave from excel file
@@ -372,8 +337,7 @@ def readpleave(query_start_date,query_last_date):
     cur.execute("""DELETE FROM sqlite_sequence WHERE name = 'PriorityLeave';""")
     conn.commit()
 
-    df = pd.read_excel (r'sample_excel.xlsx', sheet_name='Priority Leave')
-    #print(df)
+    df = pd.read_excel (r'information_excel.xlsx', sheet_name='Priority Leave')
 
     '''
     Structure: pleave_dict = {
@@ -386,12 +350,6 @@ def readpleave(query_start_date,query_last_date):
 
     index = df.index
     number_of_rows = len(index)
-    #print(number_of_rows)
-    #print()
-
-    # If not must use the below 2 lines to convert the format
-    # query_start_date = datetime.strptime(query_start_date, '%d-%m-%Y').strftime('%Y-%m-%d')
-    # query_last_date = datetime.strptime(query_last_date, '%d-%m-%Y').strftime('%Y-%m-%d')
 
     #Extract data and put into a dictionary
     for i in range(number_of_rows):
@@ -399,12 +357,9 @@ def readpleave(query_start_date,query_last_date):
         name = df.iloc[i][1]
         leave_reason = df.iloc[i][2]
         start_date = pd.to_datetime(df.iloc[i][3]).strftime('%Y-%m-%d')
-        #start_date = pd.to_datetime(df.iloc[i][3])
         end_date = pd.to_datetime(df.iloc[i][4]).strftime('%Y-%m-%d')
-        #end_date = pd.to_datetime(df.iloc[i][4])
         temp = {}
         temp[start_date] = [str(name),leave_reason,end_date]
-        #print(temp)
 
         if email in pleave_dict:
             pleave_dict[email].update(temp)
@@ -418,8 +373,31 @@ def readpleave(query_start_date,query_last_date):
     # Close connection to DB
     close_connection(conn, cur)
 
-    # print(pleave_dict)
     return pleave_dict
+
+# Read Public Holiday from excel file
+def readPh():
+    df = pd.read_excel (r'information_excel.xlsx', sheet_name='Public Holiday')
+    '''
+    Structure: ph_dict = {
+                date 1:[name, day], 
+                date 2:[name, day],
+                ...
+            }
+    '''
+    ph_dict = {}
+
+    index = df.index
+    number_of_rows = len(index)
+
+    # Extract data and put into a dictionary
+    for i in range(number_of_rows):
+        date = pd.to_datetime(df.iloc[i][0]).strftime('%Y-%m-%d')
+        day = df.iloc[i][1]
+        name = df.iloc[i][2]
+        ph_dict[date] = [name,day]
+
+    return ph_dict
 
 # Read Call Request from DB
 def readCallRequest(doc_list,query_start_date, query_last_date):
@@ -460,7 +438,7 @@ def readCallRequest(doc_list,query_start_date, query_last_date):
     
     # Close connection to DB
     close_connection(conn, cur)
-    # print(cr_dict)
+
     return cr_dict
 
 # Read Leave Application from DB
@@ -508,37 +486,8 @@ def readLeaveApplication(doc_list,query_start_date, query_last_date):
 
     return la_dict
 
-# Read Public Holiday from excel file
-def readPh():
-    df = pd.read_excel (r'sample_excel.xlsx', sheet_name='Public Holiday')
-    '''
-    Structure: pl_dict = {
-                date 1:[name, day], 
-                date 2:[name, day],
-                ...
-            }
-    '''
-    ph_dict = {}
-
-    index = df.index
-    number_of_rows = len(index)
-
-    # Extract data and put into a dictionary
-    for i in range(number_of_rows):
-        date = pd.to_datetime(df.iloc[i][0]).strftime('%Y-%m-%d')
-        day = df.iloc[i][1]
-        name = df.iloc[i][2]
-        ph_dict[date] = [name,day]
-
-    # print(ph_dict)
-    return ph_dict
-
 # Check for clashes in the excel file
-def clashes(query_start_date,query_last_date):
-    # Format the start and end dates of the schedule to appropriate format
-    # query_start_date = datetime.strptime(query_start_date, '%d-%m-%Y').strftime('%Y-%m-%d')
-    # query_last_date = datetime.strptime(query_last_date, '%d-%m-%Y').strftime('%Y-%m-%d')
-    
+def clashes(query_start_date,query_last_date):    
     # Combined dictionary to store all the data from the excel file for the scheduled dates
     combined = {}
     
@@ -553,7 +502,7 @@ def clashes(query_start_date,query_last_date):
         
         # Read Training from excel and store inside training_list
         training_list = []
-        df = pd.read_excel (r'sample_excel.xlsx', sheet_name='Training')
+        df = pd.read_excel (r'information_excel.xlsx', sheet_name='Training')
         index = df.index
         number_of_rows = len(index)
         for i in range(number_of_rows):
@@ -567,7 +516,7 @@ def clashes(query_start_date,query_last_date):
         
         # Read Duties from excel and store inside duty_list
         duty_list = []
-        df = pd.read_excel (r'sample_excel.xlsx', sheet_name='Duties')
+        df = pd.read_excel (r'information_excel.xlsx', sheet_name='Duties')
         index = df.index
         number_of_rows = len(index)
         for i in range(number_of_rows):
@@ -581,7 +530,7 @@ def clashes(query_start_date,query_last_date):
         
         # Read Priority Leave from excel and store inside pl_list
         pl_list = []
-        df = pd.read_excel (r'sample_excel.xlsx', sheet_name='Priority Leave')
+        df = pd.read_excel (r'information_excel.xlsx', sheet_name='Priority Leave')
         index = df.index
         number_of_rows = len(index)
         for i in range(number_of_rows):
@@ -650,7 +599,7 @@ def exportScheduleS():
     df = pd.DataFrame(list(data), columns=columns)
 
     # Writing the Dataframe data into an excel file and saving the excel file
-    writer = pd.ExcelWriter('schedule.xlsx')
+    writer = pd.ExcelWriter('scheduleS.xlsx')
     df.to_excel(writer, sheet_name='SeniorSchedule')
     writer.save()
 
@@ -672,7 +621,7 @@ def exportScheduleJ():
     df = pd.DataFrame(list(data), columns=columns)
 
     # Writing the Dataframe data into an excel file and saving the excel file
-    writer = pd.ExcelWriter('schedule.xlsx')
+    writer = pd.ExcelWriter('scheduleJ.xlsx')
     df.to_excel(writer, sheet_name='JuniorSchedule')
     writer.save()
 
@@ -694,7 +643,6 @@ def email_json(start_dateA,end_dateA):
     email_list = []
     email_body_list = []    # list for email body
     needed_emails = []
-    latest_emails = []
     check_latest = []
 
     count = 0
@@ -728,7 +676,6 @@ def email_json(start_dateA,end_dateA):
         
         ### email received date
         emailReceivedDate = email.SentOn
-        emailReceivedDateStr = str(email.SentOn)
         
         ### filter the JSON
         formatJson = emailBody.split()
@@ -813,7 +760,6 @@ def email_json(start_dateA,end_dateA):
                 myQnA = []
                 leaveRequest = []
                 callRequest = []
-                otherRequest = []
                 
                 for thread in new_email_body:
                     if "LeaveRequest" in thread['question']:
@@ -896,8 +842,6 @@ def email_json(start_dateA,end_dateA):
         if i not in sorted_delete_index:
             sorted_delete_index.append(i)
 
-    final_emails = []
-
     for i in reversed(sorted_delete_index):
         needed_emails.pop(i[0])
     
@@ -920,10 +864,7 @@ def email_json(start_dateA,end_dateA):
     cur.execute("""DELETE FROM sqlite_sequence WHERE name = 'CallRequest';""")
     conn.commit()
         
-    for i in range(len(needed_emails)):       
-        myStartDate = start_dateA
-        myEndDate = end_dateA
-        
+    for i in range(len(needed_emails)):   
         myEmail = needed_emails[i][2]
         myName = needed_emails[i][3]
         
@@ -953,6 +894,40 @@ def email_json(start_dateA,end_dateA):
     close_connection(conn, cur)
     
     return needed_emails
+
+# Produce doctor dictionary for past schedules only
+def produce_doctor_dictionary(doc_name,number_of_rows,df):
+    one_doc_activity_per_month = {}
+    counter = 2
+    '''
+    {doctor : 
+        {date : {activity: remark}, 
+            {activity: remark},...
+        },...
+    }
+    '''
+    # Extract data and put into a dictionary
+    for each_doc in doc_name:
+        each_doc_month_schedule = {}
+        
+        for i in range(number_of_rows):
+            per_day_activity = {}       # {date : activity_dictionary}
+            for col in df.columns:
+                if col == each_doc:
+                    activity_string = df.iloc[i][counter]
+                    str_element = activity_string.replace("'",'"')
+                    activity_dict = json.loads(str_element)
+                    per_day_activity[df.iloc[i][1]] = activity_dict
+
+                    if each_doc in each_doc_month_schedule:
+                        each_doc_month_schedule[each_doc].update(per_day_activity)
+                    if each_doc not in each_doc_month_schedule:
+                        each_doc_month_schedule[each_doc] = per_day_activity
+
+        one_doc_activity_per_month[each_doc] = each_doc_month_schedule[each_doc]
+        counter += 1
+
+    return one_doc_activity_per_month
 
 # # Export ICU1Duty table into excel file
 # def exportICU1Duty():
