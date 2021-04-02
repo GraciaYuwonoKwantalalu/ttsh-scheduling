@@ -2,7 +2,7 @@ import pulp, datetime, holidays
 import pandas as pd
 from pulp import *
 from datetime import date, timedelta, datetime
-from helperFunctions import create_connection, close_connection, readRoster, readCallRequest, readLeaveApplication, readtraining, readDuties, readpleave
+from helperFunctions import create_connection, close_connection, readRoster, readCallRequest, readLeaveApplication, readtraining, readDuties, readpleave, readPrevCalls
 from pprint import pprint
 
 # Reads from the excelresult variables and displays in matrix format
@@ -34,6 +34,7 @@ def generalmatrix(excelsheet_result,doc_list,sdate,edate,delta):
     
     return combined_list
 
+# Generate the call matrix for running the LP
 def call_matrix(doc_list,query_start_date,query_last_date,delta):
     # List to store the matrix for LP
     combined_list = []
@@ -45,31 +46,64 @@ def call_matrix(doc_list,query_start_date,query_last_date,delta):
     # Obtain the call requests from DB
     cr_dict = readCallRequest(doc_list,string_start_date,string_end_date)
 
+    # Reading from last 2 day's previous month data from excel
+    prev_call_list = readPrevCalls()        # Format: [[A,B,C],[D,E]] where 1st array is 2nd last day of previous month and 2nd array is last day of previous month
+
     # Creating the call matrix for the request month
     for doc in doc_list:
         doctor_monthly_activity = []
+        day_counter = 0
+        prev_flag = False
+        clear_flag = False
         for i in range(delta.days + 1):
             day = query_start_date + timedelta(days=i)             # 2020-08-02 (datetime object format)
 
-            if doc in cr_dict:
-                checking_flag = False
-                for sdates,detailed in cr_dict[doc].items():
-                    sdateo = datetime.strptime(sdates, '%Y-%m-%d').date()
-                    if day == sdateo and detailed[1] == "On Call":
-                        checking_flag = True
-
-                if checking_flag == False:
-                    doctor_monthly_activity.append(0)
+            # checks the "no every other day call" constraint from previous month's schedule (last 2 days)
+            if day_counter < 2 and prev_flag == False:  
+                # When the doctor has done a call in the 2nd last day of the previous month            
+                if doc in prev_call_list[0]:
+                    doctor_monthly_activity.append(3)
+                    prev_flag = True
+                # When the doctor has done a call in the last day of the previous month    
+                elif doc in prev_call_list[1]:
+                    doctor_monthly_activity.append(3)
+                # When the doctor has not done a call in the 2nd last day and last day of the previous month    
                 else:
-                    doctor_monthly_activity.append(1) 
-
-            else:
+                    clear_flag = True
+            # When the doctor has cleared the "no every other day call" constraint from previous month's schedule (last 2 days)
+            elif prev_flag == True or day_counter >= 2:
+                clear_flag = True
+                
+            # When a doctor has submitted a FormSG call request and is not constrained by the call restriction of "no every other day call"
+            if clear_flag == True and doc in cr_dict:
+                for sdates,detailed in cr_dict[doc].items():
+                    sdateo = datetime.strptime(sdates, '%Y-%m-%d').date()   # 2020-08-02 (datetime object format)
+                    # For the current date: Doctor has mentioned this date in the FormSG
+                    if day == sdateo:
+                        # Doctor wants call (Positive)
+                        if detailed[1] == "On Call":
+                            doctor_monthly_activity.append(2)
+                        # Doctor specify to not have call (Negative)
+                        elif detailed[1] == "No call only":
+                            doctor_monthly_activity.append(1)
+                        # Doctor specify to not have call (Negative)
+                        elif detailed[1] == "No call & no weekend duty":
+                            doctor_monthly_activity.append(1)
+                    # For the current date: Doctor did not specify whether they want call or don't want call in the FormSG (Neutral)
+                    else:
+                        doctor_monthly_activity.append(0)                
+            # When a doctor did not submit a FormSG call request
+            elif clear_flag == True and doc not in cr_dict:   
                 doctor_monthly_activity.append(0)
+
+            # Used for tracking the first 2 days of the current selected schedule month
+            day_counter += 1            
 
         combined_list.append(doctor_monthly_activity)
 
     return combined_list
 
+# Generate the leave matrix for running the LP
 def leave_matrix(doc_list,query_start_date,query_last_date,delta):
     # List to store the matrix for LP
     combined_list = []
@@ -106,6 +140,7 @@ def leave_matrix(doc_list,query_start_date,query_last_date,delta):
     
     return combined_list
 
+# Getting the holidays in Singapore
 def sg_holidays(whichYear,weekDays):
     whichYear = int(whichYear)
     

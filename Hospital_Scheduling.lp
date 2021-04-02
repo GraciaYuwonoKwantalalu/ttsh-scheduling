@@ -188,17 +188,17 @@ Sum_of_Calls: Assignment_AA_1 + Assignment_AA_10 + Assignment_AA_11
  + Assignment_AY_27 + Assignment_AY_28 + Assignment_AY_29 + Assignment_AY_3
  + Assignment_AY_30 + Assignment_AY_31 + Assignment_AY_4 + Assignment_AY_5
  + Assignment_AY_6 + Assignment_AY_7 + Assignment_AY_8 + Assignment_AY_9
- + Assignment_A_1 + Assignment_A_10 + Assignment_A_11 + Assignment_A_12
+ + 100 Assignment_A_1 + Assignment_A_10 + Assignment_A_11 + Assignment_A_12
  + Assignment_A_13 + Assignment_A_14 + Assignment_A_15 + Assignment_A_16
  + Assignment_A_17 + Assignment_A_18 + Assignment_A_19 + Assignment_A_2
  + Assignment_A_20 + Assignment_A_21 + Assignment_A_22 + Assignment_A_23
  + Assignment_A_24 + Assignment_A_25 + Assignment_A_26 + Assignment_A_27
  + Assignment_A_28 + Assignment_A_29 + Assignment_A_3 + Assignment_A_30
  + Assignment_A_31 + Assignment_A_4 + Assignment_A_5 + Assignment_A_6
- + Assignment_A_7 + Assignment_A_8 + Assignment_A_9 + Assignment_B_1
+ + Assignment_A_7 + Assignment_A_8 + Assignment_A_9 + 100 Assignment_B_1
  + Assignment_B_10 + Assignment_B_11 + Assignment_B_12 + Assignment_B_13
  + Assignment_B_14 + Assignment_B_15 + Assignment_B_16 + Assignment_B_17
- + Assignment_B_18 + Assignment_B_19 + Assignment_B_2 + Assignment_B_20
+ + Assignment_B_18 + Assignment_B_19 + 100 Assignment_B_2 + Assignment_B_20
  + Assignment_B_21 + Assignment_B_22 + Assignment_B_23 + Assignment_B_24
  + Assignment_B_25 + Assignment_B_26 + Assignment_B_27 + Assignment_B_28
  + Assignment_B_29 + Assignment_B_3 + Assignment_B_30 + Assignment_B_31
@@ -354,45 +354,45 @@ Sum_of_Calls: Assignment_AA_1 + Assignment_AA_10 + Assignment_AA_11
  + Assignment_U_27 + Assignment_U_28 + Assignment_U_29 + Assignment_U_3
  + Assignment_U_30 + Assignment_U_31 + Assignment_U_4 + Assignment_U_5
  + Assignment_U_6 + Assignment_U_7 + Assignment_U_8 + Assignment_U_9
- + Assignment_V_1 + Assignment_V_10 + Assignment_V_11 + Assignment_V_12
+ + 100 Assignment_V_1 + Assignment_V_10 + Assignment_V_11 + Assignment_V_12
  + Assignment_V_13 + Assignment_V_14 + Assignment_V_15 + Assignment_V_16
  + Assignment_V_17 + Assignment_V_18 + Assignment_V_19 + Assignment_V_2
- + Assignment_V_20 + Assignment_V_21 + Assignment_V_22 + Assignment_V_23
+ + Assignment_V_20 + 1.5 Assignment_V_21 + Assignment_V_22 + Assignment_V_23
  + Assignment_V_24 + Assignment_V_25 + Assignment_V_26 + Assignment_V_27
  + Assignment_V_28 + Assignment_V_29 + Assignment_V_3 + Assignment_V_30
  + Assignment_V_31 + Assignment_V_4 + Assignment_V_5 + Assignment_V_6
- + Assignment_V_7 + Assignment_V_8 + Assignment_V_9 + Assignment_W_1
+ + Assignment_V_7 + Assignment_V_8 + Assignment_V_9 + 100 Assignment_W_1
  + Assignment_W_10 + Assignment_W_11 + Assignment_W_12 + Assignment_W_13
  + Assignment_W_14 + Assignment_W_15 + Assignment_W_16 + Assignment_W_17
- + Assignment_W_18 + Assignment_W_19 + Assignment_W_2 + Assignment_W_20
- + Assignment_W_21 + Assignment_W_22 + Assignment_W_23 + Assignment_W_24
+ + Assignment_W_18 + Assignment_W_19 + 100 Assignment_W_2 + Assignment_W_20
+ + 1.5 Assignment_W_21 + Assignment_W_22 + Assignment_W_23 + Assignment_W_24
  + Assignment_W_25 + Assignment_W_26 + Assignment_W_27 + Assignment_W_28
  + Assignment_W_29 + Assignment_W_3 + Assignment_W_30 + Assignment_W_31
  + Assignment_W_4 + Assignment_W_5 + Assignment_W_6 + Assignment_W_7
- + Assignment_W_8 + Assignment_W_9 + Assignment_X_1 + Assignment_X_10
+ + Assignment_W_8 + Assignment_W_9 + 100 Assignment_X_1 + Assignment_X_10
  + Assignment_X_11 + Assignment_X_12 + Assignment_X_13 + Assignment_X_14
  + Assignment_X_15 + Assignment_X_16 + Assignment_X_17 + Assignment_X_18
- + Assignment_X_19 + Assignment_X_2 + Assignment_X_20 + 1.5 Assignment_X_21
- + Assignment_X_22 + Assignment_X_23 + Assignment_X_24 + Assignment_X_25
- + Assignment_X_26 + Assignment_X_27 + Assignment_X_28 + Assignment_X_29
- + Assignment_X_3 + Assignment_X_30 + Assignment_X_31 + Assignment_X_4
- + Assignment_X_5 + Assignment_X_6 + Assignment_X_7 + Assignment_X_8
- + Assignment_X_9 + Assignment_Y_1 + Assignment_Y_10 + Assignment_Y_11
- + Assignment_Y_12 + Assignment_Y_13 + Assignment_Y_14 + Assignment_Y_15
- + Assignment_Y_16 + Assignment_Y_17 + Assignment_Y_18 + Assignment_Y_19
- + Assignment_Y_2 + Assignment_Y_20 + Assignment_Y_21 + Assignment_Y_22
- + Assignment_Y_23 + Assignment_Y_24 + Assignment_Y_25 + Assignment_Y_26
- + Assignment_Y_27 + Assignment_Y_28 + Assignment_Y_29 + Assignment_Y_3
- + Assignment_Y_30 + Assignment_Y_31 + Assignment_Y_4 + Assignment_Y_5
- + Assignment_Y_6 + Assignment_Y_7 + Assignment_Y_8 + Assignment_Y_9
- + Assignment_Z_1 + Assignment_Z_10 + Assignment_Z_11 + Assignment_Z_12
- + Assignment_Z_13 + Assignment_Z_14 + Assignment_Z_15 + Assignment_Z_16
- + Assignment_Z_17 + Assignment_Z_18 + Assignment_Z_19 + Assignment_Z_2
- + Assignment_Z_20 + Assignment_Z_21 + Assignment_Z_22 + Assignment_Z_23
- + Assignment_Z_24 + Assignment_Z_25 + Assignment_Z_26 + Assignment_Z_27
- + Assignment_Z_28 + Assignment_Z_29 + Assignment_Z_3 + Assignment_Z_30
- + Assignment_Z_31 + Assignment_Z_4 + Assignment_Z_5 + Assignment_Z_6
- + Assignment_Z_7 + Assignment_Z_8 + Assignment_Z_9
+ + Assignment_X_19 + 100 Assignment_X_2 + Assignment_X_20
+ + 0.5 Assignment_X_21 + Assignment_X_22 + Assignment_X_23 + Assignment_X_24
+ + Assignment_X_25 + Assignment_X_26 + Assignment_X_27 + Assignment_X_28
+ + Assignment_X_29 + Assignment_X_3 + Assignment_X_30 + Assignment_X_31
+ + Assignment_X_4 + Assignment_X_5 + Assignment_X_6 + Assignment_X_7
+ + Assignment_X_8 + Assignment_X_9 + Assignment_Y_1 + Assignment_Y_10
+ + Assignment_Y_11 + Assignment_Y_12 + Assignment_Y_13 + Assignment_Y_14
+ + Assignment_Y_15 + Assignment_Y_16 + Assignment_Y_17 + Assignment_Y_18
+ + Assignment_Y_19 + Assignment_Y_2 + Assignment_Y_20 + Assignment_Y_21
+ + Assignment_Y_22 + Assignment_Y_23 + Assignment_Y_24 + Assignment_Y_25
+ + Assignment_Y_26 + Assignment_Y_27 + Assignment_Y_28 + Assignment_Y_29
+ + Assignment_Y_3 + Assignment_Y_30 + Assignment_Y_31 + Assignment_Y_4
+ + Assignment_Y_5 + Assignment_Y_6 + Assignment_Y_7 + Assignment_Y_8
+ + Assignment_Y_9 + Assignment_Z_1 + Assignment_Z_10 + Assignment_Z_11
+ + Assignment_Z_12 + Assignment_Z_13 + Assignment_Z_14 + Assignment_Z_15
+ + Assignment_Z_16 + Assignment_Z_17 + Assignment_Z_18 + Assignment_Z_19
+ + Assignment_Z_2 + Assignment_Z_20 + Assignment_Z_21 + Assignment_Z_22
+ + Assignment_Z_23 + Assignment_Z_24 + Assignment_Z_25 + Assignment_Z_26
+ + Assignment_Z_27 + Assignment_Z_28 + Assignment_Z_29 + Assignment_Z_3
+ + Assignment_Z_30 + Assignment_Z_31 + Assignment_Z_4 + Assignment_Z_5
+ + Assignment_Z_6 + Assignment_Z_7 + Assignment_Z_8 + Assignment_Z_9
 Subject To
 Sum_of_Doctors_per_calls1: Assignment_AA_1 + Assignment_AB_1 + Assignment_AC_1
  + Assignment_AD_1 + Assignment_AE_1 + Assignment_AF_1 + Assignment_AG_1

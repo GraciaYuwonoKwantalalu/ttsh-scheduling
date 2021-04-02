@@ -399,6 +399,38 @@ def readPh():
 
     return ph_dict
 
+# Read the previous month's last 2 days call from excel file
+def readPrevCalls():
+    df = pd.read_excel (r'information_excel.xlsx', sheet_name='Last 2 Days Calls')
+    '''
+    Structure: prev_call_list = [
+                [doc1,doc2],[doc3, doc4,doc5]
+            ]
+    '''
+    prev_call_list = []
+
+    index = df.index
+    number_of_rows = len(index)
+
+    temp1_dict = {}
+    dates_list = []
+
+    # Extract data and put into a dictionary
+    for i in range(number_of_rows):
+        email = df.iloc[i][0]
+        call_date = pd.to_datetime(df.iloc[i][2]).strftime('%Y-%m-%d')
+
+        if call_date in temp1_dict:
+            temp1_dict[call_date].append(email)
+        if call_date not in temp1_dict:
+            temp1_dict[call_date] = [email]
+            dates_list.append(call_date)
+    
+    for i in dates_list:
+        prev_call_list.append(temp1_dict[i])
+
+    return prev_call_list
+
 # Read Call Request from DB
 def readCallRequest(doc_list,query_start_date, query_last_date):
     # Establish connection to DB
@@ -411,7 +443,7 @@ def readCallRequest(doc_list,query_start_date, query_last_date):
 
     '''
     Structure: cr_dict = {
-                email 1:[name, request type, remark], 
+                email 1:{date:[name, request type, remark]},{date:...},
                 email 2:[name, request type, remark],
                 ...
             }
