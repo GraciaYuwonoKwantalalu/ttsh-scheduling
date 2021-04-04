@@ -1,1 +1,0 @@
-# ttsh-scheduling
