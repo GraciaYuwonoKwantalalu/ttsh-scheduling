@@ -22,6 +22,24 @@ th {
 
 <br><br>
 
+<!-- PDF MODAL STARTS -->
+<div class="modal fade bd-example-modal-sm" id="pdfModal" role="dialog">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <div class="col text-center">
+                <div class="modal-header">
+                    <h3 class="modal-title">PDF Download
+                    <button type="button" class="close" data-dismiss="modal">&times;</button></h3>
+                </div>
+                <div class="modal-body">
+                    PDF downloaded successfully! Please check your folder.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- PDF MODAL ENDS -->
+
 <!-- POINTS (JUNIOR) STARTS -->
 <div class="testimonials" id="points_junior">
     <div class="container">
@@ -50,18 +68,6 @@ th {
                                 <th><div style="width:100px;">Clinic 4</div></th>
                                 <th><div style="width:100px;">Duties</div></th>
                             </tr>
-
-                            <!-- <tr>
-                                <th><div style="height:20px; width:100px;"></div></th>
-                                {% for status, doctors in overall_summary.items() %}
-                                    {% for doctor,schedule in doctors.items() %}
-                                        {% for allocation, summary in schedule.items() %}
-                                            <th><div style="height:20px; width:100px;">{{allocation}}</div></th>
-                                        {% endfor %}
-                                    {% endfor %}
-                                {% endfor %}
-                            </tr> -->
-
                         </thead>
                         <tbody>
                             <tr>
@@ -131,7 +137,7 @@ th {
                         <tbody>
                             <tr>
                             {% for status, doctors in overall_summary.items() %}
-                                {% if status == "J" %}
+                                {% if status == "S" %}
                                     {% for doctor, schedule in doctors.items() %}
                                         <td><b>{{doctor}}</b></td>
                                         {% for allocation, number in schedule.items() %}
@@ -158,12 +164,20 @@ th {
         <div class="call-overlay">
             <div class="container">
                 <div class="row">
-                    <a class="contact-button" href="{{url_for('download_points')}}">Download as PDF</a>
+                    <a class="contact-button" href="{{url_for('download_points')}}" onclick="downloadPDF()">Download as PDF</a>
                 </div>
             </div>
         </div>
     </div>
 </div>
 <!-- BUTTON ENDS -->
+
+<script>
+// TO DOWNLOAD AS PDF
+function downloadPDF() {
+    $("#pdfModal").modal("show");
+    window.stop();
+}
+</script>
 
 {% endblock %}

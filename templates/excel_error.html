@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+
+{% block title %}Excel Error{% endblock %}
+
+{% block content %}
+
+<style>
+th {
+    text-align:center;
+}
+
+.my-custom-scrollbar {
+    position: relative;
+    height: 200px;
+    overflow: auto;
+}
+
+.table-wrapper-scroll-y {
+    display: block;
+}
+</style>
+
+<br><br>
+
+<!-- POINTS (JUNIOR) STARTS -->
+<div class="testimonials" id="points_junior">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-12 text-center text">
+                <h3>Excel Error</h3>
+                <div class="row">
+                    <div class="table-wrapper-scroll-y my-custom-scrollbar">
+                    <table class="table table-bordered table-striped mb-0">
+                        <thead>
+                            <th>Date</th>
+                            <th>Doctor</th>
+                            <th>Schedule Conflict</th>
+                        </thead>
+                        <tbody>
+                            <tr>
+                            {% for date, lists in clash_checker.items() %}
+                                {% for key in lists %}
+                                    <td>{{date}}</td>
+                                    <td>{{key[0]}}</td>
+                                    <td>{{key[2][:]}}</td>
+                                </tr>
+                                {% endfor %}
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- POINTS (JUNIOR) ENDS -->
+
+<!-- BUTTON STARTS -->
+<div class="call-to-action">
+    <div style="background-image: url('../static/images/ttsh_building.jpg'); ">
+        <div class="call-overlay">
+            <div class="container">
+                <div class="row">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- BUTTON ENDS -->
+
+{% endblock %}
