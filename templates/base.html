@@ -1,0 +1,55 @@
+<!doctype html>
+<html>
+
+<head>
+    <!-- CUSTOMISED TITLE IN EACH PAGE STARTS -->
+    <title>{% block title %}{% endblock %}</title>
+    <!-- CUSTOMISED TITLE IN EACH PAGE ENDS -->
+
+    <!-- LOAD CSS STARTS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}"/>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/all.css') }}" integrity="sha384-50oBUHEmvpQ+1lW4y57PTFmhCaXp0ML5d60M1M7uH2+nqUivzIebhndOJK28anvf" crossorigin="anonymous"/>
+    <link href="{{ url_for('static', filename='css/font1.css') }}" rel='stylesheet' type='text/css'/>
+    <link href="{{ url_for('static', filename='css/font2.css') }}" rel='stylesheet' type='text/css'/>    
+    <!-- LOAD CSS ENDS -->
+</head>
+
+<body>
+    <!-- NAVIGATION BAR STARTS -->
+    <div class="main-header" id="main-header">
+        <nav class="navbar mynav navbar-fixed-top">
+            <div class="container">
+                <div class="navbar-header">
+                    <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#myNavbar"> <span
+                            class="icon-bar"></span> <span class="icon-bar"></span> <span class="icon-bar"></span> </button>
+                    <a class="navbar-brand" href="#">
+                        <!-- <image src="static/images/ttsh_logo.png" width="90" height="30"> -->
+                    </a>
+                </div>
+                <div class="collapse navbar-collapse" id="myNavbar">
+                    <ul class="nav navbar-nav navbar-right">
+                        <li><a href="{{url_for('home')}}">Home</a></li>
+                        <li><a href="{{url_for('timetable')}}">Timetable</a></li>
+                        <li><a href="{{url_for('past_timetable')}}">Past Timetable</a></li>
+                        <li><a href="{{url_for('calls')}}">Summary</a></li>
+                        <li><a href="{{url_for('icu_duties')}}">ICU Duties</a></li>
+                        <li><a href="{{url_for('points')}}">Points</a></li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </div>
+    <!-- NAVIGATION BAR ENDS -->
+
+    <!-- CUSTOMISED CONTENT IN EACH PAGE STARTS -->
+    {% block content %}{% endblock %}
+    <!-- CUSTOMISED CONTENT IN EACH PAGE ENDS -->
+
+    <!-- JAVASCRIPT STARTS -->
+    <script src="{{ url_for('static', filename='js/jquery.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
+    <!-- JAVASCRIPT ENDS -->
+</body>
+</html>

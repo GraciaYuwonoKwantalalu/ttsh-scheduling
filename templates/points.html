@@ -1,0 +1,178 @@
+{% extends "base.html" %}
+
+{% block title %}Points{% endblock %}
+
+{% block content %}
+
+<style>
+table { border-collapse: collapse; 
+        width: 100%; 
+}
+
+th, td { background: #fff; 
+        padding: 8px 16px; 
+        text-align:center;
+}
+
+.tableFixHead {
+  overflow: auto;
+  height: 300px;
+}
+
+.tableFixHead thead th {
+  position: sticky;
+  top: 0;
+}
+</style>
+
+<br><br>
+
+<!-- PDF MODAL STARTS -->
+<div class="modal fade bd-example-modal-sm" id="pdfModal" role="dialog">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <div class="col text-center">
+                <div class="modal-header">
+                    <h3 class="modal-title">PDF Download
+                    <button type="button" class="close" data-dismiss="modal">&times;</button></h3>
+                </div>
+                <div class="modal-body">
+                    PDF downloaded successfully! Please check your folder.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- PDF MODAL ENDS -->
+
+<!-- POINTS (SENIOR) STARTS -->
+<div class="portfolio" id="points_senior">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-12 text-center text">
+                <h3>Points Summary (Senior Doctors)</h3>
+                <div class="row">
+                    <div class="tableFixHead">
+                    <table class="table table-bordered table-striped mb-0">
+                        <thead>
+                            <tr>
+                                <th><div style="width:100px;"></div></th>
+                                <th><div style="width:100px;">Month Calls</div></th>
+                                <th><div style="width:100px;">Month Call Points</div></th>
+                                <th><div style="width:100px;">WD</div></th>
+                                <th><div style="width:100px;">Fri</div></th>
+                                <th><div style="width:100px;">Sat</div></th>
+                                <th><div style="width:100px;">Sun</div></th>
+                                <th><div style="width:100px;">Pre-PH</div></th>
+                                <th><div style="width:100px;">PH</div></th>
+                                <th><div style="width:100px;">Sat/Sun AM</div></th>
+                                <th><div style="width:100px;">Leave</div></th>
+                                <th><div style="width:100px;">Clinic 1</div></th>
+                                <th><div style="width:100px;">Clinic 2</div></th>
+                                <th><div style="width:100px;">Clinic 3</div></th>
+                                <th><div style="width:100px;">Clinic 4</div></th>
+                                <th><div style="width:100px;">Duties</div></th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            <tr>
+                            {% for status, doctors in overall_summary.items() %}
+                                {% if status == "S" %}
+                                    {% for doctor, schedule in doctors.items() %}
+                                        <td><b>{{doctor}}</b></td>
+                                        {% for allocation, number in schedule.items() %}
+                                            <td>{{number}}</td>
+                                        {% endfor %}
+                                    </tr>
+                                    {% endfor %}
+                                {% endif %}
+                            {% endfor %}
+                            </tr>
+                        </tbody>
+                    </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- POINTS (SENIOR) ENDS -->
+
+<!-- POINTS (JUNIOR) STARTS -->
+<div class="testimonials" id="points_junior">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-12 text-center text">
+                <h3>Points Summary (Junior Doctors)</h3>
+                <div class="row">
+                    <div class="tableFixHead">
+                    <table class="table table-bordered table-striped mb-0">
+                        <thead>
+                            <tr>
+                                <th><div style="width:100px;"></div></th>
+                                <th><div style="width:100px;">Month Calls</div></th>
+                                <th><div style="width:100px;">Month Call Points</div></th>
+                                <th><div style="width:100px;">WD</div></th>
+                                <th><div style="width:100px;">Fri</div></th>
+                                <th><div style="width:100px;">Sat</div></th>
+                                <th><div style="width:100px;">Sun</div></th>
+                                <th><div style="width:100px;">Pre-PH</div></th>
+                                <th><div style="width:100px;">PH</div></th>
+                                <th><div style="width:100px;">Sat/Sun AM</div></th>
+                                <th><div style="width:100px;">Leave</div></th>
+                                <th><div style="width:100px;">Clinic 1</div></th>
+                                <th><div style="width:100px;">Clinic 2</div></th>
+                                <th><div style="width:100px;">Clinic 3</div></th>
+                                <th><div style="width:100px;">Clinic 4</div></th>
+                                <th><div style="width:100px;">Duties</div></th>
+                            </tr>
+                        </thead>
+                        
+                        <tbody>
+                            <tr>
+                            {% for status, doctors in overall_summary.items() %}
+                                {% if status == "J" %}
+                                    {% for doctor, schedule in doctors.items() %}
+                                        <td><b>{{doctor}}</b></td>
+                                        {% for allocation, number in schedule.items() %}
+                                            <td>{{number}}</td>
+                                        {% endfor %}
+                                    </tr>
+                                    {% endfor %}
+                                {% endif %}
+                            {% endfor %}
+                            </tr>
+                        </tbody>
+                    </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- POINTS (JUNIOR) ENDS -->
+
+<!-- BUTTON STARTS -->
+<div class="call-to-action">
+    <div style="background-image: url('../static/images/ttsh_building.jpg'); ">
+        <div class="call-overlay">
+            <div class="container">
+                <div class="row">
+                    <a class="contact-button" href="{{url_for('download_points')}}" onclick="downloadPDF()">Download as PDF</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- BUTTON ENDS -->
+
+<script>
+// TO DOWNLOAD AS PDF
+function downloadPDF() {
+    $("#pdfModal").modal("show");
+    window.stop();
+}
+</script>
+
+{% endblock %}
