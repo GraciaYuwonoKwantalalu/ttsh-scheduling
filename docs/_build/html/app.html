@@ -1,0 +1,524 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>Main Application (app.py) &mdash; Rostering Scheduling for Healthcare Professionals  documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Helper Functions (helperFunctions.py)" href="helperFunctions.html" />
+    <link rel="prev" title="Web Application" href="modules.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> Rostering Scheduling for Healthcare Professionals
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">Web Application</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Main Application (app.py)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="helperFunctions.html">Helper Functions (helperFunctions.py)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="lpFunction.html">Linear Programming (lpFunction.py)</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Rostering Scheduling for Healthcare Professionals</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="modules.html">Web Application</a> &raquo;</li>
+        
+      <li>Main Application (app.py)</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/app.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="main-application-app-py">
+<h1>Main Application (app.py)<a class="headerlink" href="#main-application-app-py" title="Permalink to this headline">¶</a></h1>
+<p>This section contains the functions needed to render the web pages.</p>
+<p>Parameters are obtained via the POST method (interaction with UI), other functions (interaction with database) or excel files.</p>
+<span class="target" id="module-app"></span><dl class="py function">
+<dt id="app.check_constraints">
+<code class="sig-prename descclassname"><span class="pre">app.</span></code><code class="sig-name descname"><span class="pre">check_constraints</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/app.html#check_constraints"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app.check_constraints" title="Permalink to this definition">¶</a></dt>
+<dd><p>Validates timetable against specified constraints.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><em>is_constraint_met()</em></p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>dictionary containing date and list of unmet constraints.</p>
+</dd>
+</dl>
+<p>For example:
+<em>{“01-05-2021 Saturday”: [“total call”, “clinic 1”, “clinic 2”]}</em></p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="app.download_calls">
+<code class="sig-prename descclassname"><span class="pre">app.</span></code><code class="sig-name descname"><span class="pre">download_calls</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/app.html#download_calls"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app.download_calls" title="Permalink to this definition">¶</a></dt>
+<dd><p>Exports summary as PDF.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p>summary data from <em>retrieve_call_summary()</em></p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><em>summary.pdf</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="app.download_icu_duties">
+<code class="sig-prename descclassname"><span class="pre">app.</span></code><code class="sig-name descname"><span class="pre">download_icu_duties</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/app.html#download_icu_duties"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app.download_icu_duties" title="Permalink to this definition">¶</a></dt>
+<dd><p>Exports ICU duties roster as PDF.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p>data from <em>retrieve_icu_1_table()</em> and <em>retrieve_icu_2_table()</em></p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><em>icu_1.pdf</em> and <em>icu_2.pdf</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="app.download_points">
+<code class="sig-prename descclassname"><span class="pre">app.</span></code><code class="sig-name descname"><span class="pre">download_points</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/app.html#download_points"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app.download_points" title="Permalink to this definition">¶</a></dt>
+<dd><p>Exports points as PDF.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p>points data from <em>retrieve_points_summary()</em></p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><em>points_senior.pdf</em> and <em>points_junior.pdf</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="app.download_schedules_csv">
+<code class="sig-prename descclassname"><span class="pre">app.</span></code><code class="sig-name descname"><span class="pre">download_schedules_csv</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/app.html#download_schedules_csv"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app.download_schedules_csv" title="Permalink to this definition">¶</a></dt>
+<dd><p>Exports timetable as CSV.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p>data from <em>exportScheduleS()</em> and <em>exportScheduleJ()</em></p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><em>scheduleS.xlsx</em> and <em>scheduleJ.xlsx</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="app.download_timetable">
+<code class="sig-prename descclassname"><span class="pre">app.</span></code><code class="sig-name descname"><span class="pre">download_timetable</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/app.html#download_timetable"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app.download_timetable" title="Permalink to this definition">¶</a></dt>
+<dd><p>Exports timetable as PDF.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p>timetable data from <em>TempJ</em> and <em>TempS</em> tables</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><em>timetable_senior.pdf</em> and <em>timetable_junior.pdf</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="app.edit_constraints">
+<code class="sig-prename descclassname"><span class="pre">app.</span></code><code class="sig-name descname"><span class="pre">edit_constraints</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/app.html#edit_constraints"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app.edit_constraints" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieves the changes made in the constraints in the <strong>Home</strong> page and updates the <em>Constraints</em> tables.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="app.home">
+<code class="sig-prename descclassname"><span class="pre">app.</span></code><code class="sig-name descname"><span class="pre">home</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/app.html#home"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app.home" title="Permalink to this definition">¶</a></dt>
+<dd><p>Redirects to <strong>Home</strong> page (home.html).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><em>retrieve_constraints()</em></p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>dictionary of constraints name &amp; constraints value.</p>
+</dd>
+</dl>
+<p>For example: <em>{“P”: 3, “amSat_clinic_1”: 1, “amSat_clinic_3”: 1}</em></p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="app.icu_duties">
+<code class="sig-prename descclassname"><span class="pre">app.</span></code><code class="sig-name descname"><span class="pre">icu_duties</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/app.html#icu_duties"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app.icu_duties" title="Permalink to this definition">¶</a></dt>
+<dd><p>Redirects to <strong>ICU Duties</strong> page (icu_duties.html).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><em>retrieve_icu_1_table()</em> and <em>retrieve_icu_2_table()</em></p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>dictionary containing date and doctor.</p>
+</dd>
+</dl>
+<p>For example:
+<em>{“01-05-2021 Saturday”: “Dr Lee”, “02-05-2021 Sunday”: “Dr Ho”}</em></p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="app.past_timetable">
+<code class="sig-prename descclassname"><span class="pre">app.</span></code><code class="sig-name descname"><span class="pre">past_timetable</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/app.html#past_timetable"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app.past_timetable" title="Permalink to this definition">¶</a></dt>
+<dd><p>Redirects to <strong>Past Timetable</strong> page (past_timetable.html).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><em>scheduleJ.xlsx</em> and <em>scheduleS.xlsx</em></p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>nested dictionary containing status, doctor, date, type and remarks extracted from the excel files.</p>
+</dd>
+</dl>
+<p>For example:
+<em>{“S”: {“Dr Lee”: {“01-05-2021 Saturday”: {“Off”: “”}}}, “J”: {“Dr Ho”: {“01-05-2021 Saturday”: {“Duty”: “ICU 1”}}}}</em></p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="app.points">
+<code class="sig-prename descclassname"><span class="pre">app.</span></code><code class="sig-name descname"><span class="pre">points</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/app.html#points"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app.points" title="Permalink to this definition">¶</a></dt>
+<dd><p>Redirects to <strong>Points</strong> page (points.html).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><em>retrieve_points_summary()</em></p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>nested dictionary containing status, doctor, points name and points value.</p>
+</dd>
+</dl>
+<p>For example:
+<em>{“S”:{“Dr Lee”:{“Clinic 1”:0, “Clinic 2”:0, “Clinic 3”:0}}, “J”:{“Dr Ho”:{“Clinic 1”:0, “Clinic 2”:0, “Clinic 3”:0}}}</em></p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="app.populate_database">
+<code class="sig-prename descclassname"><span class="pre">app.</span></code><code class="sig-name descname"><span class="pre">populate_database</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/app.html#populate_database"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app.populate_database" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates new schedule.</p>
+<p>It calls other functions to extract FormSG emails, extract <em>information_excel.xlsx</em>, populate database with these data and run LP.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="app.print_excel_worksheet_to_pdf">
+<code class="sig-prename descclassname"><span class="pre">app.</span></code><code class="sig-name descname"><span class="pre">print_excel_worksheet_to_pdf</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">i_sz_excel_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">i_sz_ws_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">i_sz_pdf_path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/app.html#print_excel_worksheet_to_pdf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app.print_excel_worksheet_to_pdf" title="Permalink to this definition">¶</a></dt>
+<dd><p>Aids the other download PDF functions by converting CSV to landscape PDF.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="app.retrieve_call_summary">
+<code class="sig-prename descclassname"><span class="pre">app.</span></code><code class="sig-name descname"><span class="pre">retrieve_call_summary</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/app.html#retrieve_call_summary"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app.retrieve_call_summary" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates the number of doctors on call, leave and duty.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p>timetable data from <em>TempS</em> and <em>TempJ</em> tables</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>nested dictionary containing date, summary name and summary value.</p>
+</dd>
+</dl>
+<p>For example:
+<em>{“01-05-2021 Saturday”: {“P”: 0,”amSat Clinic 1”: 0,”amSat Clinic 3”: 0}}</em></p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="app.retrieve_constraints">
+<code class="sig-prename descclassname"><span class="pre">app.</span></code><code class="sig-name descname"><span class="pre">retrieve_constraints</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/app.html#retrieve_constraints"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app.retrieve_constraints" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieves specified constraints from <em>Constraints</em> table.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p>timetable data from <em>Constraints</em> table</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>dictionary of constraints name &amp; constraints value.</p>
+</dd>
+</dl>
+<p>For example: <em>{“P”: 3, “amSat_clinic_1”: 1, “amSat_clinic_3”: 1}</em></p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="app.retrieve_icu_1_table">
+<code class="sig-prename descclassname"><span class="pre">app.</span></code><code class="sig-name descname"><span class="pre">retrieve_icu_1_table</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/app.html#retrieve_icu_1_table"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app.retrieve_icu_1_table" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieves the list of doctors assigned to ICU1 in the month.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p>timetable data from <em>TempS</em> and <em>TempJ</em> tables</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>dictionary containing date and doctor.</p>
+</dd>
+</dl>
+<p>For example:
+<em>{“01-05-2021 Saturday”: “Dr Lee”, “02-05-2021 Sunday”: “Dr Ho”}</em></p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="app.retrieve_icu_2_table">
+<code class="sig-prename descclassname"><span class="pre">app.</span></code><code class="sig-name descname"><span class="pre">retrieve_icu_2_table</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/app.html#retrieve_icu_2_table"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app.retrieve_icu_2_table" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieves the list of doctors assigned to ICU2 in the month.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p>timetable data from <em>TempS</em> and <em>TempJ</em> tables</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>dictionary containing date and doctor.</p>
+</dd>
+</dl>
+<p>For example:
+<em>{“01-05-2021 Saturday”: “Dr Lee”, “02-05-2021 Sunday”: “Dr Ho”}</em></p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="app.retrieve_points_summary">
+<code class="sig-prename descclassname"><span class="pre">app.</span></code><code class="sig-name descname"><span class="pre">retrieve_points_summary</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/app.html#retrieve_points_summary"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app.retrieve_points_summary" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieves the list of doctors and points obtained from being on call and duty.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p>timetable data from <em>TempS</em> and <em>TempJ</em> tables</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>nested dictionary containing status, doctor, points name and points value.</p>
+</dd>
+</dl>
+<p>For example:
+<em>{“S”:{“Dr Lee”:{“Clinic 1”:0, “Clinic 2”:0, “Clinic 3”:0}}, “J”:{“Dr Ho”:{“Clinic 1”:0, “Clinic 2”:0, “Clinic 3”:0}}}</em></p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="app.retrieve_timetable">
+<code class="sig-prename descclassname"><span class="pre">app.</span></code><code class="sig-name descname"><span class="pre">retrieve_timetable</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/app.html#retrieve_timetable"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app.retrieve_timetable" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieves timeatable from <em>TempJ</em> and <em>TempS</em> tables.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p>timetable data from <em>TempJ</em> and <em>TempS</em> tables</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>nested dictionary containing status, doctor, date, type and remarks generated by the LP.</p>
+</dd>
+</dl>
+<p>For example:
+<em>{“S”: {“Dr Lee”: {“01-05-2021 Saturday”: {“Off”: “”}}}, “J”: {“Dr Ho”: {“01-05-2021 Saturday”: {“Duty”: “ICU 1”}}}}</em></p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="app.summary">
+<code class="sig-prename descclassname"><span class="pre">app.</span></code><code class="sig-name descname"><span class="pre">summary</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/app.html#summary"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app.summary" title="Permalink to this definition">¶</a></dt>
+<dd><p>Redirects to <strong>Summary</strong> page (summary.html).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><em>retrieve_call_summary()</em></p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>nested dictionary containing date, summary name and summary value.</p>
+</dd>
+</dl>
+<p>For example:
+<em>{“01-05-2021 Saturday”: {“P”: 0,”amSat Clinic 1”: 0,”amSat Clinic 3”: 0}}</em></p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="app.timetable">
+<code class="sig-prename descclassname"><span class="pre">app.</span></code><code class="sig-name descname"><span class="pre">timetable</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/app.html#timetable"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app.timetable" title="Permalink to this definition">¶</a></dt>
+<dd><p>Redirects to <strong>Timetable</strong> page (timetable.html).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><em>retrieve_timetable()</em></p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>nested dictionary containing status, doctor, date, type and remarks generated by the LP.</p>
+</dd>
+</dl>
+<p>For example:
+<em>{“S”: {“Dr Lee”: {“01-05-2021 Saturday”: {“Off”: “”}}}, “J”: {“Dr Ho”: {“01-05-2021 Saturday”: {“Duty”: “ICU 1”}}}}</em></p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="app.update_icu_table">
+<code class="sig-prename descclassname"><span class="pre">app.</span></code><code class="sig-name descname"><span class="pre">update_icu_table</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/app.html#update_icu_table"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app.update_icu_table" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieves the changes made in <strong>ICU Duties</strong> page and updates the <em>ICU1Duty</em> and <em>ICU2Duty</em> tables.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="app.update_timetable_new">
+<code class="sig-prename descclassname"><span class="pre">app.</span></code><code class="sig-name descname"><span class="pre">update_timetable_new</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/app.html#update_timetable_new"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app.update_timetable_new" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieves the changes made in the timetable in <strong>Timetable</strong> page and updates the <em>TempJ</em> and <em>TempS</em> tables.</p>
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="helperFunctions.html" class="btn btn-neutral float-right" title="Helper Functions (helperFunctions.py)" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="modules.html" class="btn btn-neutral float-left" title="Web Application" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2021, Avante.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

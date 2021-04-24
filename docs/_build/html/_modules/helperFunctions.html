@@ -1,0 +1,1272 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>helperFunctions &mdash; Rostering Scheduling for Healthcare Professionals  documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> Rostering Scheduling for Healthcare Professionals
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../modules.html">Web Application</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Rostering Scheduling for Healthcare Professionals</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="index.html">Module code</a> &raquo;</li>
+        
+      <li>helperFunctions</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for helperFunctions</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">sqlite3</span><span class="o">,</span> <span class="nn">datetime</span><span class="o">,</span> <span class="nn">json</span><span class="o">,</span> <span class="nn">pyodbc</span><span class="o">,</span> <span class="nn">dateutil.parser</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">from</span> <span class="nn">sqlite3</span> <span class="kn">import</span> <span class="n">Error</span>
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">date</span><span class="p">,</span> <span class="n">timedelta</span><span class="p">,</span> <span class="n">datetime</span>
+<span class="kn">from</span> <span class="nn">win32com.client</span> <span class="kn">import</span> <span class="n">Dispatch</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">OrderedDict</span>
+<span class="kn">import</span> <span class="nn">dateutil.parser</span>
+<span class="kn">from</span> <span class="nn">time</span> <span class="kn">import</span> <span class="n">strptime</span>
+<span class="kn">import</span> <span class="nn">pythoncom</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">OrderedDict</span>
+
+<div class="viewcode-block" id="create_connection"><a class="viewcode-back" href="../helperFunctions.html#helperFunctions.create_connection">[docs]</a><span class="k">def</span> <span class="nf">create_connection</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Creates a database connection to a SQLite database.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">conn</span> <span class="o">=</span> <span class="n">sqlite3</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="s1">&#39;Database/database.db&#39;</span><span class="p">)</span>
+        <span class="n">cur</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">conn</span><span class="p">,</span> <span class="n">cur</span>
+    <span class="k">except</span> <span class="n">Error</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="close_connection"><a class="viewcode-back" href="../helperFunctions.html#helperFunctions.close_connection">[docs]</a><span class="k">def</span> <span class="nf">close_connection</span><span class="p">(</span><span class="n">conn</span><span class="p">,</span> <span class="n">cur</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Closes a database connection to a SQLite database.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">cur</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="n">conn</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+    <span class="k">except</span> <span class="n">Error</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="check_weekend"><a class="viewcode-back" href="../helperFunctions.html#helperFunctions.check_weekend">[docs]</a><span class="k">def</span> <span class="nf">check_weekend</span><span class="p">(</span><span class="n">date</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Checks whether a date is a weekday or weekend.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">weekend</span> <span class="o">=</span> <span class="p">{</span><span class="mi">5</span><span class="p">:</span> <span class="s2">&quot;Saturday&quot;</span><span class="p">,</span> <span class="mi">6</span><span class="p">:</span> <span class="s2">&quot;Sunday&quot;</span><span class="p">}</span>
+
+    <span class="c1"># Check what is the value for the date</span>
+    <span class="n">num</span> <span class="o">=</span> <span class="n">date</span><span class="o">.</span><span class="n">weekday</span><span class="p">()</span>    <span class="c1"># returns a value from 0-6 where 0 is Monday and 6 is Sunday</span>
+    <span class="k">if</span> <span class="n">num</span> <span class="ow">in</span> <span class="n">weekend</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s1">&#39;True&#39;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s1">&#39;False&#39;</span></div>
+
+<div class="viewcode-block" id="check_day"><a class="viewcode-back" href="../helperFunctions.html#helperFunctions.check_day">[docs]</a><span class="k">def</span> <span class="nf">check_day</span><span class="p">(</span><span class="n">date</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Checks the day of the date.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">week</span> <span class="o">=</span> <span class="p">{</span><span class="mi">0</span><span class="p">:</span> <span class="s2">&quot;Monday&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">:</span> <span class="s2">&quot;Tuesday&quot;</span><span class="p">,</span> <span class="mi">2</span><span class="p">:</span> <span class="s2">&quot;Wednesday&quot;</span><span class="p">,</span> <span class="mi">3</span><span class="p">:</span> <span class="s2">&quot;Thursday&quot;</span><span class="p">,</span> <span class="mi">4</span><span class="p">:</span> <span class="s2">&quot;Friday&quot;</span><span class="p">,</span> <span class="mi">5</span><span class="p">:</span> <span class="s2">&quot;Saturday&quot;</span><span class="p">,</span> <span class="mi">6</span><span class="p">:</span> <span class="s2">&quot;Sunday&quot;</span><span class="p">}</span>
+    
+    <span class="c1"># Check what is the value for the date</span>
+    <span class="n">num</span> <span class="o">=</span> <span class="n">date</span><span class="o">.</span><span class="n">weekday</span><span class="p">()</span>    <span class="c1"># returns a value from 0-6 where 0 is Monday and 6 is Sunday</span>
+    <span class="k">return</span> <span class="n">week</span><span class="p">[</span><span class="n">num</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="check_eveph"><a class="viewcode-back" href="../helperFunctions.html#helperFunctions.check_eveph">[docs]</a><span class="k">def</span> <span class="nf">check_eveph</span><span class="p">(</span><span class="n">date</span><span class="p">,</span><span class="n">e</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Checks public holiday eve.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">dateo</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">strptime</span><span class="p">(</span><span class="n">date</span><span class="p">,</span> <span class="s1">&#39;%Y-%m-</span><span class="si">%d</span><span class="s1">&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">date</span><span class="p">()</span>
+    <span class="n">eveo</span> <span class="o">=</span> <span class="n">dateo</span> <span class="o">+</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">days</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">eves</span> <span class="o">=</span> <span class="n">eveo</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">&quot;%Y-%m-</span><span class="si">%d</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">eves</span> <span class="ow">in</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">True</span></div>
+
+<div class="viewcode-block" id="check_month_num"><a class="viewcode-back" href="../helperFunctions.html#helperFunctions.check_month_num">[docs]</a><span class="k">def</span> <span class="nf">check_month_num</span><span class="p">(</span><span class="n">request_month</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Checks the number for the request month.</span>
+<span class="sd">    &quot;&quot;&quot;</span>   
+    <span class="n">month</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;January&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;February&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="s2">&quot;March&quot;</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span> <span class="s2">&quot;April&quot;</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span> <span class="s2">&quot;May&quot;</span><span class="p">:</span> <span class="mi">5</span><span class="p">,</span> <span class="s2">&quot;June&quot;</span><span class="p">:</span> <span class="mi">6</span><span class="p">,</span> <span class="s2">&quot;July&quot;</span><span class="p">:</span> <span class="mi">7</span><span class="p">,</span> <span class="s2">&quot;August&quot;</span><span class="p">:</span> <span class="mi">8</span><span class="p">,</span> <span class="s2">&quot;September&quot;</span><span class="p">:</span> <span class="mi">9</span><span class="p">,</span> <span class="s2">&quot;October&quot;</span><span class="p">:</span> <span class="mi">10</span><span class="p">,</span> <span class="s2">&quot;November&quot;</span><span class="p">:</span> <span class="mi">11</span><span class="p">,</span> <span class="s2">&quot;December&quot;</span><span class="p">:</span> <span class="mi">12</span><span class="p">}</span>
+    <span class="k">return</span> <span class="n">month</span><span class="p">[</span><span class="n">request_month</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="is_constraint_met"><a class="viewcode-back" href="../helperFunctions.html#helperFunctions.is_constraint_met">[docs]</a><span class="k">def</span> <span class="nf">is_constraint_met</span><span class="p">(</span><span class="n">table_name</span><span class="p">,</span><span class="n">start_date</span><span class="p">,</span><span class="n">end_date</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Validates timetable against specified constraints.</span>
+
+<span class="sd">    :parameters: data from *Constraints* and *Temp* tables </span>
+<span class="sd">    :return: dictionary containing date and list of unmet constraints. </span>
+<span class="sd">    For example:</span>
+<span class="sd">    *{&quot;01-05-2021 Saturday&quot;: [&quot;total call&quot;, &quot;clinic 1&quot;, &quot;clinic 2&quot;]}*</span>
+<span class="sd">    &quot;&quot;&quot;</span>   
+    <span class="k">try</span><span class="p">:</span>
+        <span class="c1"># Establish connection to DB</span>
+        <span class="n">conn</span><span class="p">,</span> <span class="n">cur</span> <span class="o">=</span> <span class="n">create_connection</span><span class="p">()</span>
+    
+        <span class="c1"># Fetch the constraints defined by the user from DB</span>
+        <span class="n">cur</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;SELECT * FROM Constraints;&quot;&quot;&quot;</span><span class="p">)</span>
+        <span class="n">constraints_results</span> <span class="o">=</span> <span class="n">cur</span><span class="o">.</span><span class="n">fetchone</span><span class="p">()</span>
+        <span class="n">total_call</span> <span class="o">=</span> <span class="n">constraints_results</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span>
+        <span class="n">clinic1</span> <span class="o">=</span> <span class="n">constraints_results</span><span class="p">[</span><span class="mi">6</span><span class="p">]</span>
+        <span class="n">clinic2</span> <span class="o">=</span> <span class="n">constraints_results</span><span class="p">[</span><span class="mi">7</span><span class="p">]</span>
+        <span class="n">amSat_clinic4</span> <span class="o">=</span> <span class="n">constraints_results</span><span class="p">[</span><span class="mi">8</span><span class="p">]</span>
+        <span class="n">amSat_clinic1</span> <span class="o">=</span> <span class="n">constraints_results</span><span class="p">[</span><span class="mi">9</span><span class="p">]</span>
+        <span class="n">amSat_clinic3</span> <span class="o">=</span> <span class="n">constraints_results</span><span class="p">[</span><span class="mi">10</span><span class="p">]</span>
+        <span class="n">p</span> <span class="o">=</span> <span class="n">constraints_results</span><span class="p">[</span><span class="mi">11</span><span class="p">]</span>
+    
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="c1"># Manipulating the dates for the function to work</span>
+        <span class="n">sdate</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">strptime</span><span class="p">(</span><span class="n">start_date</span><span class="p">,</span> <span class="s1">&#39;%Y-%m-</span><span class="si">%d</span><span class="s1">&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">date</span><span class="p">()</span>   <span class="c1"># start date</span>
+        <span class="n">edate</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">strptime</span><span class="p">(</span><span class="n">end_date</span><span class="p">,</span> <span class="s1">&#39;%Y-%m-</span><span class="si">%d</span><span class="s1">&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">date</span><span class="p">()</span>   <span class="c1"># end date</span>
+        <span class="n">delta</span> <span class="o">=</span> <span class="n">edate</span> <span class="o">-</span> <span class="n">sdate</span>       <span class="c1"># as timedelta</span>
+
+        <span class="c1"># Dictionary to store the results that will be returned if constraints are not met in the form: {date:[constraint1,constraint2],date:[constraint1],...}</span>
+        <span class="n">dict_notmet</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="c1"># Creating a loop to check the constraints for each day</span>
+        <span class="k">for</span> <span class="n">date_diff</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">delta</span><span class="o">.</span><span class="n">days</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+            <span class="n">day</span> <span class="o">=</span> <span class="n">sdate</span> <span class="o">+</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">days</span><span class="o">=</span><span class="n">date_diff</span><span class="p">)</span>     <span class="c1"># 2020-08-02 (datetime object format)</span>
+            <span class="n">day_key</span> <span class="o">=</span> <span class="n">day</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">&quot;%Y-%m-</span><span class="si">%d</span><span class="s2">&quot;</span><span class="p">)</span>          <span class="c1"># 2020-08-02 (string format)</span>
+            <span class="n">display_day</span> <span class="o">=</span> <span class="n">day</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%d</span><span class="s2">-%m-%Y&quot;</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot; &quot;</span> <span class="o">+</span> <span class="n">check_day</span><span class="p">(</span><span class="n">day</span><span class="p">)</span> <span class="c1"># Sunday 31-12-2020 (string format)</span>
+
+            <span class="c1"># Retrieve from DB each day&#39;s schedule</span>
+            <span class="c1"># WARNING: Prone to SQL Injection Attack (Assumption is that the admin is trustworthy and won&#39;t jeopardise the system)</span>
+            <span class="n">sqlstmt</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;SELECT * FROM &quot;&quot;&quot;</span> <span class="o">+</span> <span class="n">table_name</span> <span class="o">+</span> <span class="s2">&quot;&quot;&quot; WHERE date = ?;&quot;&quot;&quot;</span>
+            <span class="n">cur</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">sqlstmt</span><span class="p">,(</span><span class="n">display_day</span><span class="p">,))</span>
+            <span class="n">constraints_result</span> <span class="o">=</span> <span class="n">cur</span><span class="o">.</span><span class="n">fetchone</span><span class="p">()</span>
+
+            <span class="c1"># Counters to record the number of calls/duties for each day assigned</span>
+            <span class="n">counter_clinic1</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="n">counter_clinic2</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="n">counter_amsatclinic1</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="n">counter_amsatclinic3</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="n">counter_amsatclinic4</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="n">counter_p</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="n">counter_totalcall</span> <span class="o">=</span> <span class="mi">0</span>
+
+            <span class="c1"># Counting the calls/duties from all doctors for each day</span>
+            <span class="k">for</span> <span class="n">element</span> <span class="ow">in</span> <span class="n">constraints_result</span><span class="p">[</span><span class="mi">1</span><span class="p">:]:</span>
+                <span class="n">str_element</span> <span class="o">=</span> <span class="n">element</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;&#39;&quot;</span><span class="p">,</span><span class="s1">&#39;&quot;&#39;</span><span class="p">)</span>
+                <span class="n">dict_element</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">str_element</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">key</span><span class="p">,</span><span class="n">value</span> <span class="ow">in</span> <span class="n">dict_element</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                    <span class="k">if</span> <span class="s1">&#39;amSat Clinic 1&#39;</span> <span class="ow">in</span> <span class="n">value</span><span class="p">:</span>
+                        <span class="n">counter_amsatclinic1</span> <span class="o">+=</span> <span class="mi">1</span>
+                    <span class="k">elif</span> <span class="s1">&#39;Clinic 1&#39;</span> <span class="ow">in</span> <span class="n">value</span><span class="p">:</span>
+                        <span class="n">counter_clinic1</span> <span class="o">+=</span> <span class="mi">1</span>
+                    <span class="k">elif</span> <span class="s1">&#39;Clinic 2&#39;</span> <span class="ow">in</span> <span class="n">value</span><span class="p">:</span>
+                        <span class="n">counter_clinic2</span> <span class="o">+=</span> <span class="mi">1</span>
+                    <span class="k">elif</span> <span class="s1">&#39;amSat Clinic 3&#39;</span> <span class="ow">in</span> <span class="n">value</span><span class="p">:</span>
+                        <span class="n">counter_amsatclinic3</span> <span class="o">+=</span> <span class="mi">1</span>
+                    <span class="k">elif</span> <span class="s1">&#39;amSat Clinic 4&#39;</span> <span class="ow">in</span> <span class="n">value</span><span class="p">:</span>
+                        <span class="n">counter_amsatclinic4</span> <span class="o">+=</span> <span class="mi">1</span>
+                    <span class="k">elif</span> <span class="s1">&#39;P&#39;</span> <span class="ow">in</span> <span class="n">value</span><span class="p">:</span>
+                        <span class="n">counter_p</span> <span class="o">+=</span> <span class="mi">1</span>
+                    <span class="k">elif</span> <span class="s1">&#39;c-&#39;</span> <span class="ow">in</span> <span class="n">value</span> <span class="ow">or</span> <span class="s1">&#39;cr-&#39;</span> <span class="ow">in</span> <span class="n">value</span><span class="p">:</span>
+                        <span class="n">counter_totalcall</span> <span class="o">+=</span> <span class="mi">1</span>
+
+            <span class="c1"># Compare whether the current schedule meets the constraints</span>
+            <span class="n">not_met</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">if</span> <span class="n">counter_totalcall</span> <span class="o">&lt;</span> <span class="n">total_call</span><span class="p">:</span>
+                <span class="n">not_met</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;total call&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">counter_clinic1</span> <span class="o">&lt;</span> <span class="n">clinic1</span><span class="p">:</span>
+                <span class="n">not_met</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;clinic 1&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">counter_clinic2</span> <span class="o">&lt;</span> <span class="n">clinic2</span><span class="p">:</span>
+                <span class="n">not_met</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;clinic 2&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">counter_amsatclinic4</span> <span class="o">&lt;</span> <span class="n">amSat_clinic4</span><span class="p">:</span>
+                <span class="n">not_met</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;amSat Clinic 4&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">counter_amsatclinic1</span> <span class="o">&lt;</span> <span class="n">amSat_clinic1</span><span class="p">:</span>
+                <span class="n">not_met</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;amSat Clinic 1&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">counter_amsatclinic3</span> <span class="o">&lt;</span> <span class="n">amSat_clinic3</span><span class="p">:</span>
+                <span class="n">not_met</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;amSat Clinic 3&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">counter_p</span> <span class="o">&lt;</span> <span class="n">p</span><span class="p">:</span>
+                <span class="n">not_met</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;P&quot;</span><span class="p">)</span>
+            
+            <span class="k">if</span> <span class="n">not_met</span><span class="p">:</span>
+                <span class="n">temp</span> <span class="o">=</span> <span class="p">{}</span>
+                <span class="n">temp</span><span class="p">[</span><span class="n">display_day</span><span class="p">]</span> <span class="o">=</span> <span class="n">not_met</span>
+
+            <span class="c1"># Building dictionary to store the overall days and constraints that are not met</span>
+            <span class="k">if</span> <span class="n">display_day</span> <span class="ow">in</span> <span class="n">dict_notmet</span><span class="p">:</span>
+                <span class="n">dict_notmet</span><span class="p">[</span><span class="n">display_day</span><span class="p">]</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">not_met</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">display_day</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">dict_notmet</span><span class="p">:</span>
+                <span class="n">dict_notmet</span><span class="p">[</span><span class="n">display_day</span><span class="p">]</span> <span class="o">=</span> <span class="n">not_met</span>
+
+        <span class="c1"># Close connection to DB</span>
+        <span class="n">close_connection</span><span class="p">(</span><span class="n">conn</span><span class="p">,</span> <span class="n">cur</span><span class="p">)</span>
+
+        <span class="c1"># Returns the failed constraints dictionary in the form: {date:[constraint1,constraint2],date:[constraint1],...}. Else, returns True.</span>
+        <span class="k">if</span> <span class="n">dict_notmet</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">dict_notmet</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s1">&#39;True&#39;</span>
+    
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="readRoster"><a class="viewcode-back" href="../helperFunctions.html#helperFunctions.readRoster">[docs]</a><span class="k">def</span> <span class="nf">readRoster</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Reads *Roster* sheet in *information_excel.xlsx* and updates *Roster* and *Skills* tables.</span>
+
+<span class="sd">    :parameters: *Roster* sheet in *information_excel.xlsx**</span>
+<span class="sd">    :return: dictionary of doctor emails and their roster details (name, first position, second position, posting, skills, type).</span>
+<span class="sd">    For example: </span>
+<span class="sd">    *{&quot;leekh@ttsh.com&quot;:[&quot;Lee Kang Hao&quot;, &quot;MO2&quot;, &quot;&quot;, &quot;&quot;, [&quot;brain&quot;, &quot;teeth&quot;], &quot;S&quot;]}*</span>
+<span class="sd">    &quot;&quot;&quot;</span>   
+
+    <span class="c1"># Establish connection to DB</span>
+    <span class="n">conn</span><span class="p">,</span> <span class="n">cur</span> <span class="o">=</span> <span class="n">create_connection</span><span class="p">()</span> 
+
+    <span class="c1"># Delete any existing data from Roster table from DB</span>
+    <span class="n">cur</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;DELETE FROM Roster&quot;&quot;&quot;</span><span class="p">)</span>
+    <span class="n">conn</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+
+    <span class="c1"># Delete any existing data from Skill table from DB</span>
+    <span class="n">cur</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;DELETE FROM Skill&quot;&quot;&quot;</span><span class="p">)</span>
+    <span class="n">conn</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+
+    <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_excel</span> <span class="p">(</span><span class="sa">r</span><span class="s1">&#39;information_excel.xlsx&#39;</span><span class="p">,</span> <span class="n">sheet_name</span><span class="o">=</span><span class="s1">&#39;Roster&#39;</span><span class="p">)</span>
+
+    <span class="n">roster_dict</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="n">index</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">index</span>
+    <span class="n">number_of_rows</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">index</span><span class="p">)</span>
+
+    <span class="c1"># Extract data and put into a dictionary</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">number_of_rows</span><span class="p">):</span>
+        <span class="n">email</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">first_position</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">2</span><span class="p">]</span>
+        <span class="n">second_position</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">3</span><span class="p">]</span>
+        <span class="n">posting</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">4</span><span class="p">]</span>
+        <span class="n">json_skills</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">5</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">pd</span><span class="o">.</span><span class="n">isnull</span><span class="p">(</span><span class="n">json_skills</span><span class="p">)</span> <span class="o">==</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="n">skills</span> <span class="o">=</span> <span class="s2">&quot;NULL&quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="s1">&#39;;&#39;</span> <span class="ow">in</span> <span class="n">json_skills</span><span class="p">:</span> 
+                <span class="n">skills</span> <span class="o">=</span> <span class="n">json_skills</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;;&#39;</span><span class="p">)</span>
+                <span class="c1"># Insert the multiple skills each staff has into Skill table in DB</span>
+                <span class="k">for</span> <span class="n">each_skill</span> <span class="ow">in</span> <span class="n">skills</span><span class="p">:</span>
+                    <span class="n">cur</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;INSERT OR IGNORE INTO Skill(email, skill)  </span>
+<span class="s2">                            VALUES (?, ?);&quot;&quot;&quot;</span><span class="p">,</span> <span class="p">(</span><span class="n">email</span><span class="p">,</span><span class="n">each_skill</span><span class="p">))</span>
+                    <span class="n">conn</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+
+            <span class="k">else</span><span class="p">:</span> 
+                <span class="n">skills</span> <span class="o">=</span> <span class="n">json_skills</span>
+                <span class="c1"># Insert the multiple skills each staff has into Skill table in DB</span>
+                <span class="n">cur</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;INSERT OR IGNORE INTO Skill(email, skill)  </span>
+<span class="s2">                        VALUES (?, ?);&quot;&quot;&quot;</span><span class="p">,</span> <span class="p">(</span><span class="n">email</span><span class="p">,</span><span class="n">skills</span><span class="p">))</span>
+                <span class="n">conn</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+
+        <span class="n">mo_type</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">6</span><span class="p">]</span>
+        <span class="n">roster_dict</span><span class="p">[</span><span class="n">email</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">name</span><span class="p">),</span><span class="n">first_position</span><span class="p">,</span><span class="n">second_position</span><span class="p">,</span><span class="n">posting</span><span class="p">,</span><span class="n">skills</span><span class="p">,</span><span class="n">mo_type</span><span class="p">]</span>
+
+        <span class="c1"># Insert values into Roster table in DB</span>
+        <span class="n">cur</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;INSERT OR IGNORE INTO Roster(email, name, first_position, second_position, posting, type) </span>
+<span class="s2">                VALUES (?, ?, ?, ?, ?, ?);&quot;&quot;&quot;</span><span class="p">,</span> <span class="p">(</span><span class="n">email</span><span class="p">,</span><span class="nb">str</span><span class="p">(</span><span class="n">name</span><span class="p">),</span><span class="n">first_position</span><span class="p">,</span><span class="n">second_position</span><span class="p">,</span><span class="n">posting</span><span class="p">,</span><span class="n">mo_type</span><span class="p">))</span>
+        <span class="n">conn</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+    
+    <span class="c1"># Close connection to DB</span>
+    <span class="n">close_connection</span><span class="p">(</span><span class="n">conn</span><span class="p">,</span> <span class="n">cur</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">roster_dict</span></div>
+
+<div class="viewcode-block" id="readDuties"><a class="viewcode-back" href="../helperFunctions.html#helperFunctions.readDuties">[docs]</a><span class="k">def</span> <span class="nf">readDuties</span><span class="p">(</span><span class="n">query_start_date</span><span class="p">,</span><span class="n">query_last_date</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Reads *Duties* sheet in *information_excel.xlsx* and updates *Duty* table.</span>
+
+<span class="sd">    :parameters: *Duties* sheet in *information_excel.xlsx**</span>
+<span class="sd">    :return: dictionary of doctor emails and their duties details (name, duty name, start date, end date).</span>
+<span class="sd">    For example: </span>
+<span class="sd">    *{&quot;leekh@ttsh.com&quot;:[&quot;Lee Kang Hao&quot;, &quot;ICU1&quot;, &quot;5/2/2021&quot;, &quot;5/3/2021&quot;]}*</span>
+<span class="sd">    &quot;&quot;&quot;</span>   
+
+    <span class="c1"># Establish connection to DB</span>
+    <span class="n">conn</span><span class="p">,</span> <span class="n">cur</span> <span class="o">=</span> <span class="n">create_connection</span><span class="p">()</span> 
+
+    <span class="c1"># Delete any existing data from Duty table from DB</span>
+    <span class="n">cur</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;DELETE FROM Duty&quot;&quot;&quot;</span><span class="p">)</span>
+    <span class="n">conn</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+
+    <span class="c1"># Reset the auto incremental numbers when each month&#39;s schedule is being generated</span>
+    <span class="n">cur</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;DELETE FROM sqlite_sequence WHERE name = &#39;Duty&#39;;&quot;&quot;&quot;</span><span class="p">)</span>
+    <span class="n">conn</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+    
+    <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_excel</span> <span class="p">(</span><span class="sa">r</span><span class="s1">&#39;information_excel.xlsx&#39;</span><span class="p">,</span> <span class="n">sheet_name</span><span class="o">=</span><span class="s1">&#39;Duties&#39;</span><span class="p">)</span>
+
+    <span class="n">duties_dict</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="n">index</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">index</span>
+    <span class="n">number_of_rows</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">index</span><span class="p">)</span>
+
+    <span class="c1">#Extract data and put into a dictionary</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">number_of_rows</span><span class="p">):</span>
+        <span class="n">email</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">duty_name</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">2</span><span class="p">]</span>
+        <span class="n">start_date</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">to_datetime</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">3</span><span class="p">])</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s1">&#39;%Y-%m-</span><span class="si">%d</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="n">end_date</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">to_datetime</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">4</span><span class="p">])</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s1">&#39;%Y-%m-</span><span class="si">%d</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="n">temp</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">temp</span><span class="p">[</span><span class="n">start_date</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">name</span><span class="p">),</span><span class="n">duty_name</span><span class="p">,</span><span class="n">end_date</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">email</span> <span class="ow">in</span> <span class="n">duties_dict</span><span class="p">:</span>
+            <span class="n">duties_dict</span><span class="p">[</span><span class="n">email</span><span class="p">]</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">temp</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">email</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">duties_dict</span><span class="p">:</span>
+            <span class="n">duties_dict</span><span class="p">[</span><span class="n">email</span><span class="p">]</span> <span class="o">=</span> <span class="n">temp</span>
+        
+        <span class="n">cur</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;INSERT OR IGNORE INTO Duty(email, name, duty_name, start_date, end_date) </span>
+<span class="s2">                VALUES (?, ?, ?, ?, ?);&quot;&quot;&quot;</span><span class="p">,</span> <span class="p">(</span><span class="n">email</span><span class="p">,</span><span class="nb">str</span><span class="p">(</span><span class="n">name</span><span class="p">),</span><span class="n">duty_name</span><span class="p">,</span><span class="n">start_date</span><span class="p">,</span><span class="n">end_date</span><span class="p">))</span>
+        <span class="n">conn</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+    
+    <span class="c1"># Close connection to DB</span>
+    <span class="n">close_connection</span><span class="p">(</span><span class="n">conn</span><span class="p">,</span> <span class="n">cur</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">duties_dict</span></div>
+
+<div class="viewcode-block" id="readtraining"><a class="viewcode-back" href="../helperFunctions.html#helperFunctions.readtraining">[docs]</a><span class="k">def</span> <span class="nf">readtraining</span><span class="p">(</span><span class="n">query_start_date</span><span class="p">,</span><span class="n">query_last_date</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Reads *Training* sheet in *information_excel.xlsx* and updates *Training* table.</span>
+
+<span class="sd">    :parameters: *Training* sheet in *information_excel.xlsx**</span>
+<span class="sd">    :return: dictionary of doctor emails and their training details (name, training, start date, end date).</span>
+<span class="sd">    For example: </span>
+<span class="sd">    *{&quot;leekh@ttsh.com&quot;:[&quot;Lee Kang Hao&quot;, &quot;Refresher&quot;, &quot;5/2/2021&quot;, &quot;5/3/2021&quot;]}*</span>
+<span class="sd">    &quot;&quot;&quot;</span>   
+
+    <span class="c1"># Establish connection to DB</span>
+    <span class="n">conn</span><span class="p">,</span> <span class="n">cur</span> <span class="o">=</span> <span class="n">create_connection</span><span class="p">()</span> 
+
+    <span class="c1"># Delete any existing data from Training table from DB</span>
+    <span class="n">cur</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;DELETE FROM Training&quot;&quot;&quot;</span><span class="p">)</span>
+    <span class="n">conn</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+
+    <span class="c1"># Reset the auto incremental numbers when each month&#39;s schedule is being generated</span>
+    <span class="n">cur</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;DELETE FROM sqlite_sequence WHERE name = &#39;Training&#39;;&quot;&quot;&quot;</span><span class="p">)</span>
+    <span class="n">conn</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+
+    <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_excel</span> <span class="p">(</span><span class="sa">r</span><span class="s1">&#39;information_excel.xlsx&#39;</span><span class="p">,</span> <span class="n">sheet_name</span><span class="o">=</span><span class="s1">&#39;Training&#39;</span><span class="p">)</span>
+
+    <span class="n">training_dict</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="n">index</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">index</span>
+    <span class="n">number_of_rows</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">index</span><span class="p">)</span>
+
+    <span class="c1">#Extract data and put into a dictionary</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">number_of_rows</span><span class="p">):</span>
+        <span class="n">email</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">training</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">2</span><span class="p">]</span>
+        <span class="n">start_date</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">to_datetime</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">3</span><span class="p">])</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s1">&#39;%Y-%m-</span><span class="si">%d</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="n">end_date</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">to_datetime</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">4</span><span class="p">])</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s1">&#39;%Y-%m-</span><span class="si">%d</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="n">temp</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">temp</span><span class="p">[</span><span class="n">start_date</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">name</span><span class="p">),</span><span class="n">training</span><span class="p">,</span><span class="n">end_date</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">email</span> <span class="ow">in</span> <span class="n">training_dict</span><span class="p">:</span>
+            <span class="n">training_dict</span><span class="p">[</span><span class="n">email</span><span class="p">]</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">temp</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">email</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">training_dict</span><span class="p">:</span>
+            <span class="n">training_dict</span><span class="p">[</span><span class="n">email</span><span class="p">]</span> <span class="o">=</span> <span class="n">temp</span>
+        
+        <span class="n">cur</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;INSERT OR IGNORE INTO Training(email, name, training, start_date, end_date) </span>
+<span class="s2">                VALUES (?, ?, ?, ?, ?);&quot;&quot;&quot;</span><span class="p">,</span> <span class="p">(</span><span class="n">email</span><span class="p">,</span><span class="nb">str</span><span class="p">(</span><span class="n">name</span><span class="p">),</span><span class="n">training</span><span class="p">,</span><span class="n">start_date</span><span class="p">,</span><span class="n">end_date</span><span class="p">))</span>
+        <span class="n">conn</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+
+    <span class="c1"># Close connection to DB</span>
+    <span class="n">close_connection</span><span class="p">(</span><span class="n">conn</span><span class="p">,</span> <span class="n">cur</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">training_dict</span></div>
+
+<div class="viewcode-block" id="readpleave"><a class="viewcode-back" href="../helperFunctions.html#helperFunctions.readpleave">[docs]</a><span class="k">def</span> <span class="nf">readpleave</span><span class="p">(</span><span class="n">query_start_date</span><span class="p">,</span><span class="n">query_last_date</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Reads *Priority Leave* sheet in *information_excel.xlsx* and updates *PriorityLeave* table.</span>
+
+<span class="sd">    :parameters: *Priority Leave* sheet in *information_excel.xlsx**</span>
+<span class="sd">    :return: dictionary of doctor emails and their training details (name, leave reason, start date, end date).</span>
+<span class="sd">    For example: </span>
+<span class="sd">    *{&quot;leekh@ttsh.com&quot;:[&quot;Lee Kang Hao&quot;, &quot;Annual Leave&quot;, &quot;5/2/2021&quot;, &quot;5/3/2021&quot;]}*</span>
+<span class="sd">    &quot;&quot;&quot;</span>   
+
+    <span class="c1"># Establish connection to DB</span>
+    <span class="n">conn</span><span class="p">,</span> <span class="n">cur</span> <span class="o">=</span> <span class="n">create_connection</span><span class="p">()</span> 
+
+    <span class="c1"># Delete any existing data from Training table from DB</span>
+    <span class="n">cur</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;DELETE FROM PriorityLeave&quot;&quot;&quot;</span><span class="p">)</span>
+    <span class="n">conn</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+
+    <span class="c1"># Reset the auto incremental numbers when each month&#39;s schedule is being generated</span>
+    <span class="n">cur</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;DELETE FROM sqlite_sequence WHERE name = &#39;PriorityLeave&#39;;&quot;&quot;&quot;</span><span class="p">)</span>
+    <span class="n">conn</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+
+    <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_excel</span> <span class="p">(</span><span class="sa">r</span><span class="s1">&#39;information_excel.xlsx&#39;</span><span class="p">,</span> <span class="n">sheet_name</span><span class="o">=</span><span class="s1">&#39;Priority Leave&#39;</span><span class="p">)</span>
+
+    <span class="n">pleave_dict</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="n">index</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">index</span>
+    <span class="n">number_of_rows</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">index</span><span class="p">)</span>
+
+    <span class="c1">#Extract data and put into a dictionary</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">number_of_rows</span><span class="p">):</span>
+        <span class="n">email</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">leave_reason</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">2</span><span class="p">]</span>
+        <span class="n">start_date</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">to_datetime</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">3</span><span class="p">])</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s1">&#39;%Y-%m-</span><span class="si">%d</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="n">end_date</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">to_datetime</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">4</span><span class="p">])</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s1">&#39;%Y-%m-</span><span class="si">%d</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="n">temp</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">temp</span><span class="p">[</span><span class="n">start_date</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">name</span><span class="p">),</span><span class="n">leave_reason</span><span class="p">,</span><span class="n">end_date</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">email</span> <span class="ow">in</span> <span class="n">pleave_dict</span><span class="p">:</span>
+            <span class="n">pleave_dict</span><span class="p">[</span><span class="n">email</span><span class="p">]</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">temp</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">email</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">pleave_dict</span><span class="p">:</span>
+            <span class="n">pleave_dict</span><span class="p">[</span><span class="n">email</span><span class="p">]</span> <span class="o">=</span> <span class="n">temp</span>
+        
+        <span class="n">cur</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;INSERT OR IGNORE INTO PriorityLeave(email, name, reason, start_date, end_date) </span>
+<span class="s2">                VALUES (?, ?, ?, ?, ?);&quot;&quot;&quot;</span><span class="p">,</span> <span class="p">(</span><span class="n">email</span><span class="p">,</span><span class="nb">str</span><span class="p">(</span><span class="n">name</span><span class="p">),</span><span class="n">leave_reason</span><span class="p">,</span><span class="n">start_date</span><span class="p">,</span><span class="n">end_date</span><span class="p">))</span>
+        <span class="n">conn</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+
+    <span class="c1"># Close connection to DB</span>
+    <span class="n">close_connection</span><span class="p">(</span><span class="n">conn</span><span class="p">,</span> <span class="n">cur</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">pleave_dict</span></div>
+
+<div class="viewcode-block" id="readPh"><a class="viewcode-back" href="../helperFunctions.html#helperFunctions.readPh">[docs]</a><span class="k">def</span> <span class="nf">readPh</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Reads *Public Holiday* sheet in *information_excel.xlsx*.</span>
+
+<span class="sd">    :parameters: *Public Holiday* sheet in *information_excel.xlsx**</span>
+<span class="sd">    :return: dictionary containing date, day and holiday name. </span>
+<span class="sd">    For example: </span>
+<span class="sd">    *{&quot;1/1/2020&quot;:[&quot;New Year&#39;s Day&quot;, &quot;Wednesday&quot;]}*</span>
+<span class="sd">    &quot;&quot;&quot;</span>   
+
+    <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_excel</span> <span class="p">(</span><span class="sa">r</span><span class="s1">&#39;information_excel.xlsx&#39;</span><span class="p">,</span> <span class="n">sheet_name</span><span class="o">=</span><span class="s1">&#39;Public Holiday&#39;</span><span class="p">)</span>
+
+    <span class="n">ph_dict</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="n">index</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">index</span>
+    <span class="n">number_of_rows</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">index</span><span class="p">)</span>
+
+    <span class="c1"># Extract data and put into a dictionary</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">number_of_rows</span><span class="p">):</span>
+        <span class="n">date</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">to_datetime</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s1">&#39;%Y-%m-</span><span class="si">%d</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="n">day</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">2</span><span class="p">]</span>
+        <span class="n">ph_dict</span><span class="p">[</span><span class="n">date</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">name</span><span class="p">,</span><span class="n">day</span><span class="p">]</span>
+
+    <span class="k">return</span> <span class="n">ph_dict</span></div>
+
+<div class="viewcode-block" id="readPrevCalls"><a class="viewcode-back" href="../helperFunctions.html#helperFunctions.readPrevCalls">[docs]</a><span class="k">def</span> <span class="nf">readPrevCalls</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Reads *Last 2 Days Calls* sheet in *information_excel.xlsx*.</span>
+
+<span class="sd">    :parameters: *Last 2 Days Calls* sheet in *information_excel.xlsx**</span>
+<span class="sd">    :return: list containing dictionaries of call date and email. </span>
+<span class="sd">    For example: </span>
+<span class="sd">    *[{&quot;2/1/2020&quot;, &quot;leekh@ttsh.com&quot;}]*</span>
+<span class="sd">    &quot;&quot;&quot;</span> 
+
+    <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_excel</span> <span class="p">(</span><span class="sa">r</span><span class="s1">&#39;information_excel.xlsx&#39;</span><span class="p">,</span> <span class="n">sheet_name</span><span class="o">=</span><span class="s1">&#39;Last 2 Days Calls&#39;</span><span class="p">)</span>
+
+    <span class="n">prev_call_list</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="n">index</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">index</span>
+    <span class="n">number_of_rows</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">index</span><span class="p">)</span>
+
+    <span class="n">temp1_dict</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">dates_list</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="c1"># Extract data and put into a dictionary</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">number_of_rows</span><span class="p">):</span>
+        <span class="n">email</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">call_date</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">to_datetime</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">2</span><span class="p">])</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s1">&#39;%Y-%m-</span><span class="si">%d</span><span class="s1">&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">call_date</span> <span class="ow">in</span> <span class="n">temp1_dict</span><span class="p">:</span>
+            <span class="n">temp1_dict</span><span class="p">[</span><span class="n">call_date</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">email</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">call_date</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">temp1_dict</span><span class="p">:</span>
+            <span class="n">temp1_dict</span><span class="p">[</span><span class="n">call_date</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">email</span><span class="p">]</span>
+            <span class="n">dates_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">call_date</span><span class="p">)</span>
+    
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">dates_list</span><span class="p">:</span>
+        <span class="n">prev_call_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">temp1_dict</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+
+    <span class="k">return</span> <span class="n">prev_call_list</span></div>
+
+<div class="viewcode-block" id="readCallRequest"><a class="viewcode-back" href="../helperFunctions.html#helperFunctions.readCallRequest">[docs]</a><span class="k">def</span> <span class="nf">readCallRequest</span><span class="p">(</span><span class="n">query_start_date</span><span class="p">,</span> <span class="n">query_last_date</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Retrieves call request from *CallRequest* table.</span>
+
+<span class="sd">    :parameters: *CallRequest* table</span>
+<span class="sd">    :return: dictionary containing doctor emails, date, name, request type, remark. </span>
+<span class="sd">    For example: </span>
+<span class="sd">    *{&quot;leekh@ttsh.com&quot;:{&quot;2021-05-03&quot;: [&quot;Lee Kang Hao&quot;, &quot;OnCall&quot;, &quot;Mock&quot;]}}*</span>
+<span class="sd">    &quot;&quot;&quot;</span>   
+
+    <span class="c1"># Establish connection to DB</span>
+    <span class="n">conn</span><span class="p">,</span> <span class="n">cur</span> <span class="o">=</span> <span class="n">create_connection</span><span class="p">()</span>
+    
+    <span class="c1"># Fetch the call request data stored in DB</span>
+    <span class="n">cur</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;SELECT * FROM CallRequest WHERE date &gt;= ? AND date &lt;= ?;&quot;&quot;&quot;</span><span class="p">,</span>
+    <span class="p">(</span><span class="n">query_start_date</span><span class="p">,</span> <span class="n">query_last_date</span><span class="p">))</span>
+    <span class="n">cr_results</span> <span class="o">=</span> <span class="n">cur</span><span class="o">.</span><span class="n">fetchall</span><span class="p">()</span>
+
+    <span class="c1"># Dictionary to store the call request results</span>
+    <span class="n">cr_dict</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="c1"># Reading from the DB results</span>
+    <span class="k">for</span> <span class="n">each</span> <span class="ow">in</span> <span class="n">cr_results</span><span class="p">:</span>
+        <span class="n">email</span> <span class="o">=</span> <span class="n">each</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="n">each</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+        <span class="n">request_type</span> <span class="o">=</span> <span class="n">each</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span>
+        <span class="n">date</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">to_datetime</span><span class="p">(</span><span class="n">each</span><span class="p">[</span><span class="mi">3</span><span class="p">])</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s1">&#39;%Y-%m-</span><span class="si">%d</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="n">remark</span> <span class="o">=</span> <span class="n">each</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span>
+
+        <span class="n">temp</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">temp</span><span class="p">[</span><span class="n">date</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">name</span><span class="p">),</span><span class="n">request_type</span><span class="p">,</span><span class="n">remark</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">email</span> <span class="ow">in</span> <span class="n">cr_dict</span><span class="p">:</span>
+            <span class="n">cr_dict</span><span class="p">[</span><span class="n">email</span><span class="p">]</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">temp</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">email</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">cr_dict</span><span class="p">:</span>
+            <span class="n">cr_dict</span><span class="p">[</span><span class="n">email</span><span class="p">]</span> <span class="o">=</span> <span class="n">temp</span>
+    
+    <span class="c1"># Close connection to DB</span>
+    <span class="n">close_connection</span><span class="p">(</span><span class="n">conn</span><span class="p">,</span> <span class="n">cur</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">cr_dict</span></div>
+
+<div class="viewcode-block" id="readLeaveApplication"><a class="viewcode-back" href="../helperFunctions.html#helperFunctions.readLeaveApplication">[docs]</a><span class="k">def</span> <span class="nf">readLeaveApplication</span><span class="p">(</span><span class="n">query_start_date</span><span class="p">,</span> <span class="n">query_last_date</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Retrieves leave request from *LeaveApplication* table.</span>
+
+<span class="sd">    :parameters: *LeaveApplication* table</span>
+<span class="sd">    :return: dictionary containing doctor emails, start date, name, leave type, end date, duration and remark. </span>
+<span class="sd">    For example: </span>
+<span class="sd">    *{&quot;leekh@ttsh.com&quot;:{&quot;2021-05-03&quot;: [&quot;Lee Kang Hao&quot;, &quot;AnnualLeave&quot;, &quot;2021-05-05&quot;, &quot;PM&quot;, &quot;Mock&quot;]}}*</span>
+<span class="sd">    &quot;&quot;&quot;</span>   
+
+    <span class="c1"># Establish connection to DB</span>
+    <span class="n">conn</span><span class="p">,</span> <span class="n">cur</span> <span class="o">=</span> <span class="n">create_connection</span><span class="p">()</span>
+
+    <span class="c1"># Fetch the leave application data stored in DB</span>
+    <span class="n">cur</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;SELECT * FROM LeaveApplication WHERE start_date &gt;= ? INTERSECT SELECT * FROM LeaveApplication WHERE start_date &lt;= ? </span>
+<span class="s2">        UNION SELECT * FROM LeaveApplication WHERE end_date &lt;= ? INTERSECT SELECT * FROM LeaveApplication WHERE end_date &gt;= ?;&quot;&quot;&quot;</span><span class="p">,</span>
+    <span class="p">(</span><span class="n">query_start_date</span><span class="p">,</span> <span class="n">query_last_date</span><span class="p">,</span> <span class="n">query_last_date</span><span class="p">,</span> <span class="n">query_start_date</span><span class="p">))</span>
+    <span class="n">la_results</span> <span class="o">=</span> <span class="n">cur</span><span class="o">.</span><span class="n">fetchall</span><span class="p">()</span>
+
+    <span class="c1"># Dictionary to store the call request results</span>
+    <span class="n">la_dict</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="c1"># Reading from the DB results</span>
+    <span class="k">for</span> <span class="n">each</span> <span class="ow">in</span> <span class="n">la_results</span><span class="p">:</span>
+        <span class="n">email</span> <span class="o">=</span> <span class="n">each</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="n">each</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+        <span class="n">leave_type</span> <span class="o">=</span> <span class="n">each</span><span class="p">[</span><span class="mi">6</span><span class="p">]</span>
+        <span class="n">start_date</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">to_datetime</span><span class="p">(</span><span class="n">each</span><span class="p">[</span><span class="mi">3</span><span class="p">])</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s1">&#39;%Y-%m-</span><span class="si">%d</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="n">end_date</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">to_datetime</span><span class="p">(</span><span class="n">each</span><span class="p">[</span><span class="mi">4</span><span class="p">])</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s1">&#39;%Y-%m-</span><span class="si">%d</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="n">remark</span> <span class="o">=</span> <span class="n">each</span><span class="p">[</span><span class="mi">7</span><span class="p">]</span>
+        <span class="n">duration</span> <span class="o">=</span> <span class="n">each</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span>
+
+        <span class="n">temp</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">temp</span><span class="p">[</span><span class="n">start_date</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">name</span><span class="p">),</span><span class="n">leave_type</span><span class="p">,</span><span class="n">end_date</span><span class="p">,</span> <span class="n">duration</span><span class="p">,</span> <span class="n">remark</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">email</span> <span class="ow">in</span> <span class="n">la_dict</span><span class="p">:</span>
+            <span class="n">la_dict</span><span class="p">[</span><span class="n">email</span><span class="p">]</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">temp</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">email</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">la_dict</span><span class="p">:</span>
+            <span class="n">la_dict</span><span class="p">[</span><span class="n">email</span><span class="p">]</span> <span class="o">=</span> <span class="n">temp</span>
+    
+    <span class="c1"># Close connection to DB</span>
+    <span class="n">close_connection</span><span class="p">(</span><span class="n">conn</span><span class="p">,</span> <span class="n">cur</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">la_dict</span></div>
+
+<div class="viewcode-block" id="clashes"><a class="viewcode-back" href="../helperFunctions.html#helperFunctions.clashes">[docs]</a><span class="k">def</span> <span class="nf">clashes</span><span class="p">(</span><span class="n">query_start_date</span><span class="p">,</span><span class="n">query_last_date</span><span class="p">):</span>    
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Check for schedule clashes in *Training*, *Duties* and *Priority Leave* sheets in *information_excel.xlsx*</span>
+
+<span class="sd">    :parameters: *Training*, *Duties* and *Priority Leave* sheets in *information_excel.xlsx*</span>
+<span class="sd">    :return: dictionary containing date, email, name and sheets with clashes. </span>
+<span class="sd">    For example: *{&quot;2021-05-03&quot;: [&quot;leekh@ttsh.com&quot;, &quot;Lee Kang Hao&quot;, [&quot;Training&quot;, &quot;Duty&quot;]]}*</span>
+<span class="sd">    &quot;&quot;&quot;</span>   
+
+    <span class="c1"># Combined dictionary to store all the data from the excel file for the scheduled dates</span>
+    <span class="n">combined</span> <span class="o">=</span> <span class="p">{}</span>
+    
+    <span class="c1"># Reading and storing the excel file data</span>
+    <span class="n">sdate</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">strptime</span><span class="p">(</span><span class="n">query_start_date</span><span class="p">,</span> <span class="s1">&#39;%Y-%m-</span><span class="si">%d</span><span class="s1">&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">date</span><span class="p">()</span>   <span class="c1"># start date</span>
+    <span class="n">edate</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">strptime</span><span class="p">(</span><span class="n">query_last_date</span><span class="p">,</span> <span class="s1">&#39;%Y-%m-</span><span class="si">%d</span><span class="s1">&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">date</span><span class="p">()</span>   <span class="c1"># end date</span>
+    <span class="n">delta</span> <span class="o">=</span> <span class="n">edate</span> <span class="o">-</span> <span class="n">sdate</span>       <span class="c1"># as timedelta</span>
+    <span class="k">for</span> <span class="n">date_diff</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">delta</span><span class="o">.</span><span class="n">days</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+        <span class="n">day</span> <span class="o">=</span> <span class="n">sdate</span> <span class="o">+</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">days</span><span class="o">=</span><span class="n">date_diff</span><span class="p">)</span>     <span class="c1"># 2020-08-02 (datetime object format)</span>
+        <span class="n">day_key</span> <span class="o">=</span> <span class="n">day</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">&quot;%Y-%m-</span><span class="si">%d</span><span class="s2">&quot;</span><span class="p">)</span>          <span class="c1"># 2020-08-02 (string format)</span>
+        <span class="n">display_day</span> <span class="o">=</span> <span class="n">day</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%d</span><span class="s2">-%m-%Y&quot;</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot; &quot;</span> <span class="o">+</span> <span class="n">check_day</span><span class="p">(</span><span class="n">day</span><span class="p">)</span> <span class="c1"># Sunday 31-12-2020 (string format)</span>
+        
+        <span class="c1"># Read Training from excel and store inside training_list</span>
+        <span class="n">training_list</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_excel</span> <span class="p">(</span><span class="sa">r</span><span class="s1">&#39;information_excel.xlsx&#39;</span><span class="p">,</span> <span class="n">sheet_name</span><span class="o">=</span><span class="s1">&#39;Training&#39;</span><span class="p">)</span>
+        <span class="n">index</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">index</span>
+        <span class="n">number_of_rows</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">index</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">number_of_rows</span><span class="p">):</span>
+            <span class="n">start_date</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">to_datetime</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">3</span><span class="p">])</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s1">&#39;%Y-%m-</span><span class="si">%d</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="n">end_date</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">to_datetime</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">4</span><span class="p">])</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s1">&#39;%Y-%m-</span><span class="si">%d</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">day</span> <span class="o">&gt;=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">strptime</span><span class="p">(</span><span class="n">start_date</span><span class="p">,</span> <span class="s1">&#39;%Y-%m-</span><span class="si">%d</span><span class="s1">&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">date</span><span class="p">()</span> <span class="ow">and</span> <span class="n">day</span> <span class="o">&lt;=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">strptime</span><span class="p">(</span><span class="n">end_date</span><span class="p">,</span> <span class="s1">&#39;%Y-%m-</span><span class="si">%d</span><span class="s1">&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">date</span><span class="p">():</span>
+                <span class="n">email</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">name</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+                <span class="n">training</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">2</span><span class="p">]</span>
+                <span class="n">training_list</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">email</span><span class="p">,</span><span class="nb">str</span><span class="p">(</span><span class="n">name</span><span class="p">),</span><span class="n">training</span><span class="p">,</span><span class="n">start_date</span><span class="p">,</span><span class="n">end_date</span><span class="p">])</span>
+        
+        <span class="c1"># Read Duties from excel and store inside duty_list</span>
+        <span class="n">duty_list</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_excel</span> <span class="p">(</span><span class="sa">r</span><span class="s1">&#39;information_excel.xlsx&#39;</span><span class="p">,</span> <span class="n">sheet_name</span><span class="o">=</span><span class="s1">&#39;Duties&#39;</span><span class="p">)</span>
+        <span class="n">index</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">index</span>
+        <span class="n">number_of_rows</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">index</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">number_of_rows</span><span class="p">):</span>
+            <span class="n">start_date</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">to_datetime</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">3</span><span class="p">])</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s1">&#39;%Y-%m-</span><span class="si">%d</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="n">end_date</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">to_datetime</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">4</span><span class="p">])</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s1">&#39;%Y-%m-</span><span class="si">%d</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">day</span> <span class="o">&gt;=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">strptime</span><span class="p">(</span><span class="n">start_date</span><span class="p">,</span> <span class="s1">&#39;%Y-%m-</span><span class="si">%d</span><span class="s1">&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">date</span><span class="p">()</span> <span class="ow">and</span> <span class="n">day</span> <span class="o">&lt;=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">strptime</span><span class="p">(</span><span class="n">end_date</span><span class="p">,</span> <span class="s1">&#39;%Y-%m-</span><span class="si">%d</span><span class="s1">&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">date</span><span class="p">():</span>
+                <span class="n">email</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">name</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+                <span class="n">duty_name</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">2</span><span class="p">]</span>
+                <span class="n">duty_list</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">email</span><span class="p">,</span><span class="nb">str</span><span class="p">(</span><span class="n">name</span><span class="p">),</span><span class="n">duty_name</span><span class="p">,</span><span class="n">start_date</span><span class="p">,</span><span class="n">end_date</span><span class="p">])</span>
+        
+        <span class="c1"># Read Priority Leave from excel and store inside pl_list</span>
+        <span class="n">pl_list</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_excel</span> <span class="p">(</span><span class="sa">r</span><span class="s1">&#39;information_excel.xlsx&#39;</span><span class="p">,</span> <span class="n">sheet_name</span><span class="o">=</span><span class="s1">&#39;Priority Leave&#39;</span><span class="p">)</span>
+        <span class="n">index</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">index</span>
+        <span class="n">number_of_rows</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">index</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">number_of_rows</span><span class="p">):</span>
+            <span class="n">start_date</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">to_datetime</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">3</span><span class="p">])</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s1">&#39;%Y-%m-</span><span class="si">%d</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="n">end_date</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">to_datetime</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">4</span><span class="p">])</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s1">&#39;%Y-%m-</span><span class="si">%d</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">day</span> <span class="o">&gt;=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">strptime</span><span class="p">(</span><span class="n">start_date</span><span class="p">,</span> <span class="s1">&#39;%Y-%m-</span><span class="si">%d</span><span class="s1">&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">date</span><span class="p">()</span> <span class="ow">and</span> <span class="n">day</span> <span class="o">&lt;=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">strptime</span><span class="p">(</span><span class="n">end_date</span><span class="p">,</span> <span class="s1">&#39;%Y-%m-</span><span class="si">%d</span><span class="s1">&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">date</span><span class="p">():</span>
+                <span class="n">email</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">name</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+                <span class="n">leave_reason</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">2</span><span class="p">]</span>
+                <span class="n">pl_list</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">email</span><span class="p">,</span><span class="nb">str</span><span class="p">(</span><span class="n">name</span><span class="p">),</span><span class="n">leave_reason</span><span class="p">,</span><span class="n">start_date</span><span class="p">,</span><span class="n">end_date</span><span class="p">])</span>
+
+        <span class="c1"># Merging all the lists into 1 single combined dictionary</span>
+        <span class="n">combined</span><span class="p">[</span><span class="n">day_key</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;Training&quot;</span><span class="p">:</span> <span class="n">training_list</span><span class="p">,</span><span class="s2">&quot;Duties&quot;</span><span class="p">:</span> <span class="n">duty_list</span><span class="p">,</span> <span class="s2">&quot;Priority Leave&quot;</span><span class="p">:</span> <span class="n">pl_list</span><span class="p">}</span>
+
+    <span class="c1"># Read the excel data stored in the combined dictionary to determine if there are clashes</span>
+    <span class="n">clash_dict</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">date</span><span class="p">,</span><span class="n">value</span> <span class="ow">in</span> <span class="n">combined</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">doc_list</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">clash_doc_list</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">full_list</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">clash_list</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">activity</span><span class="p">,</span><span class="n">lists</span> <span class="ow">in</span> <span class="n">value</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">for</span> <span class="n">each</span> <span class="ow">in</span> <span class="n">lists</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">each</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">doc_list</span><span class="p">:</span>
+                    <span class="n">doc_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">each</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">each</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">clash_doc_list</span><span class="p">:</span>
+                        <span class="n">clash_doc_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">each</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+                <span class="n">each</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">activity</span><span class="p">)</span>
+                <span class="n">full_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">each</span><span class="p">)</span>
+        
+        <span class="c1"># If there are doctors having schedule clashes, start populating the clash_dict</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">clash_doc_list</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">unique_doc_list</span> <span class="o">=</span> <span class="p">[]</span>      
+            <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">full_list</span><span class="p">:</span>
+                <span class="n">activity_type_list</span> <span class="o">=</span> <span class="p">[]</span>   
+                <span class="k">if</span> <span class="n">c</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">in</span> <span class="n">clash_doc_list</span> <span class="ow">and</span> <span class="n">c</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">unique_doc_list</span><span class="p">:</span>
+                    <span class="n">clash_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">c</span><span class="p">)</span>
+                    <span class="n">unique_doc_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">c</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+                    <span class="n">activity_type_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">c</span><span class="p">[</span><span class="mi">5</span><span class="p">])</span>
+                    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">full_list</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="n">i</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">c</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">and</span> <span class="n">i</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">activity_type_list</span><span class="p">:</span>
+                            <span class="n">activity_type_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="p">[</span><span class="mi">5</span><span class="p">])</span>
+                    <span class="k">if</span> <span class="n">date</span> <span class="ow">in</span> <span class="n">clash_dict</span><span class="p">:</span>
+                        <span class="n">clash_dict</span><span class="p">[</span><span class="n">date</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">c</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">c</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="n">activity_type_list</span><span class="p">])</span>
+                    <span class="k">elif</span> <span class="n">date</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">clash_dict</span><span class="p">:</span>
+                        <span class="n">clash_dict</span><span class="p">[</span><span class="n">date</span><span class="p">]</span> <span class="o">=</span> <span class="p">[[</span><span class="n">c</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">c</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="n">activity_type_list</span><span class="p">]]</span>
+    
+    <span class="c1"># If there are clashes, return the clashes dictionary</span>
+    <span class="k">if</span> <span class="n">clash_dict</span><span class="p">:</span>     
+        <span class="k">return</span> <span class="n">clash_dict</span>       <span class="c1"># Format: {date:[ [email,name,[Training,Duty,Priority Leave]], [email,name,[Training,Duty,Priority Leave]]], date: ...}</span>
+    <span class="c1"># If there are no clashes, return False</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s1">&#39;False&#39;</span></div>
+
+<div class="viewcode-block" id="exportScheduleS"><a class="viewcode-back" href="../helperFunctions.html#helperFunctions.exportScheduleS">[docs]</a><span class="k">def</span> <span class="nf">exportScheduleS</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Exports senior doctors timetable as CSV. </span>
+
+<span class="sd">    :parameters: timetable data from *TempS* table</span>
+<span class="sd">    :return: *scheduleS.xlsx*</span>
+<span class="sd">    &quot;&quot;&quot;</span>   
+
+    <span class="c1"># Establish connection to DB</span>
+    <span class="n">conn</span><span class="p">,</span> <span class="n">cur</span> <span class="o">=</span> <span class="n">create_connection</span><span class="p">()</span>
+
+    <span class="c1"># Query from Temp Table in DB and put into a Pandas Dataframe</span>
+    <span class="n">script</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;SELECT * FROM TempS;&quot;&quot;&quot;</span>
+    <span class="n">cur</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">script</span><span class="p">)</span>
+    <span class="n">columns</span> <span class="o">=</span> <span class="p">[</span><span class="n">desc</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">desc</span> <span class="ow">in</span> <span class="n">cur</span><span class="o">.</span><span class="n">description</span><span class="p">]</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">cur</span><span class="o">.</span><span class="n">fetchall</span><span class="p">()</span>
+    <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">data</span><span class="p">),</span> <span class="n">columns</span><span class="o">=</span><span class="n">columns</span><span class="p">)</span>
+
+    <span class="c1"># Writing the Dataframe data into an excel file and saving the excel file</span>
+    <span class="n">writer</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">ExcelWriter</span><span class="p">(</span><span class="s1">&#39;scheduleS.xlsx&#39;</span><span class="p">)</span>
+    <span class="n">df</span><span class="o">.</span><span class="n">to_excel</span><span class="p">(</span><span class="n">writer</span><span class="p">,</span> <span class="n">sheet_name</span><span class="o">=</span><span class="s1">&#39;SeniorSchedule&#39;</span><span class="p">)</span>
+    <span class="n">writer</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+
+    <span class="c1"># Close connection to DB</span>
+    <span class="n">close_connection</span><span class="p">(</span><span class="n">conn</span><span class="p">,</span> <span class="n">cur</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="s1">&#39;True&#39;</span></div>
+
+<div class="viewcode-block" id="exportScheduleJ"><a class="viewcode-back" href="../helperFunctions.html#helperFunctions.exportScheduleJ">[docs]</a><span class="k">def</span> <span class="nf">exportScheduleJ</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Exports junior doctors timetable as CSV. </span>
+
+<span class="sd">    :parameters: timetable data from *TempJ* table</span>
+<span class="sd">    :return: *scheduleJ.xlsx*</span>
+<span class="sd">    &quot;&quot;&quot;</span>   
+
+    <span class="c1"># Establish connection to DB</span>
+    <span class="n">conn</span><span class="p">,</span> <span class="n">cur</span> <span class="o">=</span> <span class="n">create_connection</span><span class="p">()</span>
+
+    <span class="c1"># Query from Temp Table in DB and put into a Pandas Dataframe</span>
+    <span class="n">script</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;SELECT * FROM TempJ;&quot;&quot;&quot;</span>
+    <span class="n">cur</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">script</span><span class="p">)</span>
+    <span class="n">columns</span> <span class="o">=</span> <span class="p">[</span><span class="n">desc</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">desc</span> <span class="ow">in</span> <span class="n">cur</span><span class="o">.</span><span class="n">description</span><span class="p">]</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">cur</span><span class="o">.</span><span class="n">fetchall</span><span class="p">()</span>
+    <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">data</span><span class="p">),</span> <span class="n">columns</span><span class="o">=</span><span class="n">columns</span><span class="p">)</span>
+
+    <span class="c1"># Writing the Dataframe data into an excel file and saving the excel file</span>
+    <span class="n">writer</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">ExcelWriter</span><span class="p">(</span><span class="s1">&#39;scheduleJ.xlsx&#39;</span><span class="p">)</span>
+    <span class="n">df</span><span class="o">.</span><span class="n">to_excel</span><span class="p">(</span><span class="n">writer</span><span class="p">,</span> <span class="n">sheet_name</span><span class="o">=</span><span class="s1">&#39;JuniorSchedule&#39;</span><span class="p">)</span>
+    <span class="n">writer</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+
+    <span class="c1"># Close connection to DB</span>
+    <span class="n">close_connection</span><span class="p">(</span><span class="n">conn</span><span class="p">,</span> <span class="n">cur</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="s1">&#39;True&#39;</span></div>
+
+<div class="viewcode-block" id="email_json"><a class="viewcode-back" href="../helperFunctions.html#helperFunctions.email_json">[docs]</a><span class="k">def</span> <span class="nf">email_json</span><span class="p">(</span><span class="n">start_dateA</span><span class="p">,</span><span class="n">end_dateA</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Extracts FormSG emails from Outlook and updates the *CallRequest* and *LeaveApplication* tables with these data. </span>
+
+<span class="sd">    :parameters: start date and end date which specify emails to extract. </span>
+<span class="sd">    &quot;&quot;&quot;</span>   
+
+    <span class="n">pythoncom</span><span class="o">.</span><span class="n">CoInitialize</span><span class="p">()</span>
+    <span class="n">outlook</span> <span class="o">=</span> <span class="n">Dispatch</span><span class="p">(</span><span class="s2">&quot;Outlook.Application&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">GetNamespace</span><span class="p">(</span><span class="s2">&quot;MAPI&quot;</span><span class="p">)</span>
+    <span class="n">pythoncom</span><span class="o">.</span><span class="n">CoInitialize</span><span class="p">()</span>
+    <span class="n">root_folder</span> <span class="o">=</span> <span class="n">outlook</span><span class="o">.</span><span class="n">Folders</span><span class="o">.</span><span class="n">Item</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>   
+
+    <span class="c1">### note: change the folder name &#39;test&#39; to the one in TTSH</span>
+    <span class="n">test_folder</span> <span class="o">=</span> <span class="n">root_folder</span><span class="o">.</span><span class="n">Folders</span><span class="p">[</span><span class="s1">&#39;test&#39;</span><span class="p">]</span>
+    <span class="n">emails</span> <span class="o">=</span> <span class="n">test_folder</span><span class="o">.</span><span class="n">Items</span>
+ 
+    <span class="n">email_list</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">email_body_list</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">needed_emails</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">check_latest</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="n">start_dateA</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">strptime</span><span class="p">(</span><span class="n">start_dateA</span><span class="p">,</span> <span class="s1">&#39;%Y-%m-</span><span class="si">%d</span><span class="s1">&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s1">&#39;%Y-%m-</span><span class="si">%d</span><span class="s1">&#39;</span><span class="p">)</span>
+    <span class="n">start_date</span> <span class="o">=</span> <span class="n">start_dateA</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;-&#39;</span><span class="p">)</span>
+    <span class="n">start_date_mth</span><span class="p">,</span> <span class="n">start_date_year</span> <span class="o">=</span> <span class="n">start_date</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">start_date</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="n">end_dateA</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">strptime</span><span class="p">(</span><span class="n">end_dateA</span><span class="p">,</span> <span class="s1">&#39;%Y-%m-</span><span class="si">%d</span><span class="s1">&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s1">&#39;%Y-%m-</span><span class="si">%d</span><span class="s1">&#39;</span><span class="p">)</span>
+    <span class="n">end_date</span> <span class="o">=</span> <span class="n">end_dateA</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;-&#39;</span><span class="p">)</span>
+    <span class="n">end_date_mth</span><span class="p">,</span> <span class="n">end_date_year</span> <span class="o">=</span> <span class="n">end_date</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">end_date</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    
+    <span class="n">dates</span> <span class="o">=</span> <span class="p">[</span><span class="n">start_dateA</span><span class="p">,</span> <span class="n">end_dateA</span><span class="p">]</span>
+    <span class="n">start</span><span class="p">,</span> <span class="n">end</span> <span class="o">=</span> <span class="p">[</span><span class="n">datetime</span><span class="o">.</span><span class="n">strptime</span><span class="p">(</span><span class="n">_</span><span class="p">,</span> <span class="s2">&quot;%Y-%m-</span><span class="si">%d</span><span class="s2">&quot;</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">dates</span><span class="p">]</span>
+    <span class="n">myResult</span> <span class="o">=</span> <span class="n">OrderedDict</span><span class="p">(((</span><span class="n">start</span> <span class="o">+</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">_</span><span class="p">))</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;%b,%Y&quot;</span><span class="p">),</span> <span class="kc">None</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">((</span><span class="n">end</span> <span class="o">-</span> <span class="n">start</span><span class="p">)</span><span class="o">.</span><span class="n">days</span><span class="p">))</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+    <span class="n">months_between</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">myResult</span><span class="p">)</span>
+
+    <span class="n">dates</span> <span class="o">=</span> <span class="p">[</span><span class="n">start_dateA</span><span class="p">,</span> <span class="n">end_dateA</span><span class="p">]</span>
+    <span class="n">start</span><span class="p">,</span> <span class="n">end</span> <span class="o">=</span> <span class="p">[</span><span class="n">datetime</span><span class="o">.</span><span class="n">strptime</span><span class="p">(</span><span class="n">_</span><span class="p">,</span> <span class="s2">&quot;%Y-%m-</span><span class="si">%d</span><span class="s2">&quot;</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">dates</span><span class="p">]</span>
+    <span class="n">myResult</span> <span class="o">=</span> <span class="n">OrderedDict</span><span class="p">(((</span><span class="n">start</span> <span class="o">+</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">_</span><span class="p">))</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;%b,%Y&quot;</span><span class="p">),</span> <span class="kc">None</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">((</span><span class="n">end</span> <span class="o">-</span> <span class="n">start</span><span class="p">)</span><span class="o">.</span><span class="n">days</span><span class="p">))</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+    <span class="n">months_between</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">myResult</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">email</span> <span class="ow">in</span> <span class="n">emails</span><span class="p">:</span> 
+        <span class="c1">### email subjects</span>
+        <span class="n">emailSubject</span> <span class="o">=</span> <span class="n">email</span><span class="o">.</span><span class="n">Subject</span>
+        <span class="n">emailSubject</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">emailSubject</span><span class="p">)</span>
+
+        <span class="c1">### email body</span>
+        <span class="n">emailBody</span> <span class="o">=</span> <span class="n">email</span><span class="o">.</span><span class="n">Body</span>
+        <span class="n">emailBody</span> <span class="o">=</span> <span class="n">emailBody</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;ascii&#39;</span><span class="p">,</span> <span class="s1">&#39;ignore&#39;</span><span class="p">)</span>
+        <span class="n">emailBody</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">emailBody</span><span class="p">)</span>
+        
+        <span class="c1">### email received date</span>
+        <span class="n">emailReceivedDate</span> <span class="o">=</span> <span class="n">email</span><span class="o">.</span><span class="n">SentOn</span>
+        <span class="n">emailReceivedDateStr</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">email</span><span class="o">.</span><span class="n">SentOn</span><span class="p">)</span>
+        
+        <span class="n">formatJson</span> <span class="o">=</span> <span class="n">emailBody</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+        <span class="n">formatJson</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">formatJson</span><span class="p">)</span>
+        <span class="n">start</span> <span class="o">=</span> <span class="n">formatJson</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s1">&#39;--StartofJSON--&#39;</span><span class="p">)</span> <span class="o">+</span> <span class="mi">15</span>
+        <span class="n">end</span> <span class="o">=</span> <span class="n">formatJson</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s1">&#39;--EndofJSON--&#39;</span><span class="p">)</span>
+        <span class="n">myJson</span> <span class="o">=</span> <span class="n">formatJson</span><span class="p">[</span><span class="n">start</span><span class="p">:</span><span class="n">end</span><span class="p">]</span>
+        <span class="n">myQuestion</span> <span class="o">=</span> <span class="n">myJson</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;{&quot;question&quot;:&#39;</span><span class="p">)</span>
+     
+        <span class="n">myRequestMonth</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+    
+        <span class="c1">### get the questions and answers</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">myQuestion</span><span class="p">:</span>
+            <span class="n">myAnswerPosition</span> <span class="o">=</span> <span class="n">i</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s1">&#39;&quot;answer&quot;&#39;</span><span class="p">)</span>
+            <span class="n">myQuestion</span> <span class="o">=</span> <span class="n">i</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="n">myAnswerPosition</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span>            
+            
+            <span class="k">if</span> <span class="sa">r</span><span class="s1">&#39;r\n\r&#39;</span> <span class="ow">in</span> <span class="n">myQuestion</span><span class="p">:</span>
+                <span class="n">myQuestion</span> <span class="o">=</span> <span class="n">myQuestion</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;r\n\r&#39;</span><span class="p">,</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+            
+            <span class="n">myAns</span> <span class="o">=</span> <span class="n">i</span><span class="p">[</span><span class="n">myAnswerPosition</span><span class="p">:]</span>
+            <span class="n">myAnswerPosition</span> <span class="o">=</span> <span class="n">myAns</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s1">&#39;},&#39;</span><span class="p">)</span>
+            <span class="n">myAns</span> <span class="o">=</span> <span class="n">myAns</span><span class="p">[:</span><span class="n">myAnswerPosition</span><span class="p">]</span>
+            <span class="n">myAnswerPosition</span> <span class="o">=</span> <span class="n">myAns</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s1">&#39;&quot;answer&quot;:&quot;&#39;</span><span class="p">)</span> <span class="o">+</span> <span class="mi">10</span>
+            <span class="n">myAns</span> <span class="o">=</span> <span class="n">myAns</span><span class="p">[</span><span class="n">myAnswerPosition</span><span class="p">:]</span>
+            <span class="n">myAns</span> <span class="o">=</span> <span class="n">myAns</span><span class="p">[:</span><span class="nb">len</span><span class="p">(</span><span class="n">myAns</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">myAns</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">myAns</span><span class="p">)</span>
+            
+            <span class="n">myAns</span> <span class="o">=</span> <span class="n">myAns</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;\r&#39;</span><span class="p">,</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+            <span class="n">myAns</span> <span class="o">=</span> <span class="n">myAns</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;\n&#39;</span><span class="p">,</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+            <span class="n">myAns</span> <span class="o">=</span> <span class="n">myAns</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;}&#39;</span><span class="p">,</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+            <span class="n">myAns</span> <span class="o">=</span> <span class="n">myAns</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;]&#39;</span><span class="p">,</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+            <span class="n">myAns</span> <span class="o">=</span> <span class="n">myAns</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;&quot;&#39;</span><span class="p">,</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+            
+            <span class="k">if</span> <span class="sa">r</span><span class="s1">&#39;\r\n\r&#39;</span> <span class="ow">in</span> <span class="n">myAns</span><span class="p">:</span>
+                <span class="n">myAns</span> <span class="o">=</span> <span class="n">myAns</span><span class="p">[:</span><span class="nb">len</span><span class="p">(</span><span class="n">myAns</span><span class="p">)</span><span class="o">-</span><span class="mi">9</span><span class="p">]</span>
+            
+            <span class="k">if</span> <span class="s1">&#39;RequestMonth&#39;</span> <span class="ow">in</span> <span class="n">myQuestion</span><span class="p">:</span>
+                <span class="n">myRequestMonth</span> <span class="o">=</span> <span class="n">myAns</span>
+
+            <span class="k">if</span> <span class="s1">&#39;Email&#39;</span> <span class="ow">in</span> <span class="n">myQuestion</span><span class="p">:</span>
+                <span class="n">emailSenderAddress</span> <span class="o">=</span> <span class="n">myAns</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;&lt;&#39;</span><span class="p">)</span>
+                <span class="n">emailSenderAddress</span> <span class="o">=</span> <span class="n">emailSenderAddress</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">emailSender</span> <span class="o">=</span> <span class="n">myAns</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;&lt;&#39;</span><span class="p">)</span>
+                <span class="n">emailSender</span> <span class="o">=</span> <span class="n">emailSender</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                   
+            <span class="n">case2</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s2">&quot;question&quot;</span><span class="p">:</span><span class="n">myQuestion</span><span class="p">,</span>
+                <span class="s2">&quot;answer&quot;</span><span class="p">:</span><span class="n">myAns</span>
+            <span class="p">}</span>
+
+            <span class="n">email_body_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">case2</span><span class="p">)</span>
+  
+        <span class="n">myRequestMonthList</span> <span class="o">=</span> <span class="n">myRequestMonth</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">)</span>
+        <span class="n">request_year_name</span> <span class="o">=</span> <span class="n">myRequestMonthList</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>  
+        <span class="n">request_month_name</span> <span class="o">=</span> <span class="n">myRequestMonthList</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">request_month_name</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="n">request_month_name</span> <span class="o">=</span> <span class="n">request_month_name</span><span class="p">[:</span><span class="mi">3</span><span class="p">]</span>
+            <span class="n">myRequestMonth</span> <span class="o">=</span> <span class="n">request_month_name</span> <span class="o">+</span> <span class="s1">&#39;,&#39;</span> <span class="o">+</span> <span class="n">request_year_name</span>
+        <span class="n">month_number</span> <span class="o">=</span> <span class="n">strptime</span><span class="p">(</span><span class="n">request_month_name</span><span class="p">,</span><span class="s1">&#39;%b&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">tm_mon</span>
+        <span class="n">month_number</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">month_number</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="n">myRequestMonth</span> <span class="ow">in</span> <span class="n">months_between</span><span class="p">:</span>
+            <span class="n">case</span> <span class="o">=</span> <span class="p">[</span><span class="n">emailReceivedDate</span><span class="p">,</span> <span class="n">emailSenderAddress</span><span class="p">,</span> <span class="n">request_year_name</span><span class="p">,</span> <span class="n">month_number</span><span class="p">]</span>
+            <span class="n">check_latest</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">case</span><span class="p">)</span>
+            
+            <span class="n">case2</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s2">&quot;Subject&quot;</span><span class="p">:</span> <span class="n">emailSubject</span><span class="p">,</span>
+                <span class="s2">&quot;Body&quot;</span><span class="p">:</span><span class="n">email_body_list</span><span class="p">,</span>
+                <span class="s2">&quot;SenderEmail&quot;</span><span class="p">:</span> <span class="n">emailSenderAddress</span><span class="p">,</span>
+                <span class="s2">&quot;SenderName&quot;</span><span class="p">:</span><span class="n">emailSender</span><span class="p">,</span>
+                <span class="s2">&quot;Date&quot;</span><span class="p">:</span><span class="n">myRequestMonth</span><span class="p">,</span>
+                <span class="s2">&quot;ReceivedDate&quot;</span><span class="p">:</span><span class="n">emailReceivedDate</span>
+            <span class="p">}</span>
+            
+            <span class="c1">### note: don&#39;t delete this empty list  --&gt; it is needed to prevent appending from old emails</span>
+            <span class="n">email_body_list</span> <span class="o">=</span> <span class="p">[]</span>
+            
+            <span class="n">email_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">case2</span><span class="p">)</span>
+            
+            <span class="n">new_email_body</span> <span class="o">=</span> <span class="n">email_list</span><span class="p">[(</span><span class="nb">len</span><span class="p">(</span><span class="n">email_list</span><span class="p">))</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="s1">&#39;Body&#39;</span><span class="p">]</span>
+            
+            <span class="n">myQnA</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">leaveRequest</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">callRequest</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">otherRequest</span> <span class="o">=</span> <span class="p">[]</span>
+            
+            <span class="k">for</span> <span class="n">thread</span> <span class="ow">in</span> <span class="n">new_email_body</span><span class="p">:</span>
+                <span class="k">if</span> <span class="s2">&quot;LeaveRequest&quot;</span> <span class="ow">in</span> <span class="n">thread</span><span class="p">[</span><span class="s1">&#39;question&#39;</span><span class="p">]:</span>
+                    <span class="n">leaveRequest</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">thread</span><span class="p">[</span><span class="s1">&#39;answer&#39;</span><span class="p">])</span>
+                <span class="k">elif</span> <span class="s2">&quot;CallRequests&quot;</span> <span class="ow">in</span> <span class="n">thread</span><span class="p">[</span><span class="s1">&#39;question&#39;</span><span class="p">]:</span>
+                    <span class="n">callRequest</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">thread</span><span class="p">[</span><span class="s1">&#39;answer&#39;</span><span class="p">])</span>
+            
+            <span class="k">for</span> <span class="n">thread</span> <span class="ow">in</span> <span class="n">new_email_body</span><span class="p">:</span>
+                <span class="k">if</span> <span class="s2">&quot;LeaveRequest&quot;</span> <span class="ow">in</span> <span class="n">thread</span><span class="p">[</span><span class="s1">&#39;question&#39;</span><span class="p">]:</span>
+                    <span class="k">pass</span>
+                <span class="k">elif</span> <span class="s2">&quot;CallRequests&quot;</span> <span class="ow">in</span> <span class="n">thread</span><span class="p">[</span><span class="s1">&#39;question&#39;</span><span class="p">]:</span>
+                    <span class="k">pass</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">myQnA</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">thread</span><span class="p">)</span>
+            
+            <span class="n">myQnA</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s2">&quot;question&quot;</span><span class="p">:</span><span class="s2">&quot;leaveRequest&quot;</span><span class="p">,</span> <span class="s2">&quot;answer&quot;</span><span class="p">:</span><span class="n">leaveRequest</span><span class="p">})</span>
+            <span class="n">myQnA</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s2">&quot;question&quot;</span><span class="p">:</span><span class="s2">&quot;callRequest&quot;</span><span class="p">,</span> <span class="s2">&quot;answer&quot;</span><span class="p">:</span><span class="n">callRequest</span><span class="p">})</span>
+            
+            <span class="n">needed_emails</span><span class="o">.</span><span class="n">append</span><span class="p">([</span>
+                <span class="n">myQnA</span><span class="p">,</span>
+                <span class="n">email_list</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">email_list</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="s1">&#39;Subject&#39;</span><span class="p">],</span> 
+                <span class="n">email_list</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">email_list</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="s1">&#39;SenderEmail&#39;</span><span class="p">],</span> 
+                <span class="n">email_list</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">email_list</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="s1">&#39;SenderName&#39;</span><span class="p">],</span> 
+                <span class="n">email_list</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">email_list</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="s1">&#39;Date&#39;</span><span class="p">],</span>
+                <span class="n">emailReceivedDate</span>
+            <span class="p">])</span> 
+            
+    <span class="n">delete_index</span> <span class="o">=</span> <span class="p">[]</span>  
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">needed_emails</span><span class="p">)):</span>
+        <span class="n">receivedDate</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">needed_emails</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">5</span><span class="p">])</span>
+        <span class="n">receivedDate</span> <span class="o">=</span> <span class="n">receivedDate</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">)</span>
+        <span class="n">receivedDate_date</span> <span class="o">=</span> <span class="n">receivedDate</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">receivedDate_date</span> <span class="o">=</span> <span class="n">dateutil</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">receivedDate_date</span><span class="p">)</span>
+        <span class="n">receivedDate_time</span> <span class="o">=</span> <span class="n">receivedDate</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">receivedDate_time</span> <span class="o">=</span> <span class="n">receivedDate_time</span><span class="p">[:</span><span class="o">-</span><span class="mi">6</span><span class="p">]</span>
+        <span class="n">receivedDate_time</span> <span class="o">=</span> <span class="n">receivedDate_time</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;:&#39;</span><span class="p">)</span>
+
+        <span class="n">senderEmail</span> <span class="o">=</span> <span class="n">needed_emails</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">2</span><span class="p">]</span>
+        
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">check_latest</span><span class="p">)):</span>
+            
+            <span class="n">check_receivedDate</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">check_latest</span><span class="p">[</span><span class="n">j</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span>
+            <span class="n">check_receivedDate</span> <span class="o">=</span> <span class="n">check_receivedDate</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">)</span>
+            <span class="n">check_receivedDate_date</span> <span class="o">=</span> <span class="n">check_receivedDate</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">check_receivedDate_date</span> <span class="o">=</span> <span class="n">dateutil</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">check_receivedDate_date</span><span class="p">)</span>
+            <span class="n">check_receivedDate_time</span> <span class="o">=</span> <span class="n">check_receivedDate</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">check_receivedDate_time</span> <span class="o">=</span> <span class="n">check_receivedDate_time</span><span class="p">[:</span><span class="o">-</span><span class="mi">6</span><span class="p">]</span>
+            <span class="n">check_receivedDate_time</span> <span class="o">=</span> <span class="n">check_receivedDate_time</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;:&#39;</span><span class="p">)</span>
+
+            <span class="n">check_senderEmail</span> <span class="o">=</span> <span class="n">check_latest</span><span class="p">[</span><span class="n">j</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+            
+            <span class="k">if</span> <span class="n">senderEmail</span> <span class="o">==</span> <span class="n">check_senderEmail</span><span class="p">:</span>
+                
+                <span class="n">receivedDate_time_hr</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">receivedDate_time</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+                <span class="n">receivedDate_time_min</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">receivedDate_time</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+                <span class="n">receivedDate_time_sec</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">receivedDate_time</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+                
+                <span class="n">check_receivedDate_time_hr</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">check_receivedDate_time</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+                <span class="n">check_receivedDate_time_min</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">check_receivedDate_time</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+                <span class="n">check_receivedDate_time_sec</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">check_receivedDate_time</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+                       
+                <span class="k">if</span> <span class="n">receivedDate_date</span> <span class="o">==</span> <span class="n">check_receivedDate_date</span><span class="p">:</span>              
+                    <span class="k">if</span> <span class="n">receivedDate_time_hr</span> <span class="o">==</span> <span class="n">check_receivedDate_time_hr</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="n">receivedDate_time_min</span> <span class="o">==</span> <span class="n">check_receivedDate_time_min</span><span class="p">:</span>
+                            <span class="k">if</span> <span class="n">receivedDate_time_sec</span> <span class="o">&lt;</span> <span class="n">check_receivedDate_time_sec</span><span class="p">:</span>
+                                <span class="n">delete_index</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">i</span><span class="p">])</span>
+                            
+                        <span class="k">elif</span> <span class="n">receivedDate_time_min</span> <span class="o">&lt;</span> <span class="n">check_receivedDate_time_min</span><span class="p">:</span>
+                            <span class="n">delete_index</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">i</span><span class="p">])</span>
+                        
+                    <span class="k">elif</span> <span class="n">receivedDate_time_hr</span> <span class="o">&lt;</span> <span class="n">check_receivedDate_time_hr</span><span class="p">:</span>
+                        <span class="n">delete_index</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">i</span><span class="p">])</span>
+                    
+                <span class="k">elif</span> <span class="n">receivedDate_date</span> <span class="o">&lt;</span> <span class="n">check_receivedDate_date</span><span class="p">:</span>
+                    <span class="n">delete_index</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">i</span><span class="p">])</span>
+
+    <span class="n">sorted_delete_index</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">delete_index</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">i</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">sorted_delete_index</span><span class="p">:</span>
+            <span class="n">sorted_delete_index</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+    
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">reversed</span><span class="p">(</span><span class="n">sorted_delete_index</span><span class="p">):</span>
+        <span class="n">needed_emails</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">i</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+      
+    <span class="n">conn</span><span class="p">,</span> <span class="n">cur</span> <span class="o">=</span> <span class="n">create_connection</span><span class="p">()</span> 
+    <span class="c1"># Delete any existing data from CallRequest table from DB</span>
+    <span class="n">cur</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;DELETE FROM CallRequest;&quot;&quot;&quot;</span><span class="p">)</span>
+    <span class="n">conn</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+
+    <span class="c1"># Reset the auto incremental numbers when each month&#39;s schedule is being generated</span>
+    <span class="n">cur</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;DELETE FROM sqlite_sequence WHERE name = &#39;CallRequest&#39;;&quot;&quot;&quot;</span><span class="p">)</span>
+    <span class="n">conn</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+
+    <span class="c1"># Delete any existing data from LeaveApplication table from DB</span>
+    <span class="n">cur</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;DELETE FROM LeaveApplication;&quot;&quot;&quot;</span><span class="p">)</span>
+    <span class="n">conn</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+
+    <span class="c1"># Reset the auto incremental numbers when each month&#39;s schedule is being generated</span>
+    <span class="n">cur</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;DELETE FROM sqlite_sequence WHERE name = &#39;LeaveApplication&#39;;&quot;&quot;&quot;</span><span class="p">)</span>
+    <span class="n">conn</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+    
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">needed_emails</span><span class="p">)):</span>
+
+        <span class="n">myEmail</span> <span class="o">=</span> <span class="n">needed_emails</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">2</span><span class="p">]</span>
+
+        <span class="c1"># Obtain doctor&#39;s name from Roster table in DB using submitted FormSG email address</span>
+        <span class="n">cur</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;SELECT name FROM Roster WHERE email = ?;&quot;&quot;&quot;</span><span class="p">,(</span><span class="n">myEmail</span><span class="p">,))</span>
+        <span class="n">roster_results</span> <span class="o">=</span> <span class="n">cur</span><span class="o">.</span><span class="n">fetchone</span><span class="p">()</span>
+        <span class="n">myName</span> <span class="o">=</span> <span class="n">roster_results</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="c1"># myName = needed_emails[i][3]</span>
+        
+        <span class="n">myStartDate</span> <span class="o">=</span> <span class="n">start_dateA</span>
+        <span class="n">myEndDate</span> <span class="o">=</span> <span class="n">end_dateA</span>
+        
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">needed_emails</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">0</span><span class="p">]:</span>
+            <span class="k">if</span> <span class="n">j</span><span class="p">[</span><span class="s1">&#39;question&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;leaveRequest&#39;</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">j</span><span class="p">[</span><span class="s1">&#39;answer&#39;</span><span class="p">]:</span>
+                    <span class="n">mySplit</span> <span class="o">=</span> <span class="n">k</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">)</span>
+                    
+                    <span class="n">leaveStartDate</span> <span class="o">=</span> <span class="n">mySplit</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                    <span class="n">leaveEndDate</span> <span class="o">=</span> <span class="n">mySplit</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+                    
+                    <span class="k">if</span> <span class="n">leaveStartDate</span> <span class="o">!=</span> <span class="s1">&#39;&#39;</span><span class="p">:</span>
+                        <span class="n">leaveStartDate_List</span> <span class="o">=</span> <span class="n">leaveStartDate</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">)</span>
+                        <span class="n">L_sDate_day</span> <span class="o">=</span> <span class="n">leaveStartDate_List</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                        <span class="n">L_sDate_mth</span> <span class="o">=</span> <span class="n">leaveStartDate_List</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+                        
+                        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">leaveStartDate_List</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                            <span class="n">L_sDate_day</span> <span class="o">=</span> <span class="s1">&#39;0&#39;</span> <span class="o">+</span> <span class="n">L_sDate_day</span>
+                        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">leaveStartDate_List</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                            <span class="n">L_sDate_mth</span> <span class="o">=</span> <span class="s1">&#39;0&#39;</span> <span class="o">+</span> <span class="n">L_sDate_mth</span>
+                            
+                        <span class="n">L_sDate</span> <span class="o">=</span> <span class="n">request_year_name</span> <span class="o">+</span> <span class="s1">&#39;-&#39;</span> <span class="o">+</span> <span class="n">L_sDate_mth</span> <span class="o">+</span> <span class="s1">&#39;-&#39;</span> <span class="o">+</span> <span class="n">L_sDate_day</span>
+                    
+                    <span class="k">if</span> <span class="n">leaveEndDate</span> <span class="o">!=</span> <span class="s1">&#39;&#39;</span><span class="p">:</span>
+                        <span class="n">leaveEndDate_List</span> <span class="o">=</span> <span class="n">leaveEndDate</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">)</span>                   
+                        <span class="n">L_eDate_day</span> <span class="o">=</span> <span class="n">leaveEndDate_List</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                        <span class="n">L_eDate_mth</span> <span class="o">=</span> <span class="n">leaveEndDate_List</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+                        
+                        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">leaveEndDate_List</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                            <span class="n">L_eDate_day</span> <span class="o">=</span> <span class="s1">&#39;0&#39;</span> <span class="o">+</span> <span class="n">L_eDate_day</span>
+                        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">leaveEndDate_List</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                            <span class="n">L_eDate_mth</span> <span class="o">=</span> <span class="s1">&#39;0&#39;</span> <span class="o">+</span> <span class="n">L_eDate_mth</span>
+                        
+                        <span class="n">L_eDate</span> <span class="o">=</span> <span class="n">request_year_name</span> <span class="o">+</span> <span class="s1">&#39;-&#39;</span> <span class="o">+</span> <span class="n">L_eDate_mth</span> <span class="o">+</span> <span class="s1">&#39;-&#39;</span> <span class="o">+</span> <span class="n">L_eDate_day</span>
+                    
+                    <span class="k">if</span> <span class="n">mySplit</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="s1">&#39;&#39;</span> <span class="ow">and</span> <span class="n">mySplit</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="s1">&#39;&#39;</span> <span class="ow">and</span> <span class="n">mySplit</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">!=</span> <span class="s1">&#39;&#39;</span> <span class="ow">and</span> <span class="n">mySplit</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">!=</span> <span class="s1">&#39;&#39;</span><span class="p">:</span>
+                                               
+                        <span class="n">cur</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;INSERT OR IGNORE INTO LeaveApplication(email, name, start_date, end_date, duration, leave_type, remark) </span>
+<span class="s2">                           VALUES</span>
+<span class="s2">                           (?, ?, ?, ?, ?, ?, ?)</span>
+<span class="s2">                           ;&quot;&quot;&quot;</span><span class="p">,(</span><span class="n">myEmail</span><span class="p">,</span><span class="n">myName</span><span class="p">,</span><span class="n">L_sDate</span><span class="p">,</span><span class="n">L_eDate</span><span class="p">,</span><span class="n">mySplit</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span><span class="n">mySplit</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span><span class="n">mySplit</span><span class="p">[</span><span class="mi">4</span><span class="p">]))</span>
+                                                  
+                        <span class="n">conn</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+           
+            <span class="k">if</span> <span class="n">j</span><span class="p">[</span><span class="s1">&#39;question&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;callRequest&#39;</span><span class="p">:</span>
+                <span class="n">C_Date</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+                <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">j</span><span class="p">[</span><span class="s1">&#39;answer&#39;</span><span class="p">]:</span>
+                    <span class="n">mySplit</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">mySplit</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="s1">&#39;&#39;</span><span class="p">:</span>
+                        <span class="n">C_Date</span> <span class="o">=</span> <span class="n">mySplit</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                        <span class="n">C_Date</span> <span class="o">=</span> <span class="n">C_Date</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">)</span>
+                        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">C_Date</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                            <span class="n">C_Date</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;0&#39;</span> <span class="o">+</span> <span class="n">C_Date</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">C_Date</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                            <span class="n">C_Date</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;0&#39;</span> <span class="o">+</span> <span class="n">C_Date</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+                        <span class="n">C_Date</span> <span class="o">=</span> <span class="n">request_year_name</span> <span class="o">+</span> <span class="s1">&#39;-&#39;</span> <span class="o">+</span> <span class="n">C_Date</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39;-&#39;</span> <span class="o">+</span> <span class="n">C_Date</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                    
+                    <span class="k">if</span> <span class="n">mySplit</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="s1">&#39;&#39;</span> <span class="ow">and</span> <span class="n">mySplit</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="s1">&#39;&#39;</span><span class="p">:</span>    
+                        <span class="n">cur</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;INSERT OR IGNORE INTO CallRequest(email, name, date, request_type, remark) </span>
+<span class="s2">                            VALUES</span>
+<span class="s2">                            (?, ?, ?, ?, ?)</span>
+<span class="s2">                            ;&quot;&quot;&quot;</span><span class="p">,(</span><span class="n">myEmail</span><span class="p">,</span><span class="n">myName</span><span class="p">,</span><span class="n">C_Date</span><span class="p">,</span><span class="n">mySplit</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="n">mySplit</span><span class="p">[</span><span class="mi">2</span><span class="p">]))</span>
+                           
+                        <span class="n">conn</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+                        
+    <span class="n">close_connection</span><span class="p">(</span><span class="n">conn</span><span class="p">,</span> <span class="n">cur</span><span class="p">)</span> 
+    <span class="k">return</span> <span class="n">needed_emails</span></div>
+
+<div class="viewcode-block" id="produce_doctor_dictionary"><a class="viewcode-back" href="../helperFunctions.html#helperFunctions.produce_doctor_dictionary">[docs]</a><span class="k">def</span> <span class="nf">produce_doctor_dictionary</span><span class="p">(</span><span class="n">doc_name</span><span class="p">,</span><span class="n">number_of_rows</span><span class="p">,</span><span class="n">df</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Produces doctor dictionary for past schedule.</span>
+
+<span class="sd">    :parameters: doctor name, number of rows, dataframe</span>
+<span class="sd">    :return: nested dictionary containing doctor name, date, activity and remark. </span>
+<span class="sd">    For example: </span>
+<span class="sd">    {&quot;Dr Lee&quot;: {&quot;01-05-2021 Saturday&quot;: {&quot;Off&quot;: &quot;&quot;}}}</span>
+<span class="sd">    &quot;&quot;&quot;</span>   
+    <span class="n">one_doc_activity_per_month</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">counter</span> <span class="o">=</span> <span class="mi">2</span>
+
+    <span class="c1"># Extract data and put into a dictionary</span>
+    <span class="k">for</span> <span class="n">each_doc</span> <span class="ow">in</span> <span class="n">doc_name</span><span class="p">:</span>
+        <span class="n">each_doc_month_schedule</span> <span class="o">=</span> <span class="p">{}</span>
+        
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">number_of_rows</span><span class="p">):</span>
+            <span class="n">per_day_activity</span> <span class="o">=</span> <span class="p">{}</span>       <span class="c1"># {date : activity_dictionary}</span>
+            <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">df</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">col</span> <span class="o">==</span> <span class="n">each_doc</span><span class="p">:</span>
+                    <span class="n">activity_string</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">counter</span><span class="p">]</span>
+                    <span class="n">str_element</span> <span class="o">=</span> <span class="n">activity_string</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;&#39;&quot;</span><span class="p">,</span><span class="s1">&#39;&quot;&#39;</span><span class="p">)</span>
+                    <span class="n">activity_dict</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">str_element</span><span class="p">)</span>
+                    <span class="n">per_day_activity</span><span class="p">[</span><span class="n">df</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">1</span><span class="p">]]</span> <span class="o">=</span> <span class="n">activity_dict</span>
+
+                    <span class="k">if</span> <span class="n">each_doc</span> <span class="ow">in</span> <span class="n">each_doc_month_schedule</span><span class="p">:</span>
+                        <span class="n">each_doc_month_schedule</span><span class="p">[</span><span class="n">each_doc</span><span class="p">]</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">per_day_activity</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">each_doc</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">each_doc_month_schedule</span><span class="p">:</span>
+                        <span class="n">each_doc_month_schedule</span><span class="p">[</span><span class="n">each_doc</span><span class="p">]</span> <span class="o">=</span> <span class="n">per_day_activity</span>
+
+        <span class="n">one_doc_activity_per_month</span><span class="p">[</span><span class="n">each_doc</span><span class="p">]</span> <span class="o">=</span> <span class="n">each_doc_month_schedule</span><span class="p">[</span><span class="n">each_doc</span><span class="p">]</span>
+        <span class="n">counter</span> <span class="o">+=</span> <span class="mi">1</span>
+
+    <span class="k">return</span> <span class="n">one_doc_activity_per_month</span></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2021, Avante.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

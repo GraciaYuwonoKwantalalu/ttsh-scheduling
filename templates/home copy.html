@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+
+{% block title %}Home{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/jquery-ui.css') }}"/>
+<script src="{{ url_for('static', filename='js/jquery-1.12.4.js') }}"></script>
+<script src="{{ url_for('static', filename='js/jquery-ui.js') }}"></script>
+
+<style>
+table {
+    border-collapse: collapse;
+    width: 100%;
+}
+
+th,
+td {
+    background: #fff;
+    padding: 8px 16px;
+    text-align: center;
+}
+
+.tableFixHead {
+    overflow: auto;
+    height: 300px;
+}
+
+.tableFixHead thead th {
+    position: sticky;
+    top: 0;
+}
+
+.row {
+    display: flex;
+    margin-left: -5px;
+    margin-right: -5px;
+}
+
+.column {
+    flex: 50%;
+    padding: 5px;
+}
+</style>
+
+<!-- WELCOME STARTS -->
+<div class="banner" id="banner">
+    <div style="background-image: url('../static/images/ttsh_building.jpg'); ">
+        <div class="bg-overlay">
+            <div class="container">
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="banner-text">
+                            <h2>Welcome to Roster Schedule!</h2>
+                            <button type="button" class="contact-button" data-toggle="modal"
+                                data-target="#emailFilterModal">New Schedule</button>
+                            <a class="contact-button" href="{{url_for('past_timetable')}}">Past Schedule</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- WELCOME ENDS -->
+
+<!-- NEW SCHEDULE MODAL STARTS -->
+<div class="modal fade bd-example-modal-sm" id="emailFilterModal" tabindex="-1" role="dialog"
+    aria-labelledby="emailFilterModal" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="col text-center">
+                <div class="modal-header">
+                    <h3 class="modal-title" id="emailFilterModal">Generate Schedule For
+                        <button type="button" class="close" data-dismiss="modal">&times;</button></h3>
+                </div>
+
+                <div class="modal-body">
+                    <form action="{{url_for('edit_constraints')}}" method='post'>
+                        <!-- Specify dates -->
+                        Selected Month:
+                        <select name='selected_month' class="form-control">
+                            <option>January</option>
+                            <option>February</option>
+                            <option>March</option>
+                            <option>April</option>
+                            <option>May</option>
+                            <option>June</option>
+                            <option>July</option>
+                            <option>August</option>
+                            <option>September</option>
+                            <option>October</option>
+                            <option>November</option>
+                            <option>December</option>
+                        </select>
+                        <br>
+                        Start Date:
+                        <input type='text' id="startDate" name='start_date' placeholder="dd-mm-yyyy"
+                            class="form-control" />
+                        <br>
+                        End Date:
+                        <input type='text' id="endDate" name='end_date' placeholder="dd-mm-yyyy" class="form-control" />
+                        <br><br>
+
+                        <!-- Specify constraints -->
+                        <table class="table table-bordered table-striped mb-0" id="constraint_data">
+                            <thead>
+                                <tr>
+                                    <th>Constraints</th>
+                                    <th>Value</th>
+                                </tr>
+                            </thead>
+
+                            <tbody>
+                                <tr>
+                                {% for old, new in constraints_name.items() %}
+                                    {% for key, value in constraints.items() %}
+                                        {% if key == old %}
+                                            <td><b>{{new}}</b></td>
+                                            <td><input type="text" name="{{key}}" value="{{value}}" /></td>
+                                            </tr>
+                                        {% endif %}
+                                    {% endfor %}
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                        <input class="contact-button" type='submit' value='Generate' />
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- NEW SCHEDULE MODAL ENDS -->
+
+<script>
+    // TO CHANGE DATE FORMAT OF CALENDAR
+    $('input[id$=startDate]').datepicker({
+        dateFormat: 'dd-mm-yy'
+    });
+
+    $('input[id$=endDate]').datepicker({
+        dateFormat: 'dd-mm-yy'
+    });
+</script>
+{% endblock %}

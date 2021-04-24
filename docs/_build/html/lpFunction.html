@@ -1,0 +1,296 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>Linear Programming (lpFunction.py) &mdash; Rostering Scheduling for Healthcare Professionals  documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="Helper Functions (helperFunctions.py)" href="helperFunctions.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> Rostering Scheduling for Healthcare Professionals
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">Web Application</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="app.html">Main Application (app.py)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="helperFunctions.html">Helper Functions (helperFunctions.py)</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Linear Programming (lpFunction.py)</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Rostering Scheduling for Healthcare Professionals</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="modules.html">Web Application</a> &raquo;</li>
+        
+      <li>Linear Programming (lpFunction.py)</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/lpFunction.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-lpFunction">
+<span id="linear-programming-lpfunction-py"></span><h1>Linear Programming (lpFunction.py)<a class="headerlink" href="#module-lpFunction" title="Permalink to this headline">¶</a></h1>
+<dl class="py function">
+<dt id="lpFunction.call_matrix">
+<code class="sig-prename descclassname"><span class="pre">lpFunction.</span></code><code class="sig-name descname"><span class="pre">call_matrix</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">doc_list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">query_start_date</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">query_last_date</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">delta</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lpFunction.html#call_matrix"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lpFunction.call_matrix" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates the call matrix for <em>run_lp()</em>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p>name, start date, end date, delta.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="lpFunction.generalmatrix">
+<code class="sig-prename descclassname"><span class="pre">lpFunction.</span></code><code class="sig-name descname"><span class="pre">generalmatrix</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">excelsheet_result</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">doc_list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sdate</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">edate</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">delta</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lpFunction.html#generalmatrix"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lpFunction.generalmatrix" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reads from the excel_result variables and displays in matrix format.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p>excelsheet_result, name, start date, end date, delta.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="lpFunction.leave_matrix">
+<code class="sig-prename descclassname"><span class="pre">lpFunction.</span></code><code class="sig-name descname"><span class="pre">leave_matrix</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">doc_list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">query_start_date</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">query_last_date</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">delta</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lpFunction.html#leave_matrix"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lpFunction.leave_matrix" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates the leave matrix for <em>run_lp()</em>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p>name, start date, end date, delta.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="lpFunction.maketrans">
+<code class="sig-prename descclassname"><span class="pre">lpFunction.</span></code><code class="sig-name descname"><span class="pre">maketrans</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#lpFunction.maketrans" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a translation table usable for str.translate().</p>
+<p>If there is only one argument, it must be a dictionary mapping Unicode
+ordinals (integers) or characters to Unicode ordinals, strings or None.
+Character keys will be then converted to ordinals.
+If there are two arguments, they must be strings of equal length, and
+in the resulting dictionary, each character in x will be mapped to the
+character at the same position in y. If there is a third argument, it
+must be a string, whose characters will be mapped to None in the result.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="lpFunction.run_lp">
+<code class="sig-prename descclassname"><span class="pre">lpFunction.</span></code><code class="sig-name descname"><span class="pre">run_lp</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">doctor_call_daily</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">day_off_monthly</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_call_month_4</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_call_month_5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">query_start_date</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">query_last_date</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">doc_list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">doc_email_list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">A</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">B</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">C</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">D</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lpFunction.html#run_lp"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lpFunction.run_lp" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates schedule for the doctors according to the constraints.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p>constraints, start date, end date, name, email</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>dictionary</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="lpFunction.sg_holidays">
+<code class="sig-prename descclassname"><span class="pre">lpFunction.</span></code><code class="sig-name descname"><span class="pre">sg_holidays</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">whichYear</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weekDays</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lpFunction.html#sg_holidays"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lpFunction.sg_holidays" title="Permalink to this definition">¶</a></dt>
+<dd><p>Obtains the holidays in Singapore.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p>year, weekdays.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="helperFunctions.html" class="btn btn-neutral float-left" title="Helper Functions (helperFunctions.py)" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2021, Avante.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

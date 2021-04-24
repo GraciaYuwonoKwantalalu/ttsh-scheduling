@@ -1,0 +1,527 @@
+{% extends "base.html" %}
+
+{% block title %}Timetable{% endblock %}
+
+{% block content %}
+
+<style>
+/* STYLING FOR FIRST ROW */
+th, td { background: #fff; 
+        padding: 8px 16px; 
+        text-align:center;
+}
+
+/* FIX FIRST ROW IN PLACE */
+.tableFixHead {
+  overflow: auto;
+  height: 300px;
+}
+
+.tableFixHead thead th {
+  position: sticky;
+  top: 0;
+}
+
+/* FIX FIRST COLUMN IN PLACE */
+thead th:first-child {
+  left: 0;
+  z-index: 1;
+}
+
+tbody td:first-child {
+  position: sticky;
+  left: 0;
+}
+
+/* VERTICAL SCROLLBAR */
+.my-custom-scrollbar {
+    position: relative;
+    height: 300px;
+    overflow: auto;
+}
+
+.table-wrapper-scroll-y {
+    display: block;
+}
+</style>    
+
+<br><br>
+
+<!-- TOOLTIP STARTS -->
+<div class="tooltip" role="tooltip">
+    <div class="tooltip-arrow"></div>
+</div>
+<!-- TOOLTIP ENDS -->
+
+<!-- UPDATE MODAL STARTS -->
+<div class="modal fade bd-example-modal-sm" id="updateModal" tabindex="-1" role="dialog" aria-labelledby="updateModal" aria-hidden="true">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <div class="col text-center">
+                <div class="modal-header">
+                    <h3 class="modal-title" id="updateModal">Update Type & Remarks
+                    <button type="button" class="close" data-dismiss="modal">&times;</button></h3>
+                </div>
+                <div class="modal-body">
+                    Please select the type & respective remarks to update.
+                    <div class="contact-form">
+                        <form method="post">
+                            <select id="selected_type">
+                                <option value="Duty">Duty</option>
+                                <option value="On-Leave">On-Leave</option>
+                                <option value="On-Call">On-Call</option>
+                                <option value="Off (No Call)">Off (No Call)</option>
+                                <option value="Off (Null)">Off</option>
+                                <option value="Working">Working</option>
+                            </select>
+
+                            <select id="selected_details">
+                            </select>
+                            <br><br>
+                            <input class="contact-button" type="button" value="Update" id="update-type-button"/>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- UPDATE MODAL ENDS -->
+
+<!-- COMMENT MODAL STARTS -->
+<div class="modal fade bd-example-modal-sm" id="commentModal" role="dialog">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <div class="col text-center">
+                <div class="modal-header">
+                    <h3 class="modal-title">Add Comments
+                    <button type="button" class="close" data-dismiss="modal">&times;</button></h3>
+                </div>
+                <div class="modal-body">
+                    Hover over the cells to see the comments.
+                    <div class="contact-form">
+                        <form method="post">
+                            <input type="text" id="comment" placeholder="Comment" class="form-control"/>
+                            <br><br>
+                            <input class="contact-button" type="button" value="Update" id="update-comment-button"/>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- COMMENT MODAL ENDS -->
+
+<!-- CSV MODAL STARTS -->
+<div class="modal fade bd-example-modal-sm" id="csvModal" role="dialog">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <div class="col text-center">
+                <div class="modal-header">
+                    <h3 class="modal-title">CSV Export
+                    <button type="button" class="close" data-dismiss="modal">&times;</button></h3>
+                </div>
+                <div class="modal-body">
+                    CSV exported successfully! Please check your folder.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- CSV MODAL ENDS -->
+
+<!-- PDF MODAL STARTS -->
+<div class="modal fade bd-example-modal-sm" id="pdfModal" role="dialog">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <div class="col text-center">
+                <div class="modal-header">
+                    <h3 class="modal-title">PDF Download
+                    <button type="button" class="close" data-dismiss="modal">&times;</button></h3>
+                </div>
+                <div class="modal-body">
+                    PDF downloaded successfully! Please check your folder.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- PDF MODAL ENDS -->
+
+<!-- CONSTRAINT MODAL STARTS -->
+<div class="modal fade bd-example-modal-md" id="constraintModal" role="dialog">
+    <div class="modal-dialog modal-md">
+        <div class="modal-content">
+            <div class="col text-center">
+                <div class="modal-header">
+                    <h3 class="modal-title">Constraints Check
+                    <button type="button" class="close" data-dismiss="modal">&times;</button></h3>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="table-wrapper-scroll-y my-custom-scrollbar">
+                            <table class="table table-bordered table-striped mb-0" id="constraint_data">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Constraints Not Met</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- CONSTRAINT MODAL ENDS -->
+
+<!-- SUCCESS CONSTRAINT MODAL STARTS -->
+<div class="modal fade bd-example-modal-sm" id="successConstraintModal" role="dialog">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <div class="col text-center">
+                <div class="modal-header">
+                    <h3 class="modal-title">Constraints Check
+                    <button type="button" class="close" data-dismiss="modal">&times;</button></h3>
+                </div>
+                <div class="modal-body">
+                    All Constraints Met!
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- SUCCESS CONSTRAINT MODAL ENDS -->
+
+<!-- TIMETABLE (SENIOR) STARTS -->
+<div class="portfolio" id="timetable_table_senior">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-12 text-center text">
+                <h3>Timetable (Senior Doctors)</h3>
+                <div class="row">
+                    <div class="tableFixHead">
+                    <table class="table table-bordered table-striped mb-0">
+                        <thead>
+                            <tr>
+                                <th><div style="width:100px;"></div></th>
+                                {% for date, schedule in innerValue3.items() %}
+                                    <th><div style="width:100px;">{{date.split()[0]}}<br>{{date.split()[1]}}</div></th>
+                                {% endfor %}
+                            </tr>
+                        </thead>
+                        
+                        <tbody>
+                            <tr>
+                            {% for status, doctors in timetable_dict.items() %}
+                                {% if status == "S" %}
+                                    {% for doctor, schedule in doctors.items() %}
+                                        <td><b>{{doctor}}</b></td>
+                                        {% for date, allocation in schedule.items() %}
+                                            {% for type, remarks in allocation.items() %}
+                                                {% if type == "Duty" %}
+                                                <td style=background-color:#9FEDD7>
+                                                    <a href="#" data-toggle="modal" onclick="showUpdateModal(id)" title="{{remarks.split('-')[-1]}}"
+                                                        id="update/{{status}}/{{doctor}}/{{type}}/{{remarks}}/{{date}}">{{type}} ({{remarks.split('-')[0]}})</a>
+                                                    <a style="cursor:pointer" id="comment/{{status}}/{{doctor}}/{{type}}/{{remarks}}/{{date}}"
+                                                        onclick="showCommentModal(id)">
+                                                        <i id="ellipsis"><image src="{{ url_for('static', filename='images/ellipsis-v-solid.svg') }}" style="width: 5px; float:right"></i></a>
+                                                </td>
+                                                {% elif type == "On-Leave" %}
+                                                <td style=background-color:#FBE8A6>
+                                                    <a href="#" data-toggle="modal" onclick="showUpdateModal(id)" title="{{remarks.split('-')[-1]}}"
+                                                        id="update/{{status}}/{{doctor}}/{{type}}/{{remarks}}/{{date}}">{{type}} ({{remarks.split('-')[0]}})</a>
+                                                    <a style="cursor:pointer" id="comment/{{status}}/{{doctor}}/{{type}}/{{remarks}}/{{date}}"
+                                                        onclick="showCommentModal(id)">
+                                                        <i id="ellipsis"><image src="{{ url_for('static', filename='images/ellipsis-v-solid.svg') }}" style="width: 5px; float:right"></i></a>
+                                                </td>
+                                                {% elif type == "Working" %}
+                                                <td style=background-color:#FCE181>
+                                                    <a href="#" data-toggle="modal" onclick="showUpdateModal(id)" title="{{remarks.split('-')[-1]}}"
+                                                        id="update/{{status}}/{{doctor}}/{{type}}/{{remarks}}/{{date}}">{{type}}</a>
+                                                    <a style="cursor:pointer" id="comment/{{status}}/{{doctor}}/{{type}}/{{remarks}}/{{date}}"
+                                                        onclick="showCommentModal(id)">
+                                                        <i id="ellipsis"><image src="{{ url_for('static', filename='images/ellipsis-v-solid.svg') }}" style="width: 5px; float:right"></i></a>
+                                                </td>
+                                                {% elif type == "On-Call" %}
+                                                <td style=background-color:#D3E3FC>
+                                                    <a href="#" data-toggle="modal" onclick="showUpdateModal(id)" title="{{remarks.split('-')[-1]}}"
+                                                        id="update/{{status}}/{{doctor}}/{{type}}/{{remarks}}/{{date}}">{{type}} ({{remarks.split('-')[0]}})</a>
+                                                    <a style="cursor:pointer" id="comment/{{status}}/{{doctor}}/{{type}}/{{remarks}}/{{date}}"
+                                                        onclick="showCommentModal(id)">
+                                                        <i id="ellipsis"><image src="{{ url_for('static', filename='images/ellipsis-v-solid.svg') }}" style="width: 5px; float:right"></i></a>
+                                                </td>
+                                                {% elif type == "Off" %}
+                                                <td style=background-color:#FEF9C7>
+                                                    <a href="#" data-toggle="modal" onclick="showUpdateModal(id)" title="{{remarks.split('-')[-1]}}"
+                                                        id="update/{{status}}/{{doctor}}/{{type}}/{{remarks}}/{{date}}">{{type}}</a>
+                                                    <a style="cursor:pointer" id="comment/{{status}}/{{doctor}}/{{type}}/{{remarks}}/{{date}}"
+                                                        onclick="showCommentModal(id)">
+                                                        <i id="ellipsis"><image src="{{ url_for('static', filename='images/ellipsis-v-solid.svg') }}" style="width: 5px; float:right"></i></a>
+                                                </td>
+                                                {% else %}
+                                                <td style=background-color:#a2ddaa>
+                                                    <a href="#" data-toggle="modal" onclick="showUpdateModal(id)" title="{{remarks.split('-')[-1]}}"
+                                                        id="update/{{status}}/{{doctor}}/{{type}}/{{remarks}}/{{date}}">{{type}}</a>
+                                                    <a style="cursor:pointer" id="comment/{{status}}/{{doctor}}/{{type}}/{{remarks}}/{{date}}"
+                                                        onclick="showCommentModal(id)">
+                                                        <i id="ellipsis"><image src="{{ url_for('static', filename='images/ellipsis-v-solid.svg') }}" style="width: 5px; float:right"></i></a>
+                                                </td>
+                                                {% endif %}    
+                                            {% endfor %}
+                                        {% endfor %}
+                                        </tr>
+                                    {% endfor %}
+                                {% endif %}
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>    
+</div>
+<!-- TIMETABLE (SENIOR) ENDS -->
+
+<!-- TIMETABLE (JUNIOR) STARTS -->
+<div class="testimonials" id="timetable_table_junior">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-12 text-center text">
+                <h3>Timetable (Junior Doctors)</h3>
+                <div class="row">
+                <div class="tableFixHead">
+                    <table class="table table-bordered table-striped mb-0">
+                        <thead>
+                            <tr>
+                                <th><div style="width:100px;"></div></th>
+                                {% for date, schedule in innerValue3.items() %}
+                                    <th><div style="width:100px;">{{date.split()[0]}}<br>{{date.split()[1]}}</div></th>
+                                {% endfor %}
+                            </tr>
+                        </thead>
+                        
+                        <tbody>
+                            <tr>
+                            {% for status, doctors in timetable_dict.items() %}
+                                {% if status == "J" %}
+                                    {% for doctor, schedule in doctors.items() %}
+                                        <td><b>{{doctor}}</b></td>
+                                        {% for date, allocation in schedule.items() %}
+                                            {% for type, remarks in allocation.items() %}
+                                                {% if type == "Duty" %}
+                                                <td style=background-color:#9FEDD7>
+                                                    <a href="#" data-toggle="modal" onclick="showUpdateModal(id)" title="{{remarks.split('-')[-1]}}"
+                                                        id="update/{{status}}/{{doctor}}/{{type}}/{{remarks}}/{{date}}">{{type}} ({{remarks.split('-')[0]}})</a>
+                                                    <a style="cursor:pointer" id="comment/{{status}}/{{doctor}}/{{type}}/{{remarks}}/{{date}}"
+                                                        onclick="showCommentModal(id)">
+                                                        <i id="ellipsis"><image src="{{ url_for('static', filename='images/ellipsis-v-solid.svg') }}" style="width: 5px; float:right"></i></a>
+                                                </td>
+                                                {% elif type == "On-Leave" %}
+                                                <td style=background-color:#FBE8A6>
+                                                    <a href="#" data-toggle="modal" onclick="showUpdateModal(id)" title="{{remarks.split('-')[-1]}}"
+                                                        id="update/{{status}}/{{doctor}}/{{type}}/{{remarks}}/{{date}}">{{type}} ({{remarks.split('-')[0]}})</a>
+                                                    <a style="cursor:pointer" id="comment/{{status}}/{{doctor}}/{{type}}/{{remarks}}/{{date}}"
+                                                        onclick="showCommentModal(id)">
+                                                        <i id="ellipsis"><image src="{{ url_for('static', filename='images/ellipsis-v-solid.svg') }}" style="width: 5px; float:right"></i></a>
+                                                </td>
+                                                {% elif type == "Working" %}
+                                                <td style=background-color:#FCE181>
+                                                    <a href="#" data-toggle="modal" onclick="showUpdateModal(id)" title="{{remarks.split('-')[-1]}}"
+                                                        id="update/{{status}}/{{doctor}}/{{type}}/{{remarks}}/{{date}}">{{type}}</a>
+                                                    <a style="cursor:pointer" id="comment/{{status}}/{{doctor}}/{{type}}/{{remarks}}/{{date}}"
+                                                        onclick="showCommentModal(id)">
+                                                        <i id="ellipsis"><image src="{{ url_for('static', filename='images/ellipsis-v-solid.svg') }}" style="width: 5px; float:right"></i></a>
+                                                </td>
+                                                {% elif type == "On-Call" %}
+                                                <td style=background-color:#D3E3FC>
+                                                    <a href="#" data-toggle="modal" onclick="showUpdateModal(id)" title="{{remarks.split('-')[-1]}}"
+                                                        id="update/{{status}}/{{doctor}}/{{type}}/{{remarks}}/{{date}}">{{type}} ({{remarks.split('-')[0]}})</a>
+                                                    <a style="cursor:pointer" id="comment/{{status}}/{{doctor}}/{{type}}/{{remarks}}/{{date}}"
+                                                        onclick="showCommentModal(id)">
+                                                        <i id="ellipsis"><image src="{{ url_for('static', filename='images/ellipsis-v-solid.svg') }}" style="width: 5px; float:right"></i></a>
+                                                </td>
+                                                {% elif type == "Off" %}
+                                                <td style=background-color:#FEF9C7>
+                                                    <a href="#" data-toggle="modal" onclick="showUpdateModal(id)" title="{{remarks.split('-')[-1]}}"
+                                                        id="update/{{status}}/{{doctor}}/{{type}}/{{remarks}}/{{date}}">{{type}}</a>
+                                                    <a style="cursor:pointer" id="comment/{{status}}/{{doctor}}/{{type}}/{{remarks}}/{{date}}"
+                                                        onclick="showCommentModal(id)">
+                                                        <i id="ellipsis"><image src="{{ url_for('static', filename='images/ellipsis-v-solid.svg') }}" style="width: 5px; float:right"></i></a>
+                                                </td>
+                                                {% else %}
+                                                <td style=background-color:#a2ddaa>
+                                                    <a href="#" data-toggle="modal" onclick="showUpdateModal(id)" title="{{remarks.split('-')[-1]}}"
+                                                        id="update/{{status}}/{{doctor}}/{{type}}/{{remarks}}/{{date}}">{{type}}</a>
+                                                    <a style="cursor:pointer" id="comment/{{status}}/{{doctor}}/{{type}}/{{remarks}}/{{date}}"
+                                                        onclick="showCommentModal(id)">
+                                                        <i id="ellipsis"><image src="{{ url_for('static', filename='images/ellipsis-v-solid.svg') }}" style="width: 5px; float:right"></i></a>
+                                                </td>
+                                                {% endif %}    
+                                            {% endfor %}
+                                        {% endfor %}
+                                        </tr>
+                                    {% endfor %}
+                                {% endif %}
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- TIMETABLE (JUNIOR) ENDS -->
+
+<!-- BUTTON STARTS -->
+<div class="call-to-action">
+    <div style="background-image: url('../static/images/ttsh_building.jpg'); ">
+        <div class="call-overlay">
+            <div class="container">
+                <div class="row">
+                    <a class="contact-button" id="validate" href="#" onclick="validate()">Validate</a>
+                    <a class="contact-button" href="{{url_for('download_timetable')}}" onclick="downloadPDF()">Download as PDF</a>
+                    <a class="contact-button" href="{{url_for('download_schedules_csv')}}" onclick="exportCSV()">Export as CSV</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- BUTTON ENDS -->
+
+<script>
+// TO UPDATE REMARKS
+function showCommentModal(id) {
+    $("#commentModal").modal("show");
+
+    $("#update-comment-button").click(function(){
+        var comment = document.getElementById("comment").value;
+        $("#commentModal").modal("hide");
+
+        // extract cell_id
+        var cell_id = id;
+        var status = cell_id.split('/')[1];
+        var doctor = cell_id.split('/')[2];
+        var types = cell_id.split('/')[3];
+        var remarks = cell_id.split('/')[4] + '-' + comment;
+        var date = cell_id.split('/')[5];
+   
+        // update database
+        $.post("/update_timetable_new", {
+            javascript_data: JSON.stringify({status:status,doctor:doctor,date:date,types:types,remarks:remarks}),
+            success: function(data, status) {
+                location.reload();
+            }
+        });
+    });
+}
+
+// TO UPDATE TYPE
+function showUpdateModal(id) {
+    $("#updateModal").modal("show");
+
+    // extract cell_id
+    var cell_id = id;
+    var status = cell_id.split('/')[1];
+    var doctor = cell_id.split('/')[2];
+    var date = cell_id.split('/')[5];
+
+    // show dropdown options
+    document.getElementById("selected_type").onchange=function(){
+        var type = this;
+        var details = document.getElementById("selected_details");
+        var option = document.createElement("option");
+        document.getElementById("selected_details").options.length = 0;
+        
+        if (type.value == "Duty") {
+            var details_array = {'ICU 1':'ICU 1', 'ICU 2':'ICU 2', 'ICU 3':'ICU 3', 'ICU 4':'ICU 4',
+                                'Clinic 1':'Clinic 1', 'Clinic 2':'Clinic 2', 'Clinic 3':'Clinic 3', 'Clinic 4':'Clinic 4',
+                                'amSat Clinic 1':'amSat Clinic 1', 'amSat Clinic 3':'amSat Clinic 3', 'amSat Clinic 4':'amSat Clinic 4', 'P':'P'};
+            
+        } else if (type.value == "On-Leave") {
+            var details_array = {'Leave (AL)':'Leave (AL)', 'Leave (Training)':'Leave (Training)', 'Leave (MC/HL)':'Leave (MC/HL)', 'Leave (Reservist)':'Leave (Reservist)',
+                                'Leave (Family)':'Leave (Family)', 'Leave (Child)':'Leave (Child)', 'Leave (Marriage)':'Leave (Marriage)', 'Leave (Maternity)':'Leave (Maternity)',
+                                'Leave (Paternity)':'Leave (Paternity)', 'Leave (Others)':'Leave (Others)'};
+
+        } else if (type.value == "On-Call") {
+            var details_array = {'c':'c', 'cr':'cr', 'cF':'cF', 'cSat':'cSat',
+                                'cSun':'cSun', 'cpPh':'cpPh', 'cPH':'cPH', 'crF':'crF',
+                                'crSat':'crSat', 'crSun':'crSun', 'crpPH':'crpPH', 'crPH':'crPH'};
+
+        } else if (type.value == "Off (No Call)") {
+            var details_array = {}
+
+        } else if (type.value == "Off") {
+            var details_array = {};
+
+        } else {
+            var details_array = {};
+        }
+
+        for(index in details_array) {
+            details.options[details.options.length] = new Option(details_array[index], index);
+        }
+
+        // update database
+        $("#update-type-button").click(function(){
+            var types = type.value;
+            var remarks = details.value;
+
+            $.post("/update_timetable_new", {
+                javascript_data: JSON.stringify({status:status,doctor:doctor,date:date,types:types,remarks:remarks}),
+                success: function(data, status) {
+                    location.reload();
+                }
+            });
+        });
+    }
+}
+
+// TO EXPORT AS CSV 
+function exportCSV() {
+    $("#csvModal").modal("show");
+    window.stop();
+}
+
+// TO DOWNLOAD AS PDF
+function downloadPDF() {
+    $("#pdfModal").modal("show");
+    window.stop();
+}
+
+// TO VALIDATE
+function validate() {
+    $.ajax({
+        type : 'GET',
+        dataType: 'json',
+        url : "{{url_for('check_constraints')}}",
+        success: function(data, status) {
+            if(data == "True") {
+                $('#successConstraintModal').modal('show');
+            }
+            
+            $.each(data, function(index, value) {
+                $.each(value, function(ind, obj) {
+                    var row = "<tr>" +
+                                "<td>" + index + "</td>" +    
+                                "<td>" + obj + "</td>" +
+                            "</tr>";
+
+                    $('#constraint_data tbody').append(row);
+                    $('#constraintModal').modal('show');
+                });
+            });
+            
+        }
+    });
+}
+
+</script>
+{% endblock %}
+

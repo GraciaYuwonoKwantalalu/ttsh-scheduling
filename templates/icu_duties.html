@@ -1,0 +1,217 @@
+{% extends "base.html" %}
+
+{% block title %}ICU Duties{% endblock %}
+
+{% block content %}
+
+<style>
+/* STYLING FOR FIRST ROW */
+th, td { background: #fff; 
+        padding: 8px 16px; 
+        text-align:center;
+}
+
+/* FIX FIRST ROW IN PLACE */
+.tableFixHead {
+  overflow: auto;
+  height: 300px;
+}
+
+.tableFixHead thead th {
+  position: sticky;
+  top: 0;
+}
+</style>
+
+<br><br>
+
+<!-- PDF MODAL STARTS -->
+<div class="modal fade bd-example-modal-sm" id="pdfModal" role="dialog">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <div class="col text-center">
+                <div class="modal-header">
+                    <h3 class="modal-title">PDF Download
+                    <button type="button" class="close" data-dismiss="modal">&times;</button></h3>
+                </div>
+                <div class="modal-body">
+                    PDF downloaded successfully! Please check your folder.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- PDF MODAL ENDS -->
+
+<!-- ICU DUTIES 1 STARTS -->
+<div class="testimonials" id="icu_duties_1_table">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-12 text-center text">
+                <h3>ICU 1</h3>
+                <form method='post'>
+                    <input type='text' id="first_doctor" placeholder='First Doctor'>
+                    <input type='text' id="second_doctor" placeholder='Second Doctor'>
+                    <input type='text' id="third_doctor" placeholder='Third Doctor'>
+                    <input type='text' id="fourth_doctor" placeholder='Fourth Doctor'>
+                    <input class="contact-button" type='button' value='Confirm Doctors' id="confirm_doctors"/>
+                </form>
+
+                <form method='post'>
+                <br>
+                <div class="row">
+                    <div class="tableFixHead">
+                    <table class="table table-bordered table-striped mb-0">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Select Doctors On Call</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            <tr>
+                            {% for date,doctor in icu1.items() %}
+                                <td>{{date}}</td>
+                                <td>
+                                    <select id="1/{{date}}/" onclick="updateValue1(id)" onchange="getValue(id)">
+                                        <option >{{doctor}}</option>
+                                    </select>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    </div>
+                </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- ICU DUTIES 1 ENDS -->
+
+<!-- ICU DUTIES 2 STARTS -->
+<div class="portfolio" id="icu_duties_2_table">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-12 text-center text">
+                <h3>ICU 2</h3>
+                <form method='post'>
+                    <input type='text' id="first" placeholder='First Doctor'>
+                    <input type='text' id="second" placeholder='Second Doctor'>
+                    <input type='text' id="third" placeholder='Third Doctor'>
+                    <input type='text' id="fourth" placeholder='Fourth Doctor'>
+                    <input class="contact-button" type='button' value='Confirm Doctors' id="confirm_doctors"/>
+                </form>
+
+                <form method='post'>
+                <br>
+                <div class="row">
+                    <div class="tableFixHead">
+                    <table class="table table-bordered table-striped mb-0">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Select Doctors On Call</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            <tr>
+                            {% for date,doctor in icu2.items() %}
+                                <td>{{date}}</td>
+                                <td>
+                                    <select id="2/{{date}}/" onclick="updateValue2(id)" onchange="getValue(id)">
+                                        <option >{{doctor}}</option>
+                                    </select>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    </div>
+                </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- ICU DUTIES 2 ENDS -->
+
+<!-- BUTTON STARTS -->
+<div class="call-to-action">
+    <div style="background-image: url('../static/images/ttsh_building.jpg'); ">
+        <div class="call-overlay">
+            <div class="container">
+                <div class="row">
+                    <a class="contact-button" href="{{url_for('download_icu_duties')}}" onclick="downloadPDF()">Download as PDF</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- BUTTON ENDS -->
+
+<script>
+// TO DISPLAY DOCTOR NAME DROPDOWN (ICU1)
+function updateValue1(id) {
+    var first_doctor = document.getElementById("first_doctor").value;
+    var second_doctor = document.getElementById("second_doctor").value;
+    var third_doctor = document.getElementById("third_doctor").value;
+    var fourth_doctor = document.getElementById("fourth_doctor").value;
+
+    var details = document.getElementById(id);
+    var option = document.createElement("option");
+
+    var options_array = {first_doctor: first_doctor, second_doctor: second_doctor, 
+                        third_doctor: third_doctor, fourth_doctor: fourth_doctor};
+
+    for(index in options_array) {
+        if (details.options.length < 5) {
+            details.options[details.options.length] = new Option(options_array[index], id + options_array[index]);
+        }
+    }
+}
+
+// TO DISPLAY DOCTOR NAME DROPDOWN (ICU2)
+function updateValue2(id) {
+    var first_doctor = document.getElementById("first").value;
+    var second_doctor = document.getElementById("second").value;
+    var third_doctor = document.getElementById("third").value;
+    var fourth_doctor = document.getElementById("fourth").value;
+
+    var details = document.getElementById(id);
+    var option = document.createElement("option");
+
+    var options_array = {first_doctor: first_doctor, second_doctor: second_doctor, 
+                        third_doctor: third_doctor, fourth_doctor: fourth_doctor};
+
+    for(index in options_array) {
+        if (details.options.length < 5) {
+            details.options[details.options.length] = new Option(options_array[index], id + options_array[index]);
+        }
+    }
+}
+
+// TO INSERT INTO ICU_DUTIES TABLE
+function getValue(id) {
+    var cell_id = document.getElementById(id).value;
+    console.log(cell_id)
+
+    $.post("/update_icu_table", {
+        javascript_data: JSON.stringify({cell_id:cell_id}),
+        success: function(data, status) {
+        }
+    });
+}
+
+// TO DOWNLOAD AS PDF
+function downloadPDF() {
+    $("#pdfModal").modal("show");
+    window.stop();
+}
+
+</script>
+
+{% endblock %}
